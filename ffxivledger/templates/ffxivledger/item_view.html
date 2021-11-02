@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block header %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='view.css') }}">
+    {{ item['name'] }}
+{% endblock header %}
+{% block content %}
+<div class="spacer-60"></div>
+<div id="content-wrapper">
+    <div id="price-list-table-wrapper">
+        <table>
+            <th>Price point</th>
+            <th>Time</th>
+            {% for price in sale_price_list %}
+            <tr>
+                <td>{{ price.price_input }}</td>
+                <td>{{ price.price_time }}</td>
+            </tr>
+            {% endfor %}    
+        </table>
+    </div>
+</div>
+{% endblock content %}
+

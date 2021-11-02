@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block header %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+{% endblock header %}
+{% block content %}
+    <div class="spacer-60"></div>
+    <div id="content-wrapper">
+        <div id="stock-frame-wrapper">
+            <div id="stock-label">
+                <h2>Current stock</h2>
+            </div>
+            <div id="stock-frame">
+                <table>
+                    {% for item in stock_list %}
+                        <tr>
+                            <td>{{ item.item.name }}</td>
+                            <td>{{ item.amount }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        <div id="right-content-wrapper">
+            <div id="item_frame_wrapper">
+                <div id="item-form">
+                    <form method="post">
+                        {{ form.item }}
+                        {{ form.amount.label }}{{ form.amount(id="amount-input") }}
+                        {{ form.price.label }}{{ form.price(id="price-input") }}
+                        {{ form.sale_button }}
+                        {{ form.purchase_button }}
+                        {{ form.view_button }}
+                    </form>
+                    <a href="{{ url_for('item.create_item') }}">Create new item</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

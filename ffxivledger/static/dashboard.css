@@ -1,0 +1,36 @@
+/* stock frame styles */
+
+#content-wrapper > #stock-frame-wrapper > #stock-label {
+    padding-left: 20px;
+}
+
+#content-wrapper > #stock-frame-wrapper > #stock-frame table {
+    width: 300px;
+}
+
+#content-wrapper > #stock-frame-wrapper > #stock-frame table, td {
+    border: 1px #5c5c5c solid;
+    border-collapse: collapse;
+}
+
+#content-wrapper > #stock-frame-wrapper > #stock-frame td {
+    padding: 5px;
+}
+
+/* right-side panel styles */
+
+#right-content-wrapper > #item_frame_wrapper a {
+    color: lightblue;
+}
+
+#right-content-wrapper > #item_frame_wrapper select {
+    width: 200px;
+}
+
+#price-input {
+    width: 70px;
+}
+
+#amount-input {
+    width: 60px;
+}

@@ -1,0 +1,45 @@
+import pytest
+from ffxivledger.models import Item, Price, Stock
+
+
+def test_dashboard(client):
+    # first, make sure the page loads successfully
+    assert client.get('/').status_code == 200
+
+    # now ensure the data in the database (based on the test data in conftest.py) is correct
+    assert Item.query.get('test_item').type == 'product'
+    assert Price.query.get(1).price_input == 50000
+    assert Stock.query.get(1).amount == 2
+
+
+@pytest.mark.parametrize(('item_value', 'amount', 'price', 'new_stock'), (
+        ('test_item', 1, 20000, 1),
+        ('third_test_item', 100, 300, 200)
+))
+def test_add_sale(client, item_value, amount, price, new_stock):
+    data = {'item': item_value, 'amount': amount, 'price': price, 'sale_button': True}
+    client.post('/', data=data)
+
+    assert Stock.query.filter_by(item_value=item_value).one_or_none().amount == new_stock
+
+
+@pytest.mark.parametrize(('item_value', 'amount', 'price', 'new_stock'), (
+        ('test_bolts_of_cloth', 100, 100, 150),
+        ('third_test_item', 50, 200, 350)
+))
+def test_add_purchase(client, item_value, amount, price, new_stock):
+    data = {'item': item_value, 'amount': amount, 'price': price, 'purchase_button': True}
+    client.post('/', data=data)
+
+    assert Stock.query.filter_by(item_value=item_value).one_or_none().amount == new_stock
+
+
+@pytest.mark.parametrize('item_value', (
+        'test_item',
+        'test_bolts_of_cloth'
+))
+def test_view_data(client, item_value):
+    data = {'item': item_value, 'view_button': True}
+    response = client.post('/', data=data)
+
+    assert response.status_code == 302
