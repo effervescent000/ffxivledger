@@ -35,8 +35,7 @@ class Item(db.Model):
         If False, then +/- it"""
         # first find this item in ProductStock (if it doesn't exist there, create it)
         # TODO make this account for multiple users in like... any way
-        stock_row = Stock.query.filter(
-            Stock.item_value == self.value).one_or_none()
+        stock_row = Stock.query.filter(Stock.item_value == self.value).one_or_none()
         if stock_row is None:
             # always overwrite if creating a new row
             stock_row = Stock(amount=num, item_value=self.value)
@@ -45,6 +44,9 @@ class Item(db.Model):
             stock_row.amount = num
         else:
             stock_row.amount += num
+        # ensure the amount doesn't go below 0
+        if stock_row.amount < 0:
+            stock_row.amount = 0
         db.session.commit()
 
 

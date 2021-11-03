@@ -43,3 +43,25 @@ def test_view_data(client, item_value):
     response = client.post('/', data=data)
 
     assert response.status_code == 302
+
+
+@pytest.mark.parametrize(('item_value', 'amount', 'expected_amount'), (
+        ('test_item', 1, 3),
+        ('patricians_bottoms', 5, 5)
+))
+def test_add_stock_button(client, item_value, amount, expected_amount):
+    data = {'item': item_value, 'amount': amount, 'add_stock_button': True}
+    client.post('/', data=data)
+
+    assert Stock.query.filter_by(item_value=item_value).one_or_none().amount == expected_amount
+
+
+@pytest.mark.parametrize(('item_value', 'amount', 'expected_amount'), (
+        ('test_item', 1, 1),  # (2-1)
+        ('patricians_bottoms', 3, 0),  # this should go below zero and then be set to 0 (0-3)
+        ('test_item', 2, 0)  # this should end up at zero exactly (2-2)
+))
+def test_remove_stock_button(client, item_value, amount, expected_amount):
+    data = {'item': item_value, 'amount': amount, 'remove_stock_button': True}
+    client.post('/', data=data)
+    assert Stock.query.filter_by(item_value=item_value).one_or_none().amount == expected_amount
