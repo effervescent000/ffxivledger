@@ -14,6 +14,9 @@ class DashboardForm(FlaskForm):
     sale_button = SubmitField(u'Add sale')
     purchase_button = SubmitField(u'Add purchase')
     view_button = SubmitField(u'View data')
+    # buttons to change stock amounts w/o adding price data
+    add_stock_button = SubmitField(u'Add stock')
+    remove_stock_button = SubmitField(u'Remove stock')
 
 
 class CreateItemForm(FlaskForm):

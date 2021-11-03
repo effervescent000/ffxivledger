@@ -25,11 +25,14 @@ def index():
             amount = 1
 
         # check which button was clicked
-        if form.sale_button.data:
+        if form.sale_button.data or form.remove_stock_button.data:
             # make sale amounts negative
             amount *= -1
 
-            process_transaction(price_input, time, amount, item_value)
+            if form.sale_button.data:
+                process_transaction(price_input, time, amount, item_value)
+            else:
+                Item.query.get(item_value).adjust_stock(amount)
 
             return redirect(url_for('dashboard.index'))
         elif form.view_button.data:
@@ -39,7 +42,9 @@ def index():
             price_input *= -1
 
             process_transaction(price_input, time, amount, item_value)
-
+            return redirect(url_for('dashboard.index'))
+        elif form.add_stock_button.data:
+            Item.query.get(item_value).adjust_stock(amount)
             return redirect(url_for('dashboard.index'))
         else:
             return "Somehow some other button was pressed on the dashboard ???"
