@@ -1,41 +1,59 @@
 {% extends 'base.html' %}
+{% from "_formhelpers.html" import render_field, render_field_no_label %}
 {% block header %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
 {% endblock header %}
 {% block content %}
-    <div class="spacer-60"></div>
-    <div id="content-wrapper">
-        <div id="stock-frame-wrapper">
-            <div id="stock-label">
-                <h2>Current stock</h2>
-            </div>
-            <div id="stock-frame">
-                <table>
-                    {% for item in stock_list %}
-                        <tr>
-                            <td>{{ item.item.name }}</td>
-                            <td>{{ item.amount }}</td>
-                        </tr>
-                    {% endfor %}
-                </table>
-            </div>
+<div class="spacer-60"></div>
+<div id="content-wrapper">
+    <div id="stock-frame-wrapper">
+        <div id="stock-label">
+            <span>Current stock</span>
         </div>
-        <div id="right-content-wrapper">
-            <div id="item_frame_wrapper">
-                <div id="item-form">
-                    <form method="post">
-                        {{ form.item }}
-                        {{ form.amount.label }}{{ form.amount(id="amount-input") }}
-                        {{ form.price.label }}{{ form.price(id="price-input") }}
-                        {{ form.sale_button }}
-                        {{ form.purchase_button }}
-                        {{ form.view_button }}
-                        {{ form.add_stock_button }}
-                        {{ form.remove_stock_button }}
-                    </form>
-                    <a href="{{ url_for('item.create_item') }}">Create new item</a>
-                </div>
-            </div>
+        <div id="stock-frame">
+            <table>
+                {% for item in stock_list %}
+                <tr>
+                    <td>{{ item.item.name }}</td>
+                    <td>{{ item.amount }}</td>
+                </tr>
+                {% endfor %}
+            </table>
         </div>
     </div>
+    <div id="right-content-wrapper">
+        <div id="item-form">
+            <form method="post">
+                <div class="entry-forms-wrapper">
+                    {{ render_field(form.item) }}
+                    {{ render_field(form.amount) }}
+                    {{ render_field(form.price) }}
+                </div>
+                <div class="buttons-wrapper">
+                    <div class="button">
+                        {{ render_field_no_label(form.sale_button) }}
+                    </div>
+                    <div class="button">
+                        {{ render_field_no_label(form.purchase_button) }}
+                    </div>
+                    <div class="button">
+                        {{ render_field_no_label(form.view_button) }}
+                    </div>
+                    <div class="button">
+                        {{ render_field_no_label(form.remove_stock_button) }}
+                    </div>
+                    <div class="button">
+                        {{ render_field_no_label(form.add_stock_button) }}
+                    </div>
+                    
+                    
+                    
+                    <!-- {{ render_field_no_label(form.create_recipe_button) }}
+                {{ render_field_no_label(form.view_recipes_button) }} -->
+                </div>
+            </form>
+        </div>
+        <a href="{{ url_for('item.create_item') }}">Create new item</a>
+    </div>
+</div>
 {% endblock content %}

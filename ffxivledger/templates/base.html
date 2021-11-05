@@ -1,37 +1,41 @@
 <!doctype html>
 <title>{% block title %}{% endblock %} FFXIV Ledger</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
+
 <body>
-<div id="header-wrapper">
-    <div id="header">
-        <div class="logo">
-            FFXIV Ledger
+    <div id="header-wrapper">
+        <div id="left-side-header">
+            <div class="logo">
+                FFXIV Ledger
+            </div>
+            <div class="nav-bar">
+                <div class="nav-link">
+                    <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+                </div>
+                <div class="nav-link">
+                    <span class="NYI">Crafting Queue</span>
+                </div>
+                <div class="nav-link">
+                    <span class="NYI">Ledger</span>
+                </div>
+                <div class="nav-link">
+                    <span class="NYI">Materials</span>
+                </div>
+                <div class="nav-link">
+                    <span class="NYI">Options</span>
+                </div>
+            </div>
         </div>
-        <div class="nav-bar">
-            <div class="nav-link">
-                <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+        <div id="right-side-header">
+            <div id="account-wrapper">
+                <div id="register">Register</div>
+                <div id="login">Login</div>
+                <div id="logout">Logout</div>
             </div>
-            <div class="nav-link">
-                <span class="NYI">Crafting Queue</span>
-            </div>
-            <div class="nav-link">
-                <span class="NYI">Ledger</span>
-            </div>
-            <div class="nav-link">
-                <span class="NYI">Materials</span>
-            </div>
-            <div class="nav-link">
-                <span class="NYI">Options</span>
-            </div>
-        </div>
-        <div id="account-wrapper">
-            <div id="register">Register</div>
-            <div id="login">Login</div>
-            <div id="logout">Logout</div>
         </div>
     </div>
-</div>
-{% block header %}{% endblock header %}
-{% block content %}
-{% endblock content %}
+
+    {% block header %}{% endblock header %}
+    {% block content %}
+    {% endblock content %}
 </body>

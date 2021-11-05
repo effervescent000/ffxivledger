@@ -1,8 +1,8 @@
 body {
     margin: 0px;
     font-family: 'Source Sans Pro', sans-serif;
-    background-color: #363636;
-    color: white;
+    background-color: #1d2052;
+    color: #C5CAE7;
 }
 
 .NYI {
@@ -10,35 +10,39 @@ body {
 }
 
 /* header styles */
-#header-wrapper > #header {
-    background-color: black;
+#header-wrapper {
+    background-color: #170E2F;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
     font-size: 1.5em;
     padding: 10px 20px;
 }
 
-#header-wrapper > #header > .logo {
-    font-family: 'Zen Antique Soft', serif;
-    font-size: 2em;
+#header-wrapper > #left-side-header {
+    display: flex;
+    align-items: baseline;
 }
 
-#header-wrapper > #header > .nav-bar {
+#header-wrapper > #left-side-header > .logo {
+    font-family: 'Zen Antique Soft', serif;
+    font-size: 50px;
+}
+
+#header-wrapper > #left-side-header > .nav-bar {
     display: flex;
     justify-content: space-between;
+    align-items: flex-end;
+    margin-left: 30px;
+    gap: 20px;
 }
 
-#header-wrapper > #header > .nav-bar > .nav-link {
-    padding: 10px;    
-}
-
-#header-wrapper > #header > .nav-bar > .nav-link a {
-    color: white;
+#header-wrapper > #left-side-header > .nav-bar > .nav-link a {
+    color: #C5CAE7;
     text-decoration: none;
 }
 
-#header-wrapper > #header > #account-wrapper {
+#header-wrapper > #right-side-header > #account-wrapper {
     font-size: 1rem;
 }
 
