@@ -41,7 +41,7 @@ def create_app(test_config=None):
         from . import item
         app.register_blueprint(item.bp)
 
-        from . import recipes
-        app.register_blueprint(recipes.bp)
+        from . import recipe
+        app.register_blueprint(recipe.bp)
 
         return app
