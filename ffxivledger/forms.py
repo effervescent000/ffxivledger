@@ -1,14 +1,14 @@
 from flask_wtf import FlaskForm
 from wtforms import IntegerField, SelectField, Form, FormField, StringField, SubmitField
-from wtforms.validators import InputRequired, Length
+from wtforms.validators import InputRequired, Length, ValidationError
 from wtforms.fields.core import FieldList
 
-from .utils import get_item_options
+from .utils import get_item_options, get_craftables_options
 from .models import name_length
 
 
 class DashboardForm(FlaskForm):
-    item = SelectField()
+    item = SelectField(choices=get_item_options())
     amount = IntegerField()
     price = IntegerField()
     sale_button = SubmitField(u'Add sale')

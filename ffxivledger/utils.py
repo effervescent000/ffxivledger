@@ -5,7 +5,7 @@ from .models import Item
 
 def get_item(value):
     """Returns the product specified by the value (or throws a 404 error if no product is found)"""
-    item = Item.query.filter(Item.value == value).one_or_none()
+    item = Item.query.get(value)
     if item is None:
         print(value)
         abort(404)

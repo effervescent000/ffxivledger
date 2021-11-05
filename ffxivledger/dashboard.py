@@ -3,6 +3,8 @@ from flask import (
     Blueprint, flash, redirect, render_template, request, url_for
 )
 
+from wtforms import ValidationError
+
 from . import db
 from .models import Item, Price, Stock
 from .forms import DashboardForm
@@ -21,31 +23,45 @@ def index():
         price_input = form.price.data
         amount = form.amount.data
 
-        if amount is None:
-            amount = 1
-
         # check which button was clicked
         if form.sale_button.data or form.remove_stock_button.data:
-            # make sale amounts negative
-            amount *= -1
-
-            if form.sale_button.data:
-                process_transaction(price_input, time, amount, item_value)
+            if amount is None:
+                raise ValidationError('Amount required')
+            elif form.sale_button.data and price_input is None:
+                raise ValidationError('Price required')
             else:
-                Item.query.get(item_value).adjust_stock(amount)
+                # make sale amounts negative
+                amount *= -1
 
-            return redirect(url_for('dashboard.index'))
+                if form.sale_button.data:
+                    process_transaction(price_input, time, amount, item_value)
+                else:
+                    Item.query.get(item_value).adjust_stock(amount)
+
+                return redirect(url_for('dashboard.index'))
         elif form.view_button.data:
             return redirect(url_for('item.view_item', value=item_value))
         elif form.purchase_button.data:
-            # make prices negative for purchases
-            price_input *= -1
+            if price_input is None:
+                raise ValidationError('Price required')
+            elif amount is None:
+                raise ValidationError('Amount required')
+            else:
+                # make prices negative for purchases
+                price_input *= -1
 
-            process_transaction(price_input, time, amount, item_value)
-            return redirect(url_for('dashboard.index'))
+                process_transaction(price_input, time, amount, item_value)
+                return redirect(url_for('dashboard.index'))
         elif form.add_stock_button.data:
-            Item.query.get(item_value).adjust_stock(amount)
-            return redirect(url_for('dashboard.index'))
+            if amount is None:
+                raise ValidationError('Amount required')
+            else:
+                Item.query.get(item_value).adjust_stock(amount)
+                return redirect(url_for('dashboard.index'))
+        elif form.create_recipe_button.data:
+            return redirect(url_for('recipe.create_recipe', product=item_value))
+        elif form.view_recipes_button.data:
+            return redirect(url_for('recipe.view_recipes', product=item_value))
         else:
             return "Somehow some other button was pressed on the dashboard ???"
     form.item.choices = get_item_options()
