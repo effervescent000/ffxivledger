@@ -18,6 +18,13 @@ class DashboardForm(FlaskForm):
     add_stock_button = SubmitField(u'Add stock')
     remove_stock_button = SubmitField(u'Remove stock')
 
+    # def validate_sale_button(self, field):
+    #     if self.sale_button.data:
+    #         if self.amount.data is None:
+    #             raise ValidationError('Sale amount required')
+    #         if self.price.data is None:
+    #             raise ValidationError('Sale price required')
+
 
 class CreateItemForm(FlaskForm):
     item_type_choices = [

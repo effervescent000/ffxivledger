@@ -23,8 +23,7 @@ def test_add_sale(client, item_value, amount, price, new_stock):
             'price': price, 'sale_button': True}
     client.post('/', data=data)
 
-    assert Stock.query.filter_by(
-        item_value=item_value).one_or_none().amount == new_stock
+    assert Stock.query.filter_by(item_value=item_value).one_or_none().amount == new_stock
 
 
 @pytest.mark.parametrize(('item_value', 'amount', 'price'), (
