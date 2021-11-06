@@ -1,10 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends 'base.html' %}
+{% from "_formhelpers.html" import render_field, render_field_no_label %}
+{% block header %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='view.css') }}">
+    {{ item.name }}
+{% endblock header %}
+{% block content %}
+    <table>
+        <tr>
+            {% for k,v in recipes.items() %}
+                {% for component in v %}
+                    <td>{{ component.item_quantity }}</td>
+                    <td>{{ component.item_value }}</td>
+                {% endfor %}
+            {% endfor %}
+        </tr>
+    </table>
+{% endblock %}
+

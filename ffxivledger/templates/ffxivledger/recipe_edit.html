@@ -1,13 +1,19 @@
 {% extends 'base.html' %}
+{% from "_formhelpers.html" import render_field, render_field_no_label %}
 
 {% block header %}
-    <link rel="stylesheet" href="{{ url_for('static',filename='edit.css') }}">
-    <h2>New item</h2>
+    <link rel="stylesheet" href="{{ url_for('static', filename='edit.css') }}">
+    <h2>New recipe</h2>
 {% endblock %}
 
 {% block content %}
-    {% for field in form %}
-        {{ renderfield(field) }}
-    {% endfor %}
-
+    <div class="recipe-form">
+        <form method="post">
+            {{ render_field(form.product_name) }}
+            {{ render_field(form.product_quantity) }}
+            {{ render_field(form.job_field) }}
+            {{ render_field_no_label(form.line_item_list) }}
+            {{ render_field_no_label(form.save_button) }}
+        </form>
+    </div>
 {% endblock %}

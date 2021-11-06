@@ -17,6 +17,9 @@ class DashboardForm(FlaskForm):
     # buttons to change stock amounts w/o adding price data
     add_stock_button = SubmitField(u'Add stock')
     remove_stock_button = SubmitField(u'Remove stock')
+    # TODO eventually move recipe-management to its own page, rather than dumping it on the dashboard
+    create_recipe_button = SubmitField(u'Create recipe')
+    view_recipes_button = SubmitField(u'View recipe(s)')
 
     # def validate_sale_button(self, field):
     #     if self.sale_button.data:
@@ -39,14 +42,16 @@ class CreateItemForm(FlaskForm):
 
 
 # recipe related forms
-class RecipeLineForm(FlaskForm):
+class RecipeLineForm(Form):
     item_options = get_item_options()
 
     item_value = SelectField(choices=item_options)
     item_quantity = IntegerField()
 
 
-class CreateRecipeForm(Form):
-    item_options = get_item_options()
-
+class CreateRecipeForm(FlaskForm):
+    product_name = SelectField(choices=get_craftables_options())
+    product_quantity = IntegerField(default=1)
+    job_field = SelectField(choices=['ALC', 'GSM', 'WVR'])
     line_item_list = FieldList(FormField(RecipeLineForm), min_entries=6)
+    save_button = SubmitField()

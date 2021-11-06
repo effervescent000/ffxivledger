@@ -31,7 +31,7 @@ def create_app(test_config=None):
         app.register_blueprint(auth.bp)
         auth.config_login_manager(app)
 
-        from .models import User, Item, Price, Stock
+        from .models import User, Item, Price, Stock, Product, Recipe, Component
         db.create_all()
 
         from . import dashboard

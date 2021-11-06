@@ -11,17 +11,17 @@ bp = Blueprint('recipe', __name__, url_prefix='/recipe')
 
 
 @bp.route('/edit/new', methods=('GET', 'POST'))
-def create_recipe(product=None):
+def create_recipe():
     form = CreateRecipeForm()
     if request.method == 'POST':
         # this code will probably not work as is, this is just a skeleton/idea of what i expect it to look like.
         # for now I want to save all variables and then check that all are valid, and then at the end actually create
         # the recipe and components and stuff
         selected_product = get_item(form.product_name.data)
+        # selected_product = Item.query.get(form.product_name.data)
         components = {}
         for x in form.line_item_list.entries:
-            # TODO figure out how to deal with this "none/blank" situation
-            if x.item_value.data is not None:
+            if x.item_value.data != '':
                 components[x.item_value.data] = x.item_quantity.data
         if len(components) > 0:
             recipe_new = Recipe(job=form.job_field.data)
@@ -39,16 +39,18 @@ def create_recipe(product=None):
                 db.session.add(component_new)
                 db.session.commit()
     # TODO make the product selectField pre-select the product passed as an argument if there is one
-    if product is not None:
-        form.product_name.default=product
-        form.process()
+    # if value is not None:
+    #     form.product_name.default=value
+    #     form.process()
     return render_template('ffxivledger/recipe_edit.html', form=form)
 
 
 @bp.route('/view/<value>', methods=('GET', 'POST'))
 def view_recipes(value):
-    recipes = []
+    recipes = {}
+    product = get_item(value)
     # TODO i think i can do this with a list comprehension
     for x in Product.query.filter(Product.item_value == value).all():
-        recipes.append(x.recipe)
-    return render_template('ffxivledger/recipe_view.html', recipes=recipes)
+        component_list = [y for y in Component.query.filter(Component.recipe_id == x.recipe.id)]
+        recipes[x.recipe.id] = component_list
+    return render_template('ffxivledger/recipe_view.html', recipes=recipes, item=product)

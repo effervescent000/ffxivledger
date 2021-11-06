@@ -61,14 +61,16 @@ def index():
                 else:
                     Item.query.get(item_value).adjust_stock(amount)
                     return redirect(url_for('dashboard.index'))
+            elif form.create_recipe_button.data:
+                # TODO figure out why this is sending a None for product?
+                return redirect(url_for('recipe.create_recipe'))
+            elif form.view_recipes_button.data:
+                return redirect(url_for('recipe.view_recipes', value=item_value))
             else:
                 return "Somehow some other button was pressed on the dashboard ???"
     form.item.choices = get_item_options()
     stock_list = get_stock_list()
-    return render_template('ffxivledger/index.html',
-                           stock_list=stock_list,
-                           form=form
-                           )
+    return render_template('ffxivledger/index.html', stock_list=stock_list, form=form)
 
 
 def process_transaction(price_input, time, amount, item_value):
