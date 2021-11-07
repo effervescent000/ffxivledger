@@ -21,7 +21,7 @@ def name_to_value(name):
 
 
 def get_item_options():
-    item_options = [('','---')]
+    item_options = [('', '---')]
     for x in Item.query.all():
         item_options.append((x.value, x.name))
     return item_options
@@ -33,4 +33,3 @@ def get_craftables_options():
         if x.type != 'material':
             item_options.append((x.value, x.name))
     return item_options
-
