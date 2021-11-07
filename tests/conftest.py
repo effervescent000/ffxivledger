@@ -13,7 +13,6 @@ TEST_DATABASE_URI = 'sqlite:///test_database.sqlite'
 
 @pytest.fixture
 def app():
-    # db_fd, db_path = tempfile.mkstemp()
     settings_override = {
         'TESTING': True,
         'SQLALCHEMY_DATABASE_URI': TEST_DATABASE_URI,

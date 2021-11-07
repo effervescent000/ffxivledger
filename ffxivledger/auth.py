@@ -32,7 +32,6 @@ def login():
 def register():
     form = SignUpForm()
     if form.validate_on_submit():
-        print('Got through validation')
         existing_user = User.query.filter_by(name=form.name.data).first()
         if existing_user is None:
             user = User()
@@ -41,7 +40,6 @@ def register():
             db.session.add(user)
             db.session.commit()
             login_user(user)
-            print('Success!')
             return redirect(url_for('dashboard.index'))
         flash('A user with that name already exists')
     return render_template('auth/register.html', form=form)
