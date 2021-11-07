@@ -1,5 +1,5 @@
 body {
-    margin: 0px;
+    margin: 0;
     font-family: 'Source Sans Pro', sans-serif;
     background-color: #1d2052;
     color: #C5CAE7;
@@ -61,7 +61,7 @@ body {
 /* content styles */
 
 #content-wrapper {
-    padding: 0px 50px;
+    padding: 0 50px;
     display: flex;
     justify-content: space-between;
 }
