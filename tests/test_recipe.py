@@ -30,3 +30,13 @@ def test_create_recipe(client, product, product_quantity, job, components_dict):
     # test some random entries for validity
     i = random.randint(1, len(Recipe.query.all()))
     assert Recipe.query.get(i).product.item_value is not None
+
+
+@pytest.mark.parametrize('item_value', [
+    'test_item', 'patricians_bottoms'
+])
+def test_view_recipes(client, item_value):
+    rv = client.get('recipe/view/{}'.format(item_value))
+
+    # did it load successfully?
+    assert b'Recipe' in rv.data

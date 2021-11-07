@@ -1,15 +1,18 @@
 import pytest
 
 from ffxivledger.models import Item
-from ffxivledger.utils import name_to_value
+from ffxivledger.utils import name_to_value, get_item
 
 
-@pytest.mark.parametrize(('item_value', 'expected_status_code'), (
-        ('test_item', 200),
-        ('', 404)
-))
-def test_view_item(client, item_value, expected_status_code):
-    assert client.get('item/view/{}'.format(item_value)).status_code == expected_status_code
+@pytest.mark.parametrize('item_value', [
+    'test_item', 'patricians_bottoms'
+])
+def test_view_item(client, item_value):
+    rv = client.get('item/view/{}'.format(item_value))
+    item = get_item(item_value)
+
+    # did it load successfully?
+    assert b'Price point' in rv.data
 
 
 @pytest.mark.parametrize(('item_name', 'item_type', 'expected_value'), (
