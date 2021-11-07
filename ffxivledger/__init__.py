@@ -2,10 +2,11 @@ import os
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-# from flask_debugtoolbar import DebugToolbarExtension
+from flask_login import LoginManager
 
 db = SQLAlchemy()
-# toolbar = DebugToolbarExtension()
+login_manager = LoginManager()
+
 
 
 def create_app(test_config=None):
@@ -16,20 +17,19 @@ def create_app(test_config=None):
     else:
         app.config.from_mapping(test_config)
 
-    # toolbar.init_app(app)
-
     try:
         os.makedirs(app.instance_path)
     except OSError:
         pass
 
     db.init_app(app)
+    login_manager.init_app(app)
 
     with app.app_context():
 
         from . import auth
         app.register_blueprint(auth.bp)
-        auth.config_login_manager(app)
+        # auth.config_login_manager(app)
 
         from .models import User, Item, Price, Stock, Product, Recipe, Component
         db.create_all()

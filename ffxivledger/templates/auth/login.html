@@ -3,12 +3,11 @@
 
 {% block content %}
     <div class="form-wrapper">
-        <span>Sign up</span>
-        <form method="post" action="{{ url_for('auth.register') }}">
+        <span>Login</span>
+        <form method="post">
             {{ form.csrf_token }}
             {{ render_field(form.name) }}
             {{ render_field(form.password) }}
-            {{ render_field(form.confirm_password) }}
             {{ render_field_no_label(form.submit) }}
         </form>
     </div>
