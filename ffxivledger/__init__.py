@@ -26,11 +26,11 @@ def create_app(test_config=None):
 
     with app.app_context():
 
-        from . import auth
-        app.register_blueprint(auth.bp)
-
         from .models import User, Item, Price, Stock, Product, Recipe, Component
         db.create_all()
+
+        from . import auth
+        app.register_blueprint(auth.bp)
 
         from . import dashboard
         app.register_blueprint(dashboard.bp)

@@ -12,7 +12,6 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @bp.route('/login', methods=('GET', 'POST'))
 def login():
-    # redirect if the user is already logged in
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
 
@@ -28,8 +27,8 @@ def login():
     return render_template('auth/login.html', form=form)
 
 
-@bp.route('/register', methods=('GET', 'POST'))
-def register():
+@bp.route('/signup', methods=('GET', 'POST'))
+def sign_up():
     form = SignUpForm()
     if form.validate_on_submit():
         existing_user = User.query.filter_by(name=form.name.data).first()
