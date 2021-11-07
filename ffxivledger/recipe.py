@@ -14,11 +14,7 @@ bp = Blueprint('recipe', __name__, url_prefix='/recipe')
 def create_recipe():
     form = CreateRecipeForm()
     if request.method == 'POST':
-        # this code will probably not work as is, this is just a skeleton/idea of what i expect it to look like.
-        # for now I want to save all variables and then check that all are valid, and then at the end actually create
-        # the recipe and components and stuff
         selected_product = get_item(form.product_name.data)
-        # selected_product = Item.query.get(form.product_name.data)
         components = {}
         for x in form.line_item_list.entries:
             if x.item_value.data != '':
@@ -35,9 +31,10 @@ def create_recipe():
             db.session.commit()
             # now create components
             for k, v in components.items():
-                component_new = Component(item_value=k, item_quantity=v, recipe_id=recipe_new.id)
-                db.session.add(component_new)
-                db.session.commit()
+                if k is not None and v is not None:
+                    component_new = Component(item_value=k, item_quantity=v, recipe_id=recipe_new.id)
+                    db.session.add(component_new)
+                    db.session.commit()
     # TODO make the product selectField pre-select the product passed as an argument if there is one
     # if value is not None:
     #     form.product_name.default=value
