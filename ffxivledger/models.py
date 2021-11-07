@@ -77,7 +77,10 @@ class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     job = db.Column(db.String(3), nullable=False)
     components = db.relationship('Component', backref='recipe')
-    product = db.relationship('Product', backref='recipe')
+    product = db.relationship('Product', backref='recipe', uselist=False)
+
+    def __repr__(self):
+        return '<Recipe {} for {}>'.format(int(self.id), self.product.item_value)
 
 
 class Component(db.Model):
@@ -87,6 +90,10 @@ class Component(db.Model):
     item_quantity = db.Column(db.Integer, nullable=False, default=1)
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'))
 
+    def __repr__(self):
+        return '<Component {} for recipe {} for {}>'.format(self.item_value, self.recipe.id,
+                                                            self.recipe.product.item_value)
+
 
 class Product(db.Model):
     __tablename__ = 'products'
@@ -94,3 +101,6 @@ class Product(db.Model):
     item_value = db.Column(db.String(name_length), db.ForeignKey('items.value'))
     item_quantity = db.Column(db.Integer, nullable=False, default=1)
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'))
+
+    def __repr__(self):
+        return '<Product {} of recipe {}>'.format(self.item_value, int(self.recipe_id))
