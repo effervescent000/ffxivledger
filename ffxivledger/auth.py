@@ -33,8 +33,6 @@ def login():
         return redirect(url_for('dashboard.index'))
 
     form = LoginForm()
-    form.validate()
-    print(form.errors)
     if form.validate_on_submit():
         user = User.query.filter_by(name=form.name.data).first()
         if user and user.check_password(password=form.password.data):
@@ -43,7 +41,6 @@ def login():
             next_page = request.args.get('next')
             return redirect(next_page or url_for('dashboard.index'))
         flash('Invalid username/password combination')
-        return redirect(url_for('auth.login'))
     return render_template('auth/login.html', form=form)
 
 

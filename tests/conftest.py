@@ -78,6 +78,6 @@ def populate_test_data():
 
     user = User()
     user.name = 'Admin'
-    user.set_password('password')
+    user.set_password('testing_')
     db.session.add(user)
     db.session.commit()
