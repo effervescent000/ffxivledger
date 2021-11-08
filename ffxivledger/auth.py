@@ -10,23 +10,6 @@ from . import db, login_manager
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
-@bp.route('/login', methods=('GET', 'POST'))
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard.index'))
-
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(name=form.name.data).first()
-        if user and user.check_password(password=form.password.data):
-            login_user(user)
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('dashboard.index'))
-        flash('Invalid username/password combination')
-        return redirect(url_for('auth.login'))
-    return render_template('auth/login.html', form=form)
-
-
 @bp.route('/signup', methods=('GET', 'POST'))
 def signup():
     form = SignUpForm()
@@ -42,6 +25,26 @@ def signup():
             return redirect(url_for('dashboard.index'))
         flash('A user with that name already exists')
     return render_template('auth/register.html', form=form)
+
+
+@bp.route('/login', methods=('GET', 'POST'))
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+
+    form = LoginForm()
+    form.validate()
+    print(form.errors)
+    if form.validate_on_submit():
+        user = User.query.filter_by(name=form.name.data).first()
+        if user and user.check_password(password=form.password.data):
+            login_user(user)
+            # TODO look into how to secure the next_page thing
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('dashboard.index'))
+        flash('Invalid username/password combination')
+        return redirect(url_for('auth.login'))
+    return render_template('auth/login.html', form=form)
 
 
 @bp.route('/logout')
