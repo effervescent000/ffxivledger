@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import IntegerField, SelectField, Form, FormField, StringField, SubmitField, PasswordField
 from wtforms.validators import InputRequired, Length, Email, EqualTo
-from wtforms.fields.core import FieldList
+from wtforms.fields import FieldList
 
 from .utils import get_item_options, get_craftables_options
 from .models import name_length
@@ -59,7 +59,7 @@ class CreateRecipeForm(FlaskForm):
 
 # user/login-related forms
 class SignUpForm(FlaskForm):
-    name = StringField('Name', validators=[InputRequired()])
+    username = StringField('Username', validators=[InputRequired()])
     # email = StringField('Email', [InputRequired(), Email(message='Enter a valid email')])
     password = PasswordField('Password',
                              validators=[Length(min=6, message='Choose a longer password'), InputRequired()])
@@ -69,6 +69,6 @@ class SignUpForm(FlaskForm):
 
 
 class LoginForm(FlaskForm):
-    name = StringField('Username', validators=[InputRequired()])
+    username = StringField('Username', validators=[InputRequired()])
     password = PasswordField('Password', validators=[InputRequired()])
     submit = SubmitField('Login')
