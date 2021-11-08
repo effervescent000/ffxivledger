@@ -2,13 +2,21 @@
 {% from "_formhelpers.html" import render_field, render_field_no_label %}
 
 {% block content %}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
     <div class="form-wrapper">
-        <span>Sign up</span>
-        <form method="post" action="{{ url_for('auth.signup') }}">
+        <span>Login</span>
+        <form method="post">
             {{ form.csrf_token }}
             {{ render_field(form.name) }}
             {{ render_field(form.password) }}
-            {{ render_field(form.confirm_password) }}
             {{ render_field_no_label(form.submit) }}
         </form>
     </div>

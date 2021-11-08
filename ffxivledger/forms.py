@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import IntegerField, SelectField, Form, FormField, StringField, SubmitField
-from wtforms.validators import InputRequired, Length, ValidationError
+from wtforms import IntegerField, SelectField, Form, FormField, StringField, SubmitField, PasswordField
+from wtforms.validators import InputRequired, Length, Email, EqualTo
 from wtforms.fields.core import FieldList
 
 from .utils import get_item_options, get_craftables_options
@@ -55,3 +55,20 @@ class CreateRecipeForm(FlaskForm):
     job_field = SelectField(choices=['ALC', 'GSM', 'WVR'])
     line_item_list = FieldList(FormField(RecipeLineForm), min_entries=6)
     save_button = SubmitField()
+
+
+# user/login-related forms
+class SignUpForm(FlaskForm):
+    name = StringField('Name', validators=[InputRequired()])
+    # email = StringField('Email', [InputRequired(), Email(message='Enter a valid email')])
+    password = PasswordField('Password',
+                             validators=[Length(min=6, message='Choose a longer password'), InputRequired()])
+    confirm_password = PasswordField('Confirm password',
+                                     validators=[InputRequired(), EqualTo('password', message='Passwords must match.')])
+    submit = SubmitField('Register')
+
+
+class LoginForm(FlaskForm):
+    name = StringField('Username', validators=[InputRequired()])
+    password = PasswordField('Password', validators=[InputRequired()])
+    submit = SubmitField('Login')

@@ -5,7 +5,7 @@ import datetime
 
 from ffxivledger import create_app
 from ffxivledger import db
-from ffxivledger.models import Item, Price, Stock, Recipe, Product, Component
+from ffxivledger.models import Item, Price, Stock, Recipe, Product, Component, User
 from ffxivledger.utils import name_to_value
 
 TEST_DATABASE_URI = 'sqlite:///test_database.sqlite'
@@ -13,12 +13,14 @@ TEST_DATABASE_URI = 'sqlite:///test_database.sqlite'
 
 @pytest.fixture
 def app():
-    # db_fd, db_path = tempfile.mkstemp()
     settings_override = {
         'TESTING': True,
         'SQLALCHEMY_DATABASE_URI': TEST_DATABASE_URI,
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-        'SECRET_KEY': 'dev'
+        'SECRET_KEY': 'dev',
+        'WTF_CSRF_ENABLED': False,
+        'WTF_CSRF_CHECK_DEFAULT': False,
+        'WTF_CSRF_METHODS': []
     }
     app = create_app(settings_override)
 
@@ -73,6 +75,12 @@ def populate_test_data():
 
     # at this point what I expect to have in stock is:
     # Test Item 2, patrician's bottoms 0, third test item 300, test bolts of cloth 50
+
+    user = User()
+    user.name = 'Admin'
+    user.set_password('testing_')
+    db.session.add(user)
+    db.session.commit()
 
     new_recipes = [
         Recipe(job='WVR', id=1),  # patrician's bottoms
