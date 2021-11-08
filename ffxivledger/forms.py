@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import IntegerField, SelectField, Form, FormField, StringField, SubmitField, PasswordField
 from wtforms.validators import InputRequired, Length, Email, EqualTo
-from wtforms.fields.core import FieldList
+from wtforms.fields import FieldList
 
 from .utils import get_item_options, get_craftables_options
 from .models import name_length
