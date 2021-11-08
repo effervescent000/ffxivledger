@@ -61,7 +61,8 @@ class CreateRecipeForm(FlaskForm):
 class SignUpForm(FlaskForm):
     name = StringField('Name', validators=[InputRequired()])
     # email = StringField('Email', [InputRequired(), Email(message='Enter a valid email')])
-    password = PasswordField('Password', validators=[Length(min=6), InputRequired()])
+    password = PasswordField('Password',
+                             validators=[Length(min=6, message='Choose a longer password'), InputRequired()])
     confirm_password = PasswordField('Confirm password',
                                      validators=[InputRequired(), EqualTo('password', message='Passwords must match.')])
     submit = SubmitField('Register')

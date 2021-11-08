@@ -28,7 +28,7 @@ def login():
 
 
 @bp.route('/signup', methods=('GET', 'POST'))
-def sign_up():
+def signup():
     form = SignUpForm()
     if form.validate_on_submit():
         existing_user = User.query.filter_by(name=form.name.data).first()

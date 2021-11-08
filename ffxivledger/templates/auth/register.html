@@ -4,7 +4,7 @@
 {% block content %}
     <div class="form-wrapper">
         <span>Sign up</span>
-        <form method="post" action="{{ url_for('auth.register') }}">
+        <form method="post" action="{{ url_for('auth.signup') }}">
             {{ form.csrf_token }}
             {{ render_field(form.name) }}
             {{ render_field(form.password) }}
