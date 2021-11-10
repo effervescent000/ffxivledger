@@ -53,6 +53,20 @@ body {
     }
 
     #right-side-header {
+        display: flex;
+
+        #admin-wrapper {
+            display: flex;
+            gap: 20px;
+            margin-right: 20px;
+
+            .nav-link {
+                a {
+                    @include link-styling;
+                }
+            }
+        }
+
         #account-wrapper {
             font-size: 1rem;
             a {
@@ -70,4 +84,8 @@ body {
 
 .spacer-60 {
     height: 60px;
+}
+
+.NYI {
+    text-decoration: line-through;
 }
