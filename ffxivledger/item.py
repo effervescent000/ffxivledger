@@ -5,7 +5,7 @@ from flask_login import login_required
 
 from .models import Item, Price
 from . import db
-from .utils import get_item, name_to_value, admin_required
+from .utils import get_item, name_to_value, admin_required, rename_item
 from .forms import CreateItemForm
 
 bp = Blueprint('item', __name__, url_prefix='/item')
@@ -47,13 +47,13 @@ def edit_item(value):
     if request.method == 'POST':
         if item.name != form.item_name.data:
             # TODO add validation here
-            item.name = form.item_name.data
-            item.value = name_to_value(form.item_name.data)
+            rename_item(item, form.item_name.data)
         if item.type != form.item_type.data:
             item.type = form.item_type.data
         db.session.commit()
         return redirect(url_for('item.manage_items'))
     return render_template('ffxivledger/item_edit.html', form=form)
+
 
 @bp.route('/manage')
 @login_required

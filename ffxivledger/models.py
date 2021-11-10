@@ -60,7 +60,6 @@ class Item(db.Model):
             stock_row.amount = 0
         db.session.commit()
 
-
 class Price(db.Model):
     __tablename__ = 'prices'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
