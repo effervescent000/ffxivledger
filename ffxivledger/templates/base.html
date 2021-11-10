@@ -27,11 +27,22 @@
         </div>
     </div>
     <div id="right-side-header">
+        <div id="admin-wrapper">
+            <div class="nav-link">
+                <a href="{{ url_for('auth.user_management') }}">User Management</a>
+            </div>
+            <div class="nav-link">
+                <span class="NYI">Item Management</span>
+            </div>
+            <div class="nav-link">
+                <span class="NYI">Recipe Management</span>
+            </div>
+        </div>
         <div id="account-wrapper">
             <div class="account-info">
                 {% if current_user.is_authenticated %}
                     <div class="logged-in-view">
-                        <span id="welcome-message">Hi <span id="username">{{ current_user.name }}</span></span>
+                        <span id="welcome-message">Hi <span id="username">{{ current_user.username }}</span></span>
                         <span><a href="{{ url_for('auth.logout') }}">Logout</a></span>
                     </div>
                 {% else %}

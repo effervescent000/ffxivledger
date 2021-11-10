@@ -9,7 +9,7 @@ from ffxivledger.models import User
 ])
 def test_sign_up(client, username, password):
     data = {
-        'name': username, 'password': password, 'confirm_password': password, 'submit': True
+        'username': username, 'password': password, 'confirm_password': password, 'submit': True
     }
     num_users = len(User.query.all())
 
@@ -24,7 +24,7 @@ def test_sign_up(client, username, password):
 ])
 def test_sign_up_validate(client, username, password, message):
     data = {
-        'name': username, 'password': password, 'confirm_password': password, 'submit': True
+        'username': username, 'password': password, 'confirm_password': password, 'submit': True
     }
     response = client.post('/auth/signup', data=data)
     assert message in response.data
@@ -35,7 +35,7 @@ def test_sign_up_validate(client, username, password, message):
 @pytest.mark.parametrize('username,password', [('Admin', 'testing_')])
 def test_login(client, username, password):
     data = {
-        'name': username, 'password': password, 'submit': True
+        'username': username, 'password': password, 'submit': True
     }
     assert client.get('/auth/login').status_code == 200
 
@@ -48,7 +48,7 @@ def test_login(client, username, password):
 ])
 def test_login_validation(client, username, password, message):
     data = {
-        'name': username, 'password': password, 'submit': True
+        'username': username, 'password': password, 'submit': True
     }
     response = client.post('/auth/login', data=data)
     assert message in response.data
