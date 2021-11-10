@@ -12,6 +12,8 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     stock_list = db.relationship('Stock', backref='user', lazy=True)
+    # valid roles are admin and super_user
+    role = db.Column(db.String(50))
 
     def __repr__(self):
         return '<User {}>'.format(self.username)

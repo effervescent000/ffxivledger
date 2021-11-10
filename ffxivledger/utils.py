@@ -1,6 +1,8 @@
+import functools
 from werkzeug.exceptions import abort
+from flask_login import current_user
 
-from .models import Item
+from .models import Item, User
 
 
 def get_item(value):
@@ -33,3 +35,13 @@ def get_craftables_options():
         if x.type != 'material':
             item_options.append((x.value, x.name))
     return item_options
+
+
+def admin_required(func):
+    @functools.wraps(func)
+    def decorated_view(*args, **kwargs):
+        # I don't know if this will work
+        if current_user.role != 'admin':
+            abort(401)
+        return func(*args, **kwargs)
+    return decorated_view

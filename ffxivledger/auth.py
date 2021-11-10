@@ -14,7 +14,8 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 def signup():
     form = SignUpForm()
     if form.validate_on_submit():
-        existing_user = User.query.filter_by(username=form.username.data).first()
+        existing_user = User.query.filter_by(
+            username=form.username.data).first()
         if existing_user is None:
             user = User()
             user.username = form.username.data
@@ -48,6 +49,13 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('dashboard.index'))
+
+
+@bp.route('/manage')
+@login_required
+def user_management():
+    user_list = User.query.all()
+    return render_template('auth/account_management.html', users=user_list)
 
 
 @login_manager.user_loader

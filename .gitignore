@@ -143,3 +143,4 @@ ffxivledger/test_database.sqlite
 ffxivledger/ffxivledger.sqlite
 config.py
 .vscode/settings.json
+ffxivledger/static/common.css.map

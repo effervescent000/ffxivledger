@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div id="user-list-wrapper">
+    <table>
+        {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td><td><a href="#">Edit user</a></td>
+            </tr>
+        {% endfor %}
+        
+    </table>
+</div>
+
+{% endblock %}

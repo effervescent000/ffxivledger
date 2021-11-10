@@ -42,6 +42,15 @@ body {
     text-decoration: none;
 }
 
+#header-wrapper > #right-side-header {
+    display: flex;
+}
+
+#header-wrapper > #right-side-header > #admin-wrapper {
+    display: flex;
+    gap: 20px;
+}
+
 #header-wrapper > #right-side-header > #account-wrapper {
     font-size: 1rem;
 }
