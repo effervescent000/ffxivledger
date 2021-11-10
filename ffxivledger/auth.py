@@ -3,8 +3,10 @@ from flask import (
 )
 from flask_login import login_required, logout_user, current_user, login_user
 
+from ffxivledger.utils import admin_required
+
 from .models import User
-from .forms import SignUpForm, LoginForm
+from .forms import SignUpForm, LoginForm, ManageUserForm
 from . import db, login_manager
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -56,6 +58,26 @@ def logout():
 def user_management():
     user_list = User.query.all()
     return render_template('auth/account_management.html', users=user_list)
+
+
+@bp.route('manage/<id>', methods=('POST', 'GET'))
+@login_required
+# @admin_required
+def admin_manage_user(id):
+    form = ManageUserForm()
+    user = User.query.get(id)
+    if request.method == 'POST':
+        if form.username.data == '':
+            pass
+        else:
+            # TODO add some validation here
+            user.username = form.username.data
+        if form.role.data == '':
+            user.role = None
+        else:
+            user.role = form.role.data
+        db.session.commit()
+    return render_template('auth/edit_user.html', form=form, user=user)
 
 
 @login_manager.user_loader

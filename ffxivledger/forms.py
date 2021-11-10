@@ -1,7 +1,9 @@
+from flask.app import Flask
 from flask_wtf import FlaskForm
 from wtforms import IntegerField, SelectField, Form, FormField, StringField, SubmitField, PasswordField
 from wtforms.validators import InputRequired, Length, Email, EqualTo
 from wtforms.fields import FieldList
+from flask_login import current_user
 
 from .utils import get_item_options, get_craftables_options
 from .models import name_length
@@ -72,3 +74,10 @@ class LoginForm(FlaskForm):
     username = StringField('Username', validators=[InputRequired()])
     password = PasswordField('Password', validators=[InputRequired()])
     submit = SubmitField('Login')
+
+
+class ManageUserForm(FlaskForm):
+    # TODO figure out how to prepopulate defaults here based on current user
+    username = StringField('Username')
+    role = SelectField('Role', choices=[('', '---'), ('super_user', 'SuperUser'), ('admin', 'Admin')])
+    submit = SubmitField('Save')

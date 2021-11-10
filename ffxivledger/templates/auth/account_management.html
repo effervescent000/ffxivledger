@@ -6,7 +6,7 @@
     <table>
         {% for user in users %}
             <tr>
-                <td>{{ user.username }}</td><td><a href="#">Edit user</a></td>
+                <td>{{ user.username }}</td><td><a href="{{ url_for('auth.admin_manage_user', id=user.id) }}">Edit user</a></td>
             </tr>
         {% endfor %}
         
