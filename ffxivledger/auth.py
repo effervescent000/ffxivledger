@@ -62,7 +62,7 @@ def user_management():
 
 @bp.route('manage/<id>', methods=('POST', 'GET'))
 @login_required
-# @admin_required
+@admin_required
 def admin_manage_user(id):
     form = ManageUserForm()
     user = User.query.get(id)
