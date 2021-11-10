@@ -3,8 +3,10 @@ from flask import (
 )
 from flask_login import login_required, logout_user, current_user, login_user
 
+from ffxivledger.utils import admin_required
+
 from .models import User
-from .forms import SignUpForm, LoginForm
+from .forms import SignUpForm, LoginForm, ManageUserForm
 from . import db, login_manager
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -14,10 +16,11 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 def signup():
     form = SignUpForm()
     if form.validate_on_submit():
-        existing_user = User.query.filter_by(name=form.name.data).first()
+        existing_user = User.query.filter_by(
+            username=form.username.data).first()
         if existing_user is None:
             user = User()
-            user.name = form.name.data
+            user.username = form.username.data
             user.set_password(form.password.data)
             db.session.add(user)
             db.session.commit()
@@ -34,7 +37,7 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(name=form.name.data).first()
+        user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(password=form.password.data):
             login_user(user)
             # TODO look into how to secure the next_page thing
@@ -48,6 +51,33 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('dashboard.index'))
+
+
+@bp.route('/manage')
+@login_required
+def user_management():
+    user_list = User.query.all()
+    return render_template('auth/account_management.html', users=user_list)
+
+
+@bp.route('manage/<id>', methods=('POST', 'GET'))
+@login_required
+@admin_required
+def admin_manage_user(id):
+    form = ManageUserForm()
+    user = User.query.get(id)
+    if request.method == 'POST':
+        if form.username.data == '':
+            pass
+        else:
+            # TODO add some validation here
+            user.username = form.username.data
+        if form.role.data == '':
+            user.role = None
+        else:
+            user.role = form.role.data
+        db.session.commit()
+    return render_template('auth/edit_user.html', form=form, user=user)
 
 
 @login_manager.user_loader

@@ -1,11 +1,11 @@
 from flask import (
     Blueprint, flash, redirect, render_template, request, url_for
 )
+from flask_login import login_required
 
 from .models import Item, Price
-
 from . import db
-from ffxivledger.utils import get_item, name_to_value
+from .utils import get_item, name_to_value, admin_required
 from .forms import CreateItemForm
 
 bp = Blueprint('item', __name__, url_prefix='/item')
@@ -22,6 +22,8 @@ def view_item(value):
 
 
 @bp.route('/edit/new', methods=('GET', 'POST'))
+@login_required
+@admin_required
 def create_item():
     form = CreateItemForm()
     if request.method == 'POST':
