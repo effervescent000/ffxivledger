@@ -1,0 +1,55 @@
+@import "variables", "mixins";
+
+#content-wrapper {
+  display: flex;
+  justify-content: space-between;
+
+  #stock-frame-wrapper {
+    #stock-label {
+      font-size: 1.5em;
+      margin: 10px;
+    }
+
+    table {
+      width: 300px;
+    }
+  }
+
+  #right-content-wrapper {
+    #item-form form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      .entry-forms-wrapper {
+        select {
+          @include input-styling;
+          width: 250px;
+        }
+
+        input[type="text"] {
+          @include input-styling;
+        }
+
+        input[type="submit"] {
+          @include button-styling;
+        }
+      }
+
+      .buttons-wrapper {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        justify-items: center;
+      }
+    }
+  }
+}
+
+#price {
+  width: 70px;
+}
+
+#amount {
+  width: 60px;
+}

@@ -1,17 +1,4 @@
-$primary-background-color: #1d2052;
-$secondary-background-color: #170E2F;
-$primary-text-color: #C5CAE7;
-
-$master-font: 'Source Sans Pro', sans-serif;
-$special-font: 'Zen Antique Soft', serif;
-
-@mixin link-styling {
-    color: $primary-text-color;
-    text-decoration: none;
-    &:hover {
-        text-decoration: underline;
-    }
-}
+@import 'variables', 'mixins';
 
 body {
     margin: 0;
@@ -43,12 +30,6 @@ body {
             align-items: flex-end;
             margin-left: 30px;
             gap: 20px;
-
-            .nav-link {
-                a {
-                    @include link-styling;
-                }
-            }
         }
     }
 
@@ -59,27 +40,16 @@ body {
             display: flex;
             gap: 20px;
             margin-right: 20px;
-
-            .nav-link {
-                a {
-                    @include link-styling;
-                }
-            }
         }
 
         #account-wrapper {
             font-size: 1rem;
-            a {
-                @include link-styling;
-            }
         }
     }
 }
 
 #content-wrapper {
     padding: 0px 50px;
-    display: flex;
-    justify-content: space-between;
 }
 
 .spacer-60 {
@@ -88,4 +58,17 @@ body {
 
 .NYI {
     text-decoration: line-through;
+}
+
+a {
+    @include link-styling();
+}
+
+table, td {
+    border: 1px $primary-accent-color solid;
+    border-collapse: collapse;
+}
+
+td {
+    padding: 5px;
 }

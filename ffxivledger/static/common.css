@@ -48,15 +48,6 @@ body {
   gap: 20px;
 }
 
-#header-wrapper #left-side-header .nav-bar .nav-link a {
-  color: #C5CAE7;
-  text-decoration: none;
-}
-
-#header-wrapper #left-side-header .nav-bar .nav-link a:hover {
-  text-decoration: underline;
-}
-
 #header-wrapper #right-side-header {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -71,36 +62,12 @@ body {
   margin-right: 20px;
 }
 
-#header-wrapper #right-side-header #admin-wrapper .nav-link a {
-  color: #C5CAE7;
-  text-decoration: none;
-}
-
-#header-wrapper #right-side-header #admin-wrapper .nav-link a:hover {
-  text-decoration: underline;
-}
-
 #header-wrapper #right-side-header #account-wrapper {
   font-size: 1rem;
 }
 
-#header-wrapper #right-side-header #account-wrapper a {
-  color: #C5CAE7;
-  text-decoration: none;
-}
-
-#header-wrapper #right-side-header #account-wrapper a:hover {
-  text-decoration: underline;
-}
-
 #content-wrapper {
   padding: 0px 50px;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-pack: justify;
-      -ms-flex-pack: justify;
-          justify-content: space-between;
 }
 
 .spacer-60 {
@@ -109,5 +76,23 @@ body {
 
 .NYI {
   text-decoration: line-through;
+}
+
+a {
+  color: #C5CAE7;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+table, td {
+  border: 1px #B298EB solid;
+  border-collapse: collapse;
+}
+
+td {
+  padding: 5px;
 }
 /*# sourceMappingURL=common.css.map */

@@ -136,11 +136,14 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# custom
 .idea/
 test_database.sql
-ffxivledger/__pycache__/__init__.cpython-310.pyc
 ffxivledger/test_database.sqlite
 ffxivledger/ffxivledger.sqlite
 config.py
 .vscode/settings.json
-ffxivledger/static/common.css.map
+ffxivledger/static/*.css.map
+ffxivledger/static/variables.css
+ffxivledger/static/mixins.css
