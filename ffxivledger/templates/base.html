@@ -27,17 +27,21 @@
         </div>
     </div>
     <div id="right-side-header">
-        <div id="admin-wrapper">
-            <div class="nav-link">
-                <a href="{{ url_for('auth.user_management') }}">User Management</a>
-            </div>
-            <div class="nav-link">
-                <a href="{{ url_for('item.manage_items') }}">Item Management</a>
-            </div>
-            <div class="nav-link">
-                <a href="{{ url_for('recipe.manage_recipes') }}">Recipe Management</a>
-            </div>
-        </div>
+        {% if current_user.is_authenticated %}
+            {% if current_user.role == 'admin' %}
+                <div id="admin-wrapper">
+                    <div class="nav-link">
+                        <a href="{{ url_for('auth.user_management') }}">User Management</a>
+                    </div>
+                    <div class="nav-link">
+                        <a href="{{ url_for('item.manage_items') }}">Item Management</a>
+                    </div>
+                    <div class="nav-link">
+                        <a href="{{ url_for('recipe.manage_recipes') }}">Recipe Management</a>
+                    </div>
+                </div>
+            {% endif %}        
+        {% endif %}
         <div id="account-wrapper">
             <div class="account-info">
                 {% if current_user.is_authenticated %}
