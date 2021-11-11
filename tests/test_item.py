@@ -39,3 +39,11 @@ def test_edit_item(client, item_value, new_name, new_type):
 
     client.post('item/edit/{}'.format(item_value), data=data)
     assert get_item(name_to_value(new_name)).name == new_name
+
+@pytest.mark.parametrize('item_value', [
+    'test_item', # a valid item
+    'not_a_valid_item' # what it says
+])
+def test_delete_item(client, item_value):
+    client.post('item/delete/{}'.format(item_value))
+    assert Item.query.get(item_value) is None
