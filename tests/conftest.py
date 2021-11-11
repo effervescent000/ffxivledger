@@ -20,7 +20,8 @@ def app():
         'SECRET_KEY': 'dev',
         'WTF_CSRF_ENABLED': False,
         'WTF_CSRF_CHECK_DEFAULT': False,
-        'WTF_CSRF_METHODS': []
+        'WTF_CSRF_METHODS': [],
+        'LOGIN_DISABLED': True
     }
     app = create_app(settings_override)
 

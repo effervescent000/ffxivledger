@@ -1,7 +1,7 @@
 import pytest
 
 from ffxivledger.models import Item
-from ffxivledger.utils import name_to_value
+from ffxivledger.utils import get_item, name_to_value
 
 
 @pytest.mark.parametrize(('item_value', 'expected_status_code'), (
@@ -26,3 +26,13 @@ def test_create_item(client, item_name, item_type, expected_value):
 
     # check to see if the items were entered successfully
     assert Item.query.get(expected_value) is not None
+
+@pytest.mark.parametrize('item_value,new_name,new_type', [
+    ('test_item', 'New Test Item', 'material')
+])
+def test_edit_item(client, item_value, new_name, new_type):
+    item_old_name = get_item(item_value).name
+    data = {'item_name': new_name, 'item_type': new_type}
+
+    client.post('item/edit/{}'.format(item_value), data=data)
+    assert get_item(name_to_value(new_name)).name == new_name
