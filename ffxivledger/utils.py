@@ -1,6 +1,11 @@
+import functools
 from werkzeug.exceptions import abort
+from flask_login import current_user
+from flask import current_app
 
-from .models import Item
+from . import db
+
+from .models import Item, User, Price, Component, Stock, Product
 
 
 def get_item(value):
@@ -33,3 +38,33 @@ def get_craftables_options():
         if x.type != 'material':
             item_options.append((x.value, x.name))
     return item_options
+
+
+def admin_required(func):
+    @functools.wraps(func)
+    def decorated_view(*args, **kwargs):
+        if current_app.config.get('TESTING') is False:
+            if current_user.role != 'admin':
+                abort(401)
+            return func(*args, **kwargs)
+        else:
+            return func(*args, **kwargs)
+    return decorated_view
+
+
+def rename_item(item, new_name):
+    if new_name == '':
+        pass
+    else:
+        old_value = item.value
+        item.name = new_name
+        item.value = name_to_value(new_name)
+        for x in Price.query.filter_by(item_value=old_value).all():
+            x.item_value = item.value
+        for x in Stock.query.filter_by(item_value=old_value).all():
+            x.item_value = item.value
+        for x in Component.query.filter_by(item_value=old_value).all():
+            x.item_value = item.value
+        for x in Product.query.filter_by(item_value=old_value).all():
+            x.item_value = item.value
+        db.session.commit()

@@ -20,7 +20,8 @@ def app():
         'SECRET_KEY': 'dev',
         'WTF_CSRF_ENABLED': False,
         'WTF_CSRF_CHECK_DEFAULT': False,
-        'WTF_CSRF_METHODS': []
+        'WTF_CSRF_METHODS': [],
+        'LOGIN_DISABLED': True
     }
     app = create_app(settings_override)
 
@@ -77,7 +78,7 @@ def populate_test_data():
     # Test Item 2, patrician's bottoms 0, third test item 300, test bolts of cloth 50
 
     user = User()
-    user.name = 'Admin'
+    user.username = 'Admin'
     user.set_password('testing_')
     db.session.add(user)
     db.session.commit()

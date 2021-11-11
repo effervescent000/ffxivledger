@@ -15,7 +15,7 @@
         <span>Login</span>
         <form method="post">
             {{ form.csrf_token }}
-            {{ render_field(form.name) }}
+            {{ render_field(form.username) }}
             {{ render_field(form.password) }}
             {{ render_field_no_label(form.submit) }}
         </form>

@@ -1,11 +1,11 @@
 from flask import (
     Blueprint, flash, redirect, render_template, request, url_for
 )
+from flask_login import login_required
 
 from .models import Item, Price
-
 from . import db
-from ffxivledger.utils import get_item, name_to_value
+from .utils import get_item, name_to_value, admin_required, rename_item
 from .forms import CreateItemForm
 
 bp = Blueprint('item', __name__, url_prefix='/item')
@@ -22,6 +22,8 @@ def view_item(value):
 
 
 @bp.route('/edit/new', methods=('GET', 'POST'))
+@login_required
+@admin_required
 def create_item():
     form = CreateItemForm()
     if request.method == 'POST':
@@ -34,3 +36,28 @@ def create_item():
         db.session.commit()
         return redirect(url_for('dashboard.index'))
     return render_template('ffxivledger/item_edit.html', form=form)
+
+
+@bp.route('/edit/<value>', methods=('GET', 'POST'))
+@login_required
+@admin_required
+def edit_item(value):
+    item = get_item(value)
+    form = CreateItemForm(item_name=item.name,item_type=item.type)
+    if request.method == 'POST':
+        if item.name != form.item_name.data:
+            # TODO add validation here
+            rename_item(item, form.item_name.data)
+        if item.type != form.item_type.data:
+            item.type = form.item_type.data
+        db.session.commit()
+        return redirect(url_for('item.manage_items'))
+    return render_template('ffxivledger/item_edit.html', form=form)
+
+
+@bp.route('/manage')
+@login_required
+@admin_required
+def manage_items():
+    item_list = Item.query.all()
+    return render_template('ffxivledger/item_management.html', item_list=item_list)

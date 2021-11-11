@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="items-wrapper">
+        <table>
+            {% for item in item_list %}
+                <tr>
+                    <td>{{ item.name }}</td><td>{{ item.type }}</td><td><a href="{{ url_for('item.edit_item', value=item.value) }}">Edit item</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

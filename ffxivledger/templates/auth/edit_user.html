@@ -2,13 +2,11 @@
 {% from "_formhelpers.html" import render_field, render_field_no_label %}
 
 {% block content %}
+    Edit user {{ user.username }}
     <div class="form-wrapper">
-        <span>Sign up</span>
-        <form method="post" action="{{ url_for('auth.signup') }}">
-            {{ form.csrf_token }}
+        <form method="post">
             {{ render_field(form.username) }}
-            {{ render_field(form.password) }}
-            {{ render_field(form.confirm_password) }}
+            {{ render_field(form.role) }}
             {{ render_field_no_label(form.submit) }}
         </form>
     </div>
