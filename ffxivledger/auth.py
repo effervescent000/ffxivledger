@@ -16,8 +16,7 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 def signup():
     form = SignUpForm()
     if form.validate_on_submit():
-        existing_user = User.query.filter_by(
-            username=form.username.data).first()
+        existing_user = User.query.filter_by(username=form.username.data).first()
         if existing_user is None:
             user = User()
             user.username = form.username.data

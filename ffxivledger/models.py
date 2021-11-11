@@ -42,14 +42,28 @@ class Item(db.Model):
     def __repr__(self):
         return '<Item {}>'.format(self.name)
 
-    def adjust_stock(self, num, overwrite=False):
+
+    def process_transaction(self, price_input, time, amount, user_id):
+        price = Price(
+            price_input=price_input,
+            price_time=time,
+            amount=amount,
+            item_value=self.value,
+            user_id=user_id
+        )
+        db.session.add(price)
+        db.session.commit()
+        # now adjust the amount stored in the stock table
+        self.adjust_stock(amount, user_id)
+
+
+    def adjust_stock(self, num, user_id, overwrite=False):
         """Adjust the amount of a product in stock. If override is True, then overwrite the current stock value.
         If False, then +/- it"""
-        # TODO make this account for multiple users in like... any way
-        stock_row = Stock.query.filter(Stock.item_value == self.value).one_or_none()
+        stock_row = Stock.query.filter_by(item_value=self.value,user_id=user_id).one_or_none()
         if stock_row is None:
             # always overwrite if creating a new row
-            stock_row = Stock(amount=num, item_value=self.value)
+            stock_row = Stock(amount=num, item_value=self.value, user_id=user_id)
             db.session.add(stock_row)
         elif overwrite is True:
             stock_row.amount = num
@@ -67,8 +81,8 @@ class Price(db.Model):
     price_time = db.Column(db.DateTime, nullable=False)
     # the amount purchased/sold at this price
     amount = db.Column(db.Integer, nullable=False, default=1)
-    item_value = db.Column(db.String(name_length),
-                           db.ForeignKey('items.value'))
+    item_value = db.Column(db.String(name_length), db.ForeignKey('items.value'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     def __repr__(self):
         return '<Price {}>'.format(str(self.price_input))

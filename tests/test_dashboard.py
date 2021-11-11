@@ -13,17 +13,17 @@ def test_dashboard(client):
     assert Price.query.get(1).price_input == 50000
     assert Stock.query.get(1).amount == 2
 
-
 @pytest.mark.parametrize(('item_value', 'amount', 'price', 'new_stock'), (
         ('test_item', 1, 20000, 1),
         ('third_test_item', 100, 300, 200)
 ))
 def test_add_sale(client, item_value, amount, price, new_stock):
-    data = {'item': item_value, 'amount': amount,
-            'price': price, 'sale_button': True}
-    client.post('/', data=data)
+    with client:
+        # client.post('/auth/login', data = {'username': 'admin','password':'test_password'}, follow_redirects=True)
+        data = {'item': item_value, 'amount': amount, 'price': price, 'sale_button': True}
+        client.post('/', data=data)
 
-    assert Stock.query.filter_by(item_value=item_value).one_or_none().amount == new_stock
+    assert Stock.query.filter_by(item_value=item_value, user_id=1).one_or_none().amount == new_stock
 
 
 @pytest.mark.parametrize(('item_value', 'amount', 'price'), (
@@ -37,17 +37,17 @@ def test_add_sale_validation(client, item_value, amount, price):
         client.post('/', data=data)
 
 
+
 @pytest.mark.parametrize(('item_value', 'amount', 'price', 'new_stock'), (
         ('test_bolts_of_cloth', 100, 100, 150),
         ('third_test_item', 50, 200, 350)
 ))
 def test_add_purchase(client, item_value, amount, price, new_stock):
-    data = {'item': item_value, 'amount': amount,
-            'price': price, 'purchase_button': True}
+    data = {'item': item_value, 'amount': amount,'price': price, 'purchase_button': True}
     client.post('/', data=data)
 
-    assert Stock.query.filter_by(
-        item_value=item_value).one_or_none().amount == new_stock
+    assert Stock.query.filter_by(item_value=item_value, user_id=1).one_or_none().amount == new_stock
+
 
 
 @pytest.mark.parametrize('item_value', (
@@ -60,7 +60,6 @@ def test_view_data(client, item_value):
 
     assert response.status_code == 302
 
-
 @pytest.mark.parametrize(('item_value', 'amount', 'expected_amount'), (
         ('test_item', 1, 3),
         ('patricians_bottoms', 5, 5)
@@ -69,7 +68,7 @@ def test_add_stock_button(client, item_value, amount, expected_amount):
     data = {'item': item_value, 'amount': amount, 'add_stock_button': True}
     client.post('/', data=data)
 
-    assert Stock.query.filter_by(item_value=item_value).one_or_none().amount == expected_amount
+    assert Stock.query.filter_by(item_value=item_value,user_id=1).one_or_none().amount == expected_amount
 
 
 @pytest.mark.parametrize(('item_value', 'amount', 'expected_amount'), (
@@ -81,5 +80,4 @@ def test_add_stock_button(client, item_value, amount, expected_amount):
 def test_remove_stock_button(client, item_value, amount, expected_amount):
     data = {'item': item_value, 'amount': amount, 'remove_stock_button': True}
     client.post('/', data=data)
-    assert Stock.query.filter_by(
-        item_value=item_value).one_or_none().amount == expected_amount
+    assert Stock.query.filter_by(item_value=item_value,user_id=1).one_or_none().amount == expected_amount
