@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    Recipes
+    <div class="items-wrapper">
+        <table>
+            {% for product in product_list %}
+                    <tr>
+                        <td>{{ product.item_value }}</td><td><a href="{{ url_for('recipe.view_recipes', value=product.item_value) }}">View recipes</a></td>
+                    </tr>
+            {% endfor %}
+            
+        </table>
+    </div>
+
+{% endblock %}

@@ -5,7 +5,7 @@ import datetime
 
 from ffxivledger import create_app
 from ffxivledger import db
-from ffxivledger.models import Item, Price, User
+from ffxivledger.models import Item, Price, Stock, Recipe, Product, Component, User
 from ffxivledger.utils import name_to_value
 
 TEST_DATABASE_URI = 'sqlite:///test_database.sqlite'
@@ -20,7 +20,8 @@ def app():
         'SECRET_KEY': 'dev',
         'WTF_CSRF_ENABLED': False,
         'WTF_CSRF_CHECK_DEFAULT': False,
-        'WTF_CSRF_METHODS': []
+        'WTF_CSRF_METHODS': [],
+        'LOGIN_DISABLED': True
     }
     app = create_app(settings_override)
 
@@ -80,4 +81,28 @@ def populate_test_data():
     user.username = 'Admin'
     user.set_password('testing_')
     db.session.add(user)
+    db.session.commit()
+
+    new_recipes = [
+        Recipe(job='WVR', id=1),  # patrician's bottoms
+        Recipe(job='GSM', id=2)  # test item
+    ]
+    for x in new_recipes:
+        db.session.add(x)
+    db.session.commit()
+    new_products = [
+        Product(item_value='patricians_bottoms', item_quantity=1, recipe_id=1),
+        Product(item_value='test_item', item_quantity=1, recipe_id=2)
+    ]
+    for x in new_products:
+        db.session.add(x)
+    db.session.commit()
+    new_components = [
+        Component(item_value='test_bolts_of_cloth', item_quantity=5, recipe_id=1),
+        Component(item_value='test_bolts_of_cloth', item_quantity=2, recipe_id=1),
+        Component(item_value='third_test_item', item_quantity=1, recipe_id=1)
+    ]
+    #     right now test_item has NO components and I'm leaving it like this for testing purposes
+    for x in new_components:
+        db.session.add(x)
     db.session.commit()

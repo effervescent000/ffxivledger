@@ -2,18 +2,25 @@
 {% from "_formhelpers.html" import render_field, render_field_no_label %}
 {% block header %}
     <link rel="stylesheet" href="{{ url_for('static', filename='view.css') }}">
-    {{ item.name }}
+    <div class="item-header">{{ item.name }}</div>
 {% endblock header %}
 {% block content %}
-    <table>
-        <tr>
-            {% for k,v in recipes.items() %}
-                {% for component in v %}
-                    <td>{{ component.item_quantity }}</td>
-                    <td>{{ component.item_value }}</td>
-                {% endfor %}
-            {% endfor %}
-        </tr>
-    </table>
+    <div id="content-wrapper">
+        {% for recipe in recipes %}
+            <div class="recipe">
+                <span class="recipe-header">Recipe #{{ recipe }}</span> <a href="{{ url_for('recipe.edit_recipe', id=recipe) }}">Edit</a>
+                <table>
+                    {% for k,v in recipes.items() %}
+                        {% for component in v %}
+                        <tr>
+                            <td>{{ component.item_quantity }}</td>
+                            <td>{{ component.item_value }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </table>
+            </div>
+        {% endfor %}
+    </div>
 {% endblock %}
 
