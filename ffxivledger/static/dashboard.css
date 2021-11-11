@@ -36,7 +36,7 @@
   width: 250px;
 }
 
-#content-wrapper #right-content-wrapper #item-form form .entry-forms-wrapper input[type="text"] {
+#content-wrapper #right-content-wrapper #item-form form .entry-forms-wrapper input[type="number"] {
   background-color: #362A6B;
   color: #C5CAE7;
   border: #B298EB solid 1px;
@@ -44,7 +44,16 @@
   padding: 2px 5px;
 }
 
-#content-wrapper #right-content-wrapper #item-form form .entry-forms-wrapper input[type="submit"] {
+#content-wrapper #right-content-wrapper #item-form form .buttons-wrapper {
+  display: -ms-grid;
+  display: grid;
+  -ms-grid-columns: (1fr)[3];
+      grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  justify-items: center;
+}
+
+#content-wrapper #right-content-wrapper #item-form form .buttons-wrapper input[type="submit"] {
   background-color: #C5CAE7;
   border: 1px transparent solid;
   border-radius: 3px;
@@ -52,16 +61,8 @@
   padding: 2px 5px;
 }
 
-#content-wrapper #right-content-wrapper #item-form form .entry-forms-wrapper input[type="submit"]:active {
+#content-wrapper #right-content-wrapper #item-form form .buttons-wrapper input[type="submit"]:active {
   border: 1px #362A6B solid;
-}
-
-#content-wrapper #right-content-wrapper #item-form form .buttons-wrapper {
-  display: -ms-grid;
-  display: grid;
-      grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  justify-items: center;
 }
 
 #price {

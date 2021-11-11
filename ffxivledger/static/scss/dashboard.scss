@@ -27,12 +27,8 @@
           width: 250px;
         }
 
-        input[type="text"] {
+        input[type="number"] {
           @include input-styling;
-        }
-
-        input[type="submit"] {
-          @include button-styling;
         }
       }
 
@@ -41,6 +37,10 @@
         grid-template-columns: repeat(3, 1fr);
         gap: 10px;
         justify-items: center;
+
+        input[type="submit"] {
+          @include button-styling;
+        }
       }
     }
   }
