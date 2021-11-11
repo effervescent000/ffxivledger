@@ -11,7 +11,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
-    stock_list = db.relationship('Stock', backref='user', lazy=True)
+    stock_list = db.relationship('Stock', backref='user', lazy=True, cascade="all, delete-orphan")
     # valid roles are admin and super_user
     role = db.Column(db.String(50))
 
@@ -33,11 +33,11 @@ class Item(db.Model):
     name = db.Column(db.String(name_length), unique=True, nullable=False)
     # valid types are: 'product', 'intermediate', 'material'
     type = db.Column(db.String(50), nullable=False)
-    prices = db.relationship('Price', backref='item', lazy=True)
-    stock = db.relationship('Stock', backref='item', lazy=True)
+    prices = db.relationship('Price', backref='item', lazy=True, cascade="all, delete-orphan")
+    stock = db.relationship('Stock', backref='item', lazy=True, cascade="all, delete-orphan")
 
     components = db.relationship('Component', backref='item', lazy=True)
-    products = db.relationship('Product', backref='item', lazy=True)
+    products = db.relationship('Product', backref='item', lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return '<Item {}>'.format(self.name)
@@ -87,8 +87,8 @@ class Recipe(db.Model):
     __tablename__ = 'recipes'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     job = db.Column(db.String(3), nullable=False)
-    components = db.relationship('Component', backref='recipe')
-    product = db.relationship('Product', backref='recipe')
+    components = db.relationship('Component', backref='recipe', cascade="all, delete-orphan")
+    product = db.relationship('Product', backref='recipe', cascade="all, delete-orphan")
 
 
 class Component(db.Model):

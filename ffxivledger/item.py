@@ -1,3 +1,4 @@
+from operator import getitem
 from flask import (
     Blueprint, flash, redirect, render_template, request, url_for
 )
@@ -61,3 +62,13 @@ def edit_item(value):
 def manage_items():
     item_list = Item.query.all()
     return render_template('ffxivledger/item_management.html', item_list=item_list)
+
+@bp.route('/delete/<value>', methods=('GET', 'POST'))
+@login_required
+@admin_required
+def delete_item(value):
+    item = Item.query.get(value)
+    if item is not None:
+        db.session.delete(item)
+        db.session.commit()
+    return redirect(url_for('item.manage_items'))

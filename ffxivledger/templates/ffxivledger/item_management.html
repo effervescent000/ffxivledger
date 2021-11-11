@@ -5,7 +5,10 @@
         <table>
             {% for item in item_list %}
                 <tr>
-                    <td>{{ item.name }}</td><td>{{ item.type }}</td><td><a href="{{ url_for('item.edit_item', value=item.value) }}">Edit item</a></td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.type }}</td>
+                    <td><a href="{{ url_for('item.edit_item', value=item.value) }}">Edit item</a></td>
+                    <td><a href="{{ url_for('item.delete_item', value=item.value) }}">Delete item (WARNING: FOR REALSIES)</a></td>
                 </tr>
             {% endfor %}
         </table>
