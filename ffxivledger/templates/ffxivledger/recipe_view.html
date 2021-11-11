@@ -8,16 +8,16 @@
     <div id="content-wrapper">
         {% for recipe in recipes %}
             <div class="recipe">
-                <span class="recipe-header">Recipe</span>
+                <span class="recipe-header">Recipe #{{ recipe }}</span> <a href="{{ url_for('recipe.edit_recipe', id=recipe) }}">Edit</a>
                 <table>
-                    <tr>
-                        {% for k,v in recipes.items() %}
-                            {% for component in v %}
-                                <td>{{ component.item_quantity }}</td>
-                                <td>{{ component.item_value }}</td>
-                            {% endfor %}
+                    {% for k,v in recipes.items() %}
+                        {% for component in v %}
+                        <tr>
+                            <td>{{ component.item_quantity }}</td>
+                            <td>{{ component.item_value }}</td>
+                        </tr>
                         {% endfor %}
-                    </tr>
+                    {% endfor %}
                 </table>
             </div>
         {% endfor %}
