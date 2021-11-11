@@ -16,6 +16,8 @@ bp = Blueprint('recipe', __name__, url_prefix='/recipe')
 
 
 @bp.route('/edit/new', methods=('GET', 'POST'))
+@login_required
+@admin_required
 def create_recipe():
     form = CreateRecipeForm()
     if request.method == 'POST':
@@ -47,6 +49,8 @@ def create_recipe():
 
 
 @bp.route('/edit/<id>', methods=('GET', 'POST'))
+@login_required
+@admin_required
 def edit_recipe(id):
     # first generate/prepopulate the form
     recipe = Recipe.query.get(id)
