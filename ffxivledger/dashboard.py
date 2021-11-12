@@ -9,7 +9,7 @@ from wtforms import ValidationError
 from . import db
 from .models import Item, Price, Stock
 from .forms import DashboardForm
-from .utils import get_item, get_item_options
+from .utils import get_item, get_item_options, convert_to_time_format
 
 bp = Blueprint('dashboard', __name__)
 
@@ -20,7 +20,7 @@ def index():
     if request.method == 'POST':
         # first collect info from form
         item_value = form.item.data
-        time = datetime.datetime.now()
+        time = convert_to_time_format(datetime.datetime.now())
         price_input = form.price.data
         amount = form.amount.data
 

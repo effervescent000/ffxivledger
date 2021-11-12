@@ -42,4 +42,7 @@ def create_app(test_config=None):
         from . import recipe
         app.register_blueprint(recipe.bp)
 
+        from . import price
+        app.register_blueprint(price.bp)
+
         return app

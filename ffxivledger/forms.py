@@ -43,6 +43,15 @@ class CreateItemForm(FlaskForm):
     save_button = SubmitField(u'Save')
 
 
+class PriceForm(FlaskForm):
+    item_value = SelectField(choices=get_item_options())
+    price_input = IntegerField('Price point', validators=[InputRequired()])
+    item_quantity = IntegerField()
+    price_time = StringField('Transaction time')
+
+    save_button = SubmitField()
+
+
 # recipe related forms
 class RecipeLineForm(Form):
     item_value = SelectField(choices=get_item_options())
