@@ -81,6 +81,6 @@ def index():
 
 
 def get_stock_list():
-    # TODO make it so this only shows products (right now it will include materials)
-    stock_list = Stock.query.filter(Stock.amount >= 1).all()
+    stock_query = Stock.query.filter(Stock.amount >= 1).all()
+    stock_list = [x for x in stock_query if x.item.type == 'product']
     return stock_list
