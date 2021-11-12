@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from . import db
 
 name_length = 200
-
+time_format = '%Y-%m-%d %H:%M'
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -78,7 +78,7 @@ class Price(db.Model):
     __tablename__ = 'prices'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     price_input = db.Column(db.Integer, nullable=False)
-    price_time = db.Column(db.DateTime, nullable=False)
+    price_time = db.Column(db.String(50), nullable=False)
     # the amount purchased/sold at this price
     amount = db.Column(db.Integer, nullable=False, default=1)
     item_value = db.Column(db.String(name_length), db.ForeignKey('items.value'))

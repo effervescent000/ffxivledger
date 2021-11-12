@@ -45,9 +45,7 @@ class CreateItemForm(FlaskForm):
 
 # recipe related forms
 class RecipeLineForm(Form):
-    item_options = get_item_options()
-
-    item_value = SelectField(choices=item_options)
+    item_value = SelectField(choices=get_item_options())
     item_quantity = IntegerField()
 
 

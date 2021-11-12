@@ -2,10 +2,11 @@ import functools
 from werkzeug.exceptions import abort
 from flask_login import current_user
 from flask import current_app
+from datetime import datetime
 
 from . import db
 
-from .models import Item, User, Price, Component, Stock, Product
+from .models import Item, User, Price, Component, Stock, Product, time_format
 
 
 def get_item(value):
@@ -68,3 +69,10 @@ def rename_item(item, new_name):
         for x in Product.query.filter_by(item_value=old_value).all():
             x.item_value = item.value
         db.session.commit()
+
+
+def convert_to_time_format(time):
+    """Convert a datetime object into a string in the preferred time format"""
+    new_time = time.strftime(time_format)
+    # new_time = datetime.strptime(new_time, time_format)
+    return new_time
