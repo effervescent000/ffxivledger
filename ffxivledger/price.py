@@ -12,6 +12,7 @@ bp = Blueprint('price', __name__, url_prefix='/price')
 @bp.route('/<id>', methods=('GET', 'POST'))
 @login_required
 def view_price(id):
+    # TODO make it so this checks users (so people can only see their own prices)
     price = Price.query.get(id)
     if request.method == 'POST':
         form = PriceForm()
