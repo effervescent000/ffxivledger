@@ -39,9 +39,6 @@ def test_login(client, username, password):
     }
     assert client.get('/auth/login').status_code == 200
 
-    response = client.post('/auth/login', data=data)
-    # assert response.status_code == 302
-
 
 @pytest.mark.parametrize('username,password,message', [
     ('a_user', 'a_password', b'Invalid username/password combination')
@@ -52,3 +49,17 @@ def test_login_validation(client, username, password, message):
     }
     response = client.post('/auth/login', data=data)
     assert message in response.data
+
+@pytest.mark.parametrize('id,new_name,new_role', [
+    (1, 'ur_mum', 'super_user'),
+    (2, 'urrrr_mum', 'admin')
+])
+def test_admin_manage_user(client, id, new_name, new_role):
+    assert client.get('/auth/manage/{}'.format(id)).status_code == 200
+
+    user = User.query.get(id)
+    data = {'username': new_name, 'role': new_role}
+    response = client.post('/auth/manage/{}'.format(id), data=data)
+
+    assert user.username == new_name
+    assert user.role == new_role

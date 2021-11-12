@@ -84,10 +84,14 @@ class CreateRecipeForm(FlaskForm):
 class SignUpForm(FlaskForm):
     username = StringField('Username', validators=[InputRequired()])
     # email = StringField('Email', [InputRequired(), Email(message='Enter a valid email')])
-    password = PasswordField('Password',
-                             validators=[Length(min=6, message='Choose a longer password'), InputRequired()])
-    confirm_password = PasswordField('Confirm password',
-                                     validators=[InputRequired(), EqualTo('password', message='Passwords must match.')])
+    password = PasswordField('Password', validators=[
+        Length(min=6, message='Choose a longer password'), 
+        InputRequired()
+        ])
+    confirm_password = PasswordField('Confirm password', validators=[
+        InputRequired(), 
+        EqualTo('password', message='Passwords must match.')
+        ])
     submit = SubmitField('Register')
 
 
@@ -98,7 +102,6 @@ class LoginForm(FlaskForm):
 
 
 class ManageUserForm(FlaskForm):
-    # TODO figure out how to prepopulate defaults here based on current user
-    username = StringField('Username')
+    username = StringField('Username', validators=[InputRequired(), Length(min=5, max=50)])
     role = SelectField('Role', choices=[('', '---'), ('super_user', 'SuperUser'), ('admin', 'Admin')])
     submit = SubmitField('Save')
