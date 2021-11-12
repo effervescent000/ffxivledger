@@ -65,12 +65,8 @@ def user_management():
 def admin_manage_user(id):
     form = ManageUserForm()
     user = User.query.get(id)
-    if request.method == 'POST':
-        if form.username.data == '':
-            pass
-        else:
-            # TODO add some validation here
-            user.username = form.username.data
+    if form.validate_on_submit():
+        user.username = form.username.data
         if form.role.data == '':
             user.role = None
         else:
