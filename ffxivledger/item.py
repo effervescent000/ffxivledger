@@ -44,9 +44,8 @@ def create_item():
 def edit_item(value):
     item = get_item(value)
     form = CreateItemForm(item_name=item.name,item_type=item.type)
-    if request.method == 'POST':
+    if form.validate_on_submit():
         if item.name != form.item_name.data:
-            # TODO add validation here
             rename_item(item, form.item_name.data)
         if item.type != form.item_type.data:
             item.type = form.item_type.data

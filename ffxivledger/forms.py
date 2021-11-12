@@ -51,7 +51,7 @@ class CreateItemForm(FlaskForm):
         ('intermediate', 'Intermediate item'),
         ('material', 'Raw material')
     ]
-
+    
     item_name = StringField(u'Item name', validators=[InputRequired(), Length(max=name_length)])
     item_type = SelectField(u'Item type', choices=item_type_choices)
     save_button = SubmitField(u'Save')
