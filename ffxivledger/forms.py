@@ -1,7 +1,9 @@
 from flask.app import Flask
 from flask_wtf import FlaskForm
-from wtforms import IntegerField, SelectField, Form, FormField, StringField, SubmitField, PasswordField
-from wtforms.validators import InputRequired, Length, Email, EqualTo
+from wtforms import (
+    IntegerField, SelectField, Form, FormField, StringField, SubmitField, PasswordField, ValidationError
+)
+from wtforms.validators import InputRequired, Length, Email, EqualTo, Optional
 from wtforms.fields import FieldList
 from flask_login import current_user
 
@@ -11,8 +13,8 @@ from .models import name_length
 
 class DashboardForm(FlaskForm):
     item = SelectField(choices=get_item_options())
-    amount = IntegerField()
-    price = IntegerField()
+    amount = IntegerField('Amount')
+    price = IntegerField('Gil')
     sale_button = SubmitField(u'Add sale')
     purchase_button = SubmitField(u'Add purchase')
     view_button = SubmitField(u'View data')
@@ -23,12 +25,24 @@ class DashboardForm(FlaskForm):
     create_recipe_button = SubmitField(u'Create recipe')
     view_recipes_button = SubmitField(u'View recipe(s)')
 
-    # def validate_sale_button(self, field):
-    #     if self.sale_button.data:
-    #         if self.amount.data is None:
-    #             raise ValidationError('Sale amount required')
-    #         if self.price.data is None:
-    #             raise ValidationError('Sale price required')
+    def validate(self):
+        if self.sale_button.data:
+            if self.amount.data is None:
+                raise ValidationError('Sale amount required')
+            if self.price.data is None:
+                raise ValidationError('Sale price required')
+        if self.remove_stock_button.data:
+            if self.amount.data is None:
+                raise ValidationError('Amount required')
+        if self.purchase_button.data:
+            if self.price.data is None:
+                raise ValidationError('Purchase price required')
+            if self.amount.data is None:
+                raise ValidationError('Amount required')
+        if self.add_stock_button.data:
+            if self.amount.data is None:
+                raise ValidationError('Amount required')
+        return True
 
 
 class CreateItemForm(FlaskForm):

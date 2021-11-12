@@ -19,7 +19,6 @@ def test_dashboard(client):
 ))
 def test_add_sale(client, item_value, amount, price, new_stock):
     with client:
-        # client.post('/auth/login', data = {'username': 'admin','password':'test_password'}, follow_redirects=True)
         data = {'item': item_value, 'amount': amount, 'price': price, 'sale_button': True}
         client.post('/', data=data)
 

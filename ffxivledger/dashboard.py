@@ -17,7 +17,8 @@ bp = Blueprint('dashboard', __name__)
 @bp.route('/', methods=('GET', 'POST'))
 def index():
     form = DashboardForm()
-    if request.method == 'POST':
+    if form.validate_on_submit():
+        print('Made it through validation!')
         # first collect info from form
         item_value = form.item.data
         time = convert_to_time_format(datetime.datetime.now())
@@ -35,39 +36,26 @@ def index():
                 user_id = current_user.id
             # check which button was clicked
             if form.sale_button.data or form.remove_stock_button.data:
-                if amount is None:
-                    raise ValidationError('Amount required')
-                elif form.sale_button.data and price_input is None:
-                    raise ValidationError('Price required')
-                else:
-                    # make sale amounts negative
-                    amount *= -1
+                # make sale amounts negative
+                amount *= -1
 
-                    if form.sale_button.data:
-                        get_item(item_value).process_transaction(price_input, time, amount, user_id)
-                        # process_transaction(price_input, time, amount, item_value, user_id)
-                    else:
-                        Item.query.get(item_value).adjust_stock(amount, user_id)
-                    return redirect(url_for('dashboard.index'))
+                if form.sale_button.data:
+                    get_item(item_value).process_transaction(price_input, time, amount, user_id)
+                    # process_transaction(price_input, time, amount, item_value, user_id)
+                else:
+                    Item.query.get(item_value).adjust_stock(amount, user_id)
+                return redirect(url_for('dashboard.index'))
             elif form.view_button.data:
                 return redirect(url_for('item.view_item', value=item_value))
             elif form.purchase_button.data:
-                if price_input is None:
-                    raise ValidationError('Price required')
-                elif amount is None:
-                    raise ValidationError('Amount required')
-                else:
-                    # make prices negative for purchases
-                    price_input *= -1
-                    get_item(item_value).process_transaction(price_input, time, amount, user_id)
-                    # process_transaction(price_input, time, amount, item_value, user_id)
-                    return redirect(url_for('dashboard.index'))
+                # make prices negative for purchases
+                price_input *= -1
+                get_item(item_value).process_transaction(price_input, time, amount, user_id)
+                # process_transaction(price_input, time, amount, item_value, user_id)
+                return redirect(url_for('dashboard.index'))
             elif form.add_stock_button.data:
-                if amount is None:
-                    raise ValidationError('Amount required')
-                else:
-                    Item.query.get(item_value).adjust_stock(amount, user_id)
-                    return redirect(url_for('dashboard.index'))
+                Item.query.get(item_value).adjust_stock(amount, user_id)
+                return redirect(url_for('dashboard.index'))
             elif form.create_recipe_button.data:
                 # TODO figure out why this is sending a None for product?
                 return redirect(url_for('recipe.create_recipe'))

@@ -25,6 +25,7 @@
     <div id="right-content-wrapper">
         <div id="item-form">
             <form method="post">
+                {{ form.hidden_tag() }}
                 <div class="entry-forms-wrapper">
                     {{ render_field(form.item) }}
                     {{ render_field(form.amount) }}
