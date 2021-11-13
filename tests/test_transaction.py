@@ -27,7 +27,7 @@ def test_edit_transaction(client, id, item_value, gil_value, time, amount, user_
 
     price = Transaction.query.get(id)
 
-    response = client.post('transaction/{}'.format(id), data=data)
+    client.post('transaction/{}'.format(id), data=data)
     assert price.item_value == item_value
     assert price.amount == amount
 

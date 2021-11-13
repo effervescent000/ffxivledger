@@ -10,7 +10,7 @@ def test_dashboard(client):
 
     # now ensure the data in the database (based on the test data in conftest.py) is correct
     assert Item.query.get('test_item').type == 'product'
-    assert Transaction.query.get(1).gil_value == 50000
+    assert Transaction.query.get(13).gil_value == 50000
     assert Stock.query.get(1).amount == 2
 
 @pytest.mark.parametrize(('item_value', 'amount', 'gil_value', 'new_stock'), (

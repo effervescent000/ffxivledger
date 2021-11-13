@@ -54,10 +54,10 @@ class Item(db.Model):
         db.session.add(transaction)
         db.session.commit()
         # now adjust the amount stored in the stock table
-        self.adjust_stock(amount, user_id)
+        self._adjust_stock(amount, user_id)
 
 
-    def adjust_stock(self, num, user_id, overwrite=False):
+    def _adjust_stock(self, num, user_id, overwrite=False):
         """Adjust the amount of a product in stock. If override is True, then overwrite the current stock value.
         If False, then +/- it"""
         stock_row = Stock.query.filter_by(item_value=self.value,user_id=user_id).one_or_none()

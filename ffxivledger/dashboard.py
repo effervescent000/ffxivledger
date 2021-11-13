@@ -18,12 +18,13 @@ bp = Blueprint('dashboard', __name__)
 def index():
     form = DashboardForm()
     if form.validate_on_submit():
-        print('Made it through validation!')
         # first collect info from form
         item_value = form.item.data
         time = convert_to_time_format(datetime.datetime.now())
         gil_value = form.gil_value.data
         amount = form.amount.data
+        if gil_value is None:
+            gil_value = 0
 
         # reject immediately if an item was not selected
         if item_value == '':
@@ -38,11 +39,7 @@ def index():
             if form.sale_button.data or form.remove_stock_button.data:
                 # make sale amounts negative
                 amount *= -1
-
-                if form.sale_button.data:
-                    get_item(item_value).process_transaction(gil_value, time, amount, user_id)
-                else:
-                    Item.query.get(item_value).adjust_stock(amount, user_id)
+                get_item(item_value).process_transaction(gil_value, time, amount, user_id)
                 return redirect(url_for('dashboard.index'))
             elif form.view_button.data:
                 return redirect(url_for('item.view_item', value=item_value))
@@ -52,7 +49,7 @@ def index():
                 get_item(item_value).process_transaction(gil_value, time, amount, user_id)
                 return redirect(url_for('dashboard.index'))
             elif form.add_stock_button.data:
-                Item.query.get(item_value).adjust_stock(amount, user_id)
+                get_item(item_value).process_transaction(gil_value, time, amount, user_id)
                 return redirect(url_for('dashboard.index'))
             elif form.create_recipe_button.data:
                 # TODO figure out why this is sending a None for product?
