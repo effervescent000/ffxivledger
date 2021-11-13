@@ -8,13 +8,13 @@
 <div id="content-wrapper">
     <div id="price-list-table-wrapper">
         <table>
-            <th>Price point</th>
+            <th>Gil</th>
             <th>Time</th>
-            {% for price in sale_price_list %}
+            {% for transaction in sale_price_list %}
             <tr>
-                <td>{{ price.price_input }}</td>
-                <td>{{ price.price_time }}</td>
-                <td><a href="{{ url_for('price.view_price', id=price.id) }}">Edit price point</a></td>
+                <td>{{ transaction.gil_value }}</td>
+                <td>{{ transaction.time }}</td>
+                <td><a href="{{ url_for('transaction.view_transaction', id=transaction.id) }}">Edit transaction</a></td>
             </tr>
             {% endfor %}    
         </table>

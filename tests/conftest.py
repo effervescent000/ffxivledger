@@ -5,7 +5,7 @@ from flask_login import login_user
 
 from ffxivledger import create_app
 from ffxivledger import db
-from ffxivledger.models import Item, Price, Stock, Recipe, Product, Component, User
+from ffxivledger.models import Item, Transaction, Stock, Recipe, Product, Component, User
 from ffxivledger.utils import convert_to_time_format, get_item
 
 TEST_DATABASE_URI = 'sqlite:///test_database.sqlite'
@@ -74,8 +74,8 @@ def populate_test_data():
         Item.query.get(new_items[3].value).adjust_stock(20, x.id)
 
     time = convert_to_time_format(datetime.datetime.now())
-    get_item(new_items[0].value).process_transaction(price_input=50000, time=time, amount=-1, user_id=1)
-    get_item(new_items[3].value).process_transaction(price_input=-200, time=time, amount=30, user_id=1)
+    get_item(new_items[0].value).process_transaction(gil_value=50000, time=time, amount=-1, user_id=1)
+    get_item(new_items[3].value).process_transaction(gil_value=-200, time=time, amount=30, user_id=1)
     
     # at this point what I expect to have in stock is:
     # Test Item 2, patrician's bottoms 0, third test item 300, test bolts of cloth 50

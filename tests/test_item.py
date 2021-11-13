@@ -12,7 +12,7 @@ def test_view_item(client, item_value):
     item = get_item(item_value)
 
     # did it load successfully?
-    assert b'Price point' in rv.data
+    assert b'Gil' in rv.data
 
 
 @pytest.mark.parametrize(('item_name', 'item_type', 'expected_value'), (

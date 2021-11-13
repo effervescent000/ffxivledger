@@ -7,9 +7,9 @@
         <form method="post">
             {{ form.csrf_token }}
             {{ render_field(form.item_value) }}
-            {{ render_field(form.price_input) }}
+            {{ render_field(form.gil_value) }}
             {{ render_field(form.item_quantity) }}
-            {{ render_field(form.price_time) }}
+            {{ render_field(form.time) }}
             {{ render_field_no_label(form.save_button)  }}
         </form>
     </div>

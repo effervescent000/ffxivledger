@@ -3,7 +3,7 @@ from flask import (
 )
 from flask_login import login_required
 
-from .models import Item, Price
+from .models import Item, Transaction
 from . import db
 from .utils import get_item, name_to_value, admin_required, rename_item
 from .forms import CreateItemForm
@@ -15,10 +15,10 @@ bp = Blueprint('item', __name__, url_prefix='/item')
 def view_item(value):
     item = get_item(value)
 
-    sale_price_list = Price.query.filter(Price.item_value == value, Price.price_input > 0).all()
-    purchase_price_list = Price.query.filter(Price.item_value == value, Price.price_input < 0).all()
-    return render_template('ffxivledger/item_view.html', item=item, sale_price_list=sale_price_list,
-                           purchase_price_list=purchase_price_list)
+    sale_list = Transaction.query.filter(Transaction.item_value == value, Transaction.gil_value > 0).all()
+    purchase_list = Transaction.query.filter(Transaction.item_value == value, Transaction.gil_value < 0).all()
+    return render_template('ffxivledger/item_view.html', item=item, sale_price_list=sale_list,
+                           purchase_price_list=purchase_list)
 
 
 @bp.route('/edit/new', methods=('GET', 'POST'))

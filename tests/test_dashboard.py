@@ -1,7 +1,7 @@
 import pytest
 from wtforms import ValidationError
 
-from ffxivledger.models import Item, Price, Stock
+from ffxivledger.models import Item, Transaction, Stock
 
 
 def test_dashboard(client):
@@ -10,39 +10,39 @@ def test_dashboard(client):
 
     # now ensure the data in the database (based on the test data in conftest.py) is correct
     assert Item.query.get('test_item').type == 'product'
-    assert Price.query.get(1).price_input == 50000
+    assert Transaction.query.get(1).gil_value == 50000
     assert Stock.query.get(1).amount == 2
 
-@pytest.mark.parametrize(('item_value', 'amount', 'price', 'new_stock'), (
+@pytest.mark.parametrize(('item_value', 'amount', 'gil_value', 'new_stock'), (
         ('test_item', 1, 20000, 1),
         ('third_test_item', 100, 300, 200)
 ))
-def test_add_sale(client, item_value, amount, price, new_stock):
+def test_add_sale(client, item_value, amount, gil_value, new_stock):
     with client:
-        data = {'item': item_value, 'amount': amount, 'price': price, 'sale_button': True}
+        data = {'item': item_value, 'amount': amount, 'gil_value': gil_value, 'sale_button': True}
         client.post('/', data=data)
 
     assert Stock.query.filter_by(item_value=item_value, user_id=1).one_or_none().amount == new_stock
 
 
-@pytest.mark.parametrize(('item_value', 'amount', 'price'), (
+@pytest.mark.parametrize(('item_value', 'amount', 'gil_value'), (
         ('test_item', None, 20000),
         ('third_test_item', 100, None)
 ))
-def test_add_sale_validation(client, item_value, amount, price):
+def test_add_sale_validation(client, item_value, amount, gil_value):
     with pytest.raises(ValidationError):
         data = {'item': item_value, 'amount': amount,
-                'price': price, 'sale_button': True}
+                'gil_value': gil_value, 'sale_button': True}
         client.post('/', data=data)
 
 
 
-@pytest.mark.parametrize(('item_value', 'amount', 'price', 'new_stock'), (
+@pytest.mark.parametrize(('item_value', 'amount', 'gil_value', 'new_stock'), (
         ('test_bolts_of_cloth', 100, 100, 150),
         ('third_test_item', 50, 200, 350)
 ))
-def test_add_purchase(client, item_value, amount, price, new_stock):
-    data = {'item': item_value, 'amount': amount,'price': price, 'purchase_button': True}
+def test_add_purchase(client, item_value, amount, gil_value, new_stock):
+    data = {'item': item_value, 'amount': amount,'gil_value': gil_value, 'purchase_button': True}
     client.post('/', data=data)
 
     assert Stock.query.filter_by(item_value=item_value, user_id=1).one_or_none().amount == new_stock

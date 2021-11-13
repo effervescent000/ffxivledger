@@ -7,7 +7,7 @@ from flask_login import current_user
 from wtforms import ValidationError
 
 from . import db
-from .models import Item, Price, Stock
+from .models import Item, Transaction, Stock
 from .forms import DashboardForm
 from .utils import get_item, get_item_options, convert_to_time_format
 
@@ -22,7 +22,7 @@ def index():
         # first collect info from form
         item_value = form.item.data
         time = convert_to_time_format(datetime.datetime.now())
-        price_input = form.price.data
+        gil_value = form.gil_value.data
         amount = form.amount.data
 
         # reject immediately if an item was not selected
@@ -40,8 +40,7 @@ def index():
                 amount *= -1
 
                 if form.sale_button.data:
-                    get_item(item_value).process_transaction(price_input, time, amount, user_id)
-                    # process_transaction(price_input, time, amount, item_value, user_id)
+                    get_item(item_value).process_transaction(gil_value, time, amount, user_id)
                 else:
                     Item.query.get(item_value).adjust_stock(amount, user_id)
                 return redirect(url_for('dashboard.index'))
@@ -49,9 +48,8 @@ def index():
                 return redirect(url_for('item.view_item', value=item_value))
             elif form.purchase_button.data:
                 # make prices negative for purchases
-                price_input *= -1
-                get_item(item_value).process_transaction(price_input, time, amount, user_id)
-                # process_transaction(price_input, time, amount, item_value, user_id)
+                gil_value *= -1
+                get_item(item_value).process_transaction(gil_value, time, amount, user_id)
                 return redirect(url_for('dashboard.index'))
             elif form.add_stock_button.data:
                 Item.query.get(item_value).adjust_stock(amount, user_id)

@@ -26,7 +26,7 @@ def create_app(test_config=None):
 
     with app.app_context():
 
-        from .models import User, Item, Price, Stock, Product, Recipe, Component
+        from .models import User, Item, Transaction, Stock, Product, Recipe, Component
         db.create_all()
 
         from . import auth
@@ -42,7 +42,7 @@ def create_app(test_config=None):
         from . import recipe
         app.register_blueprint(recipe.bp)
 
-        from . import price
-        app.register_blueprint(price.bp)
+        from . import transaction
+        app.register_blueprint(transaction.bp)
 
         return app

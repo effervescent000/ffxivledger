@@ -33,7 +33,7 @@ class Item(db.Model):
     name = db.Column(db.String(name_length), unique=True, nullable=False)
     # valid types are: 'product', 'intermediate', 'material'
     type = db.Column(db.String(50), nullable=False)
-    prices = db.relationship('Price', backref='item', lazy=True, cascade="all, delete-orphan")
+    transactions = db.relationship('Transaction', backref='item', lazy=True, cascade="all, delete-orphan")
     stock = db.relationship('Stock', backref='item', lazy=True, cascade="all, delete-orphan")
 
     components = db.relationship('Component', backref='item', lazy=True)
@@ -43,15 +43,15 @@ class Item(db.Model):
         return '<Item {}>'.format(self.name)
 
 
-    def process_transaction(self, price_input, time, amount, user_id):
-        price = Price(
-            price_input=price_input,
-            price_time=time,
+    def process_transaction(self, gil_value, time, amount, user_id):
+        transaction = Transaction(
+            gil_value=gil_value,
+            time=time,
             amount=amount,
             item_value=self.value,
             user_id=user_id
         )
-        db.session.add(price)
+        db.session.add(transaction)
         db.session.commit()
         # now adjust the amount stored in the stock table
         self.adjust_stock(amount, user_id)
@@ -74,18 +74,18 @@ class Item(db.Model):
             stock_row.amount = 0
         db.session.commit()
 
-class Price(db.Model):
-    __tablename__ = 'prices'
+class Transaction(db.Model):
+    __tablename__ = 'transactions'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    price_input = db.Column(db.Integer, nullable=False)
-    price_time = db.Column(db.String(50), nullable=False)
-    # the amount purchased/sold at this price
+    gil_value = db.Column(db.Integer, nullable=False)
+    time = db.Column(db.String(50), nullable=False)
+    # the amount purchased/sold at this value
     amount = db.Column(db.Integer, nullable=False, default=1)
     item_value = db.Column(db.String(name_length), db.ForeignKey('items.value'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     def __repr__(self):
-        return '<Price {}>'.format(str(self.price_input))
+        return '<Transaction #{}>'.format(self.id)
 
 
 class Stock(db.Model):

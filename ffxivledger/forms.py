@@ -14,11 +14,11 @@ from .models import name_length
 class DashboardForm(FlaskForm):
     item = SelectField(choices=get_item_options())
     amount = IntegerField('Amount')
-    price = IntegerField('Gil')
+    gil_value = IntegerField('Gil')
     sale_button = SubmitField(u'Add sale')
     purchase_button = SubmitField(u'Add purchase')
     view_button = SubmitField(u'View data')
-    # buttons to change stock amounts w/o adding price data
+    
     add_stock_button = SubmitField(u'Add stock')
     remove_stock_button = SubmitField(u'Remove stock')
     # TODO eventually move recipe-management to its own page, rather than dumping it on the dashboard
@@ -29,14 +29,14 @@ class DashboardForm(FlaskForm):
         if self.sale_button.data:
             if self.amount.data is None:
                 raise ValidationError('Sale amount required')
-            if self.price.data is None:
-                raise ValidationError('Sale price required')
+            if self.gil_value.data is None:
+                raise ValidationError('Sale value required')
         if self.remove_stock_button.data:
             if self.amount.data is None:
                 raise ValidationError('Amount required')
         if self.purchase_button.data:
-            if self.price.data is None:
-                raise ValidationError('Purchase price required')
+            if self.gil_value.data is None:
+                raise ValidationError('Purchase value required')
             if self.amount.data is None:
                 raise ValidationError('Amount required')
         if self.add_stock_button.data:
@@ -57,11 +57,11 @@ class CreateItemForm(FlaskForm):
     save_button = SubmitField(u'Save')
 
 
-class PriceForm(FlaskForm):
+class TransactionForm(FlaskForm):
     item_value = SelectField(choices=get_item_options())
-    price_input = IntegerField('Price point', validators=[InputRequired()])
+    gil_value = IntegerField('Gil value', validators=[InputRequired()])
     item_quantity = IntegerField()
-    price_time = StringField('Transaction time')
+    time = StringField('Transaction time')
 
     save_button = SubmitField()
 
