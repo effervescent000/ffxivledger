@@ -1,19 +1,28 @@
 #content-wrapper {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-pack: justify;
-      -ms-flex-pack: justify;
-          justify-content: space-between;
+  display: -ms-grid;
+  display: grid;
+  -ms-grid-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
 }
 
-#content-wrapper #stock-frame-wrapper #stock-label {
+#content-wrapper #left-content-wrapper #stock-label {
   font-size: 1.5em;
   margin: 10px;
 }
 
-#content-wrapper #stock-frame-wrapper table {
+#content-wrapper #left-content-wrapper table {
   width: 300px;
+}
+
+#content-wrapper #right-content-wrapper {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  gap: 4em;
 }
 
 #content-wrapper #right-content-wrapper #item-form form {
@@ -62,6 +71,29 @@
 }
 
 #content-wrapper #right-content-wrapper #item-form form .buttons-wrapper input[type="submit"]:active {
+  border: 1px #362A6B solid;
+}
+
+#content-wrapper #right-content-wrapper #log-frame-wrapper #log-wrapper textarea {
+  width: 50%;
+  resize: none;
+  height: 12em;
+  background-color: #362A6B;
+  color: #C5CAE7;
+  border: #E9C5F0 1px solid;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+#content-wrapper #right-content-wrapper #log-frame-wrapper #log-buttons button {
+  background-color: #C5CAE7;
+  border: 1px transparent solid;
+  border-radius: 3px;
+  color: #362A6B;
+  padding: 2px 5px;
+}
+
+#content-wrapper #right-content-wrapper #log-frame-wrapper #log-buttons button:active {
   border: 1px #362A6B solid;
 }
 

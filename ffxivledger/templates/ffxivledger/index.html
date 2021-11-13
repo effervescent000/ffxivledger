@@ -7,7 +7,7 @@
 {% block content %}
 <div class="spacer-60"></div>
 <div id="content-wrapper">
-    <div id="stock-frame-wrapper">
+    <div id="left-content-wrapper">
         <div id="stock-label">
             <span>Current stock</span>
         </div>
@@ -21,6 +21,9 @@
                 {% endfor %}
             </table>
         </div>
+    </div>
+    <div id="center-content-wrapper">
+        <div class="NYI">Crafting calc goes here</div>
     </div>
     <div id="right-content-wrapper">
         <div id="item-form">
@@ -48,15 +51,19 @@
                         {{ render_field_no_label(form.add_stock_button) }}
                     </div>
                     <div class="button">
-                        {{ render_field_no_label(form.create_recipe_button) }}
-                    </div>
-                    <div class="button">
                         {{ render_field_no_label(form.view_recipes_button) }}
                     </div>
                 </div>
             </form>
         </div>
-        <a href="{{ url_for('item.create_item') }}">Create new item</a>
+        <div id="log-frame-wrapper">
+            <div id="log-wrapper">
+                <textarea id="log" readonly>I don't know what to put here</textarea>
+            </div>
+            <div id="log-buttons">
+                <button>Clear log</button>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock content %}
