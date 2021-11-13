@@ -74,10 +74,6 @@ def populate_test_data():
         Item.query.get(new_items[2].value).process_transaction(0, convert_to_time_format(datetime.datetime.now()), 300, x.id)
         Item.query.get(new_items[3].value).process_transaction(0, convert_to_time_format(datetime.datetime.now()), 20, x.id)
 
-        # Item.query.get(new_items[0].value)._adjust_stock(3, x.id)
-        # Item.query.get(new_items[1].value)._adjust_stock(0, x.id)
-        # Item.query.get(new_items[2].value)._adjust_stock(300, x.id)
-        # Item.query.get(new_items[3].value)._adjust_stock(20, x.id)
 
     time = convert_to_time_format(datetime.datetime.now())
     get_item(new_items[0].value).process_transaction(gil_value=50000, time=time, amount=-1, user_id=1)
