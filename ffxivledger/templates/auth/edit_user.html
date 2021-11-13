@@ -5,6 +5,7 @@
     Edit user {{ user.username }}
     <div class="form-wrapper">
         <form method="post">
+            {{ form.hidden_tag() }}
             {{ render_field(form.username) }}
             {{ render_field(form.role) }}
             {{ render_field_no_label(form.submit) }}

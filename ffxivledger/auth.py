@@ -72,6 +72,7 @@ def admin_manage_user(id):
         else:
             user.role = form.role.data
         db.session.commit()
+        return redirect(url_for('auth.user_management'))
     return render_template('auth/edit_user.html', form=form, user=user)
 
 

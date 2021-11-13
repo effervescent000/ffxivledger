@@ -36,7 +36,7 @@ class Item(db.Model):
     transactions = db.relationship('Transaction', backref='item', lazy=True, cascade="all, delete-orphan")
     stock = db.relationship('Stock', backref='item', lazy=True, cascade="all, delete-orphan")
 
-    components = db.relationship('Component', backref='item', lazy=True)
+    components = db.relationship('Component', backref='item', lazy=True, cascade='all, delete-orphan')
     products = db.relationship('Product', backref='item', lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
