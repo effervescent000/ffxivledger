@@ -75,7 +75,7 @@ class RecipeLineForm(Form):
 class CreateRecipeForm(FlaskForm):
     product_name = SelectField(choices=get_craftables_options())
     product_quantity = IntegerField(default=1)
-    job_field = SelectField(choices=['ALC', 'GSM', 'WVR'])
+    job_field = SelectField(choices=['ALC', 'ARM', 'BSM', 'CRP', 'GSM','LTW', 'WVR'])
     line_item_list = FieldList(FormField(RecipeLineForm), min_entries=6)
     save_button = SubmitField()
 

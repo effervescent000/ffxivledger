@@ -30,6 +30,7 @@ def get_item_options():
     item_options = [('', '---')]
     for x in Item.query.all():
         item_options.append((x.value, x.name))
+    item_options.sort()
     return item_options
 
 
@@ -38,6 +39,7 @@ def get_craftables_options():
     for x in Item.query.all():
         if x.type != 'material':
             item_options.append((x.value, x.name))
+    item_options.sort()
     return item_options
 
 
