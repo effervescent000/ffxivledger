@@ -75,6 +75,7 @@ def rename_item(item, new_name):
 
 def convert_to_time_format(time):
     """Convert a datetime object into a string in the preferred time format"""
-    new_time = time.strftime(time_format)
-    # new_time = datetime.strptime(new_time, time_format)
-    return new_time
+    return time.strftime(time_format)
+
+def convert_string_to_datetime(time):
+    return datetime.strptime(time, time_format)

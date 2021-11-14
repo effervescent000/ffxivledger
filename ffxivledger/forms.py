@@ -1,7 +1,7 @@
 from flask.app import Flask
 from flask_wtf import FlaskForm
 from wtforms import (
-    IntegerField, SelectField, Form, FormField, StringField, SubmitField, PasswordField, ValidationError
+    IntegerField, SelectField, Form, FormField, StringField, SubmitField, PasswordField, ValidationError, TextAreaField
 )
 from wtforms.validators import InputRequired, Length, Email, EqualTo, Optional
 from wtforms.fields import FieldList
@@ -65,6 +65,16 @@ class TransactionForm(FlaskForm):
 
     save_button = SubmitField()
 
+
+class CraftingQueueForm(FlaskForm):
+    queue_dropdown = SelectField('Number to queue', choices=[3,5,10])
+    queue_button = SubmitField('Queue')
+    queue_text = TextAreaField()
+
+
+class CraftingOutputForm(FlaskForm):
+    output_text= TextAreaField(render_kw={'readonly': True})
+    clear_button = SubmitField('Clear log')
 
 # recipe related forms
 class RecipeLineForm(Form):

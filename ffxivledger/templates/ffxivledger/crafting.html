@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% from "_formhelpers.html" import render_field, render_field_no_label %}
+
+{% block header %}
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='crafting_queue.css') }}">
+
+{% endblock %}
+
+{% block content %}
+    <div id="content-wrapper">
+        <div class="spacer"></div>
+        <div id="queue-form-wrapper">
+            <form method="post">
+                {{ queue_form.hidden_tag() }}
+                <div class="input">
+                    {{ render_field_no_label(queue_form.queue_dropdown) }}
+                    {{ render_field_no_label(queue_form.queue_button) }}
+                </div>
+                <div class="output">
+                    {{ render_field_no_label(queue_form.queue_text) }}
+                </div>
+            </form>
+        </div>
+        <div id="log-form-wrapper">
+            <form method="post">
+                {{ log_form.hidden_tag() }}
+                <div class="output">
+                    {{ render_field_no_label(log_form.output_text) }}
+                </div>
+                <div id="input">
+                    {{ render_field_no_label(log_form.clear_button) }}
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -48,14 +48,9 @@
     }
     #log-frame-wrapper {
       #log-wrapper textarea {
+        @include textarea-styling;
         width: 50%;
-        resize: none;
         height: 12em;
-        background-color: $tertiary-background-color;
-        color: $primary-text-color;
-        border: $secondary-accent-color 1px solid;
-        border-radius: 10px;
-        padding: 10px;
       }
       #log-buttons button {
         @include button-styling;

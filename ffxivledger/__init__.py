@@ -45,4 +45,7 @@ def create_app(test_config=None):
         from . import transaction
         app.register_blueprint(transaction.bp)
 
+        from . import crafting_calc
+        app.register_blueprint(crafting_calc.bp)
+
         return app
