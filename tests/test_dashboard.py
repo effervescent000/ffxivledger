@@ -15,14 +15,14 @@ def test_dashboard(client):
 
 @pytest.mark.parametrize(('item_value', 'amount', 'gil_value', 'new_stock'), (
         ('test_item', 1, 20000, 1),
-        ('third_test_item', 100, 300, 200)
+        ('third_test_item', 100, 300, 300)
 ))
 def test_add_sale(client, item_value, amount, gil_value, new_stock):
-    with client:
-        data = {'item': item_value, 'amount': amount, 'gil_value': gil_value, 'sale_button': True}
-        client.post('/', data=data)
+    old_amount = Stock.query.filter_by(item_value=item_value, user_id=1).one_or_none().amount
+    data = {'item': item_value, 'amount': amount, 'gil_value': gil_value, 'sale_button': True}
+    client.post('/', data=data)
 
-    assert Stock.query.filter_by(item_value=item_value, user_id=1).one_or_none().amount == new_stock
+    assert old_amount - amount == new_stock
 
 
 @pytest.mark.parametrize(('item_value', 'amount', 'gil_value'), (
@@ -36,17 +36,16 @@ def test_add_sale_validation(client, item_value, amount, gil_value):
         client.post('/', data=data)
 
 
-
 @pytest.mark.parametrize(('item_value', 'amount', 'gil_value', 'new_stock'), (
         ('test_bolts_of_cloth', 100, 100, 150),
-        ('third_test_item', 50, 200, 350)
+        ('third_test_item', 50, 200, 450)
 ))
 def test_add_purchase(client, item_value, amount, gil_value, new_stock):
+    old_amount = Stock.query.filter_by(item_value=item_value, user_id=1).one_or_none().amount
     data = {'item': item_value, 'amount': amount,'gil_value': gil_value, 'purchase_button': True}
     client.post('/', data=data)
 
-    assert Stock.query.filter_by(item_value=item_value, user_id=1).one_or_none().amount == new_stock
-
+    assert old_amount + amount == new_stock
 
 
 @pytest.mark.parametrize('item_value', (

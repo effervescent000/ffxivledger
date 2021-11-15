@@ -6,7 +6,7 @@ from flask import (
 from flask_login import current_user
 
 from .models import Item, Stock, Transaction, Recipe, Component, Product
-from .utils import get_item, convert_string_to_datetime
+from .utils import get_item, convert_string_to_datetime, get_user_id
 from .forms import CraftingQueueForm, CraftingOutputForm
 
 bp = Blueprint('crafting', __name__, url_prefix='/craft')
@@ -38,23 +38,33 @@ def generate_queue(num):
     primary_craft_list = []
     secondary_craft_list = []
     tertiary_craft_list = []
+    error_list = []
 
+    user_id = get_user_id()
     for x in Product.query.all():
-        stock = get_item(x.item_value).stock
+        stock = Stock.query.filter_by(item_value=x.item_value, user_id=user_id).all()
         if len(stock) > 1:
             print('Stock data is screwed up for {}'.format(x.item_value))
         else:
-            if stock.amount == 0:
-                transaction_list = Transaction.query.filter_by(item_value=x.item_value, user_id=current_user.id).all()
+            if stock[0].amount == 0:
+                transaction_list = Transaction.query.filter_by(item_value=x.item_value, user_id=user_id).all()
                 sales_list = [y for y in transaction_list if (y.gil_value > 0 and y.amount < 0)]
                 if len(sales_list) > 0:
-                    gph = get_gph(x.item_value, sales_list)
+                    result = get_gph(x.item_value, sales_list, error_list)
+                    gph = result[0]
+                    error_list = result[1]
                     if gph is not None:
                         primary_craft_list.append((x.item_value, gph, 'gph'))
                     else:
-                        secondary_craft_list.append((x.item_value, get_profit(x.item_value), 'gil'))
+                        result = get_profit(x.item_value, error_list)
+                        profit = result[0]
+                        error_list = result[1]
+                        secondary_craft_list.append((x.item_value, profit, 'gil'))
                 else:
-                    tertiary_craft_list.append((x.item_value, get_profit(x.item_value), 'gil'))
+                    result = get_profit(x.item_value, error_list)
+                    profit = result[0]
+                    error_list = result[1]
+                    tertiary_craft_list.append((x.item_value, profit, 'gil'))
     primary_craft_list.sort(key=get_gph, reverse=True)
     secondary_craft_list.sort(key=get_profit, reverse=True)
     tertiary_craft_list.sort(key=get_profit, reverse=True)
@@ -82,8 +92,9 @@ def get_from_craft_lists(craft_list, secondary_craft_list, num):
             craft_list.append(secondary_craft_list[i])
     return craft_list
 
-def get_gph(item_value, sales_list=None):
-    transaction_list = Transaction.query.filter_by(item_value=item_value, user_id=current_user.id).all()
+def get_gph(item_value, sales_list=None, error_list=None):
+    new_error_list = []
+    transaction_list = Transaction.query.filter_by(item_value=item_value, user_id=get_user_id()).all()
     if sales_list is None:
         sales_list = [x for x in transaction_list if (x.gil_value > 0 and x.amount < 0)]
     restock_list = [x for x in transaction_list if (x.gil_value == 0 and x.amount > 0)]
@@ -100,7 +111,13 @@ def get_gph(item_value, sales_list=None):
             for x in deltas:
                 total_time += x
             avg_time = total_time / len(deltas)
-            return floor(get_profit(item_value) / (avg_time.days * 24 + avg_time.seconds / 3600))
+            if error_list is None:
+                return floor(get_profit(item_value) / (avg_time.days * 24 + avg_time.seconds / 3600))
+            else:
+                profit = get_profit(item_value)
+                new_error_list = profit[1]
+                profit = profit[0]
+                return [floor(profit / (avg_time.days * 24 + avg_time.seconds / 3600)), error_list + new_error_list]
     return None
 
 
@@ -114,12 +131,30 @@ def match_stock(sale_time, restock_list):
     return None
 
 
-def get_profit(item_value):
-    return get_average_price(item_value, mode='s') - get_crafting_cost(item_value)
+def get_profit(item_value, error_list=None):
+    new_error_list = []
+    new_item_value = None
+    if isinstance(item_value, tuple):
+        new_item_value = item_value[0]
+    else:
+        new_item_value = item_value
+    avg = get_average_price(new_item_value, mode='s')
+    result = get_crafting_cost(new_item_value, new_error_list)
+    cost = result[0]
+    if avg is None:
+        avg = 0
+    if cost is None:
+        print('{} has a crafting cost of None, setting to 0'.format(new_item_value))
+        cost = 0
+    if error_list is not None:
+        new_error_list = result[1]
+        return [avg - cost, error_list + new_error_list]
+    else:
+        return avg - cost
 
 def get_average_price(item_value,mode=None):
     price_list = []
-    transaction_list = Transaction.query.filter_by(item_value=item_value, user_id=current_user.id).all()
+    transaction_list = Transaction.query.filter_by(item_value=item_value, user_id=get_user_id()).all()
     if mode is None:
         price_list = [x.gil_value for x in transaction_list if x.gil_value != 0]
     elif mode == 'sale' or mode == 'sales' or mode == 1 or mode == 's':
@@ -134,8 +169,10 @@ def get_average_price(item_value,mode=None):
         return None
 
 
-def get_crafting_cost(item_value):
+def get_crafting_cost(item_value, error_list=None):
     item = get_item(item_value)
+    if error_list is None:
+        error_list = []
     if item.type != 'material':
         products = Product.query.filter_by(item_value=item_value).all()
         if len(products) > 0:
@@ -144,10 +181,16 @@ def get_crafting_cost(item_value):
             recipe_list = [x.recipe_id for x in products]
             for x in recipe_list:
                 recipe = Recipe.query.get(x)
-                for x in recipe.components:
-                    craft_cost += get_crafting_cost(item_value)
-            return craft_cost
+                for y in recipe.components:
+                    result = get_crafting_cost(y.item_value, error_list)
+                    if result is None:
+                        error_list.append('Component {} returned None for crafting cost'.format(y.item_value))
+                    else:
+                        y_cost = result[0]
+                        error_list = result[1]
+                        craft_cost += y_cost
+            return [craft_cost, error_list]
     else:
         craft_cost = get_average_price(item_value, mode='p')
-        return craft_cost
+        return [craft_cost, error_list]
     return None

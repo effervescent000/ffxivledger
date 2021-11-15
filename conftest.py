@@ -23,11 +23,11 @@ def app():
         'WTF_CSRF_METHODS': [],
         'LOGIN_DISABLED': True
     }
+    
     app = create_app(settings_override)
 
     with app.app_context():
         db.init_app(app)
-
         populate_test_data()
 
         yield app
@@ -46,6 +46,7 @@ def runner(app):
 
 
 def populate_test_data():
+    
     user_list = [
         User(username='Admin', role='admin'),
         User(username='super_user', role='super_user'),
@@ -77,10 +78,11 @@ def populate_test_data():
 
     time = convert_to_time_format(datetime.datetime.now())
     get_item(new_items[0].value).process_transaction(gil_value=50000, time=time, amount=-1, user_id=1)
+    get_item(new_items[2].value).process_transaction(gil_value=-100, time=time, amount=100, user_id=1)
     get_item(new_items[3].value).process_transaction(gil_value=-200, time=time, amount=30, user_id=1)
     
     # at this point what I expect to have in stock is:
-    # Test Item 2, patrician's bottoms 0, third test item 300, test bolts of cloth 50
+    # Test Item 2, patrician's bottoms 0, third test item 400, test bolts of cloth 50
 
     new_recipes = [
         Recipe(job='WVR', id=1),  # patrician's bottoms

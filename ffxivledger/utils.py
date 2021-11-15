@@ -79,3 +79,11 @@ def convert_to_time_format(time):
 
 def convert_string_to_datetime(time):
     return datetime.strptime(time, time_format)
+
+def get_user_id():
+    user_id = None
+    if current_app.config.get('TESTING') is True:
+        user_id = 1
+    else:
+        user_id = current_user.id
+    return user_id
