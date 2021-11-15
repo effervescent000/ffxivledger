@@ -32,9 +32,15 @@ def view_queue():
 
 def list_to_string(list_arg):
     text = ''
-    for x in list_arg:
-        new_string = '{} for {} {}\n'.format(x[0], x[1], x[2])
-        text += new_string
+    if len(list_arg) > 0:
+        if isinstance(list_arg[0], tuple):
+            for x in list_arg:
+                new_string = '{} for {} {}\n'.format(x[0], x[1], x[2])
+                text += new_string
+        else:
+            for x in list_arg:
+                new_string = '{}\n'.format(x)
+                text += new_string
     return text
 
 def generate_queue(num):
@@ -164,7 +170,7 @@ def get_average_price(item_value,mode=None):
     elif mode == 'sale' or mode == 'sales' or mode == 1 or mode == 's':
         price_list = [x.gil_value for x in transaction_list if x.gil_value > 0]
     elif mode == 'purchase' or mode == 'purchases' or mode == -1 or mode == 'p':
-        price_list = [x.gil_value for x in transaction_list if x.gil_value < 0]
+        price_list = [x.gil_value * -1 for x in transaction_list if x.gil_value < 0]
     else:
         print('Invalid mode passed to get_average_price')
     if len(price_list) > 0:
