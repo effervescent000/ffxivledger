@@ -18,20 +18,24 @@ def view_queue():
     if request.method == 'POST':
         if queue_form.queue_button.data:
             queue_amount = queue_form.queue_dropdown.data
-            queue_form.queue_text.data = queue_to_string(generate_queue(queue_amount))
-            return render_template('ffxivledger/crafting.html', queue_form=queue_form, log_form=log_form, queue_amount=queue_amount)
+            result = generate_queue(queue_amount)
+            craft_list = result[0]
+            error_list = result[1]
+            queue_form.queue_text.data = list_to_string(craft_list)
+            log_form.output_text.data = list_to_string(error_list)
+            return render_template('ffxivledger/crafting.html', queue_form=queue_form, log_form=log_form)
         elif log_form.clear_button.data:
             pass
         else:
             print('Neither button was pressed???')
     return render_template('ffxivledger/crafting.html', queue_form=queue_form, log_form=log_form)
 
-def queue_to_string(craft_list):
+def list_to_string(list_arg):
     text = ''
-    for x in craft_list:
-        new_string = '{} for {} {}\n'.format(craft_list[0], craft_list[1], craft_list[2])
-        text = text + new_string
-        return text
+    for x in list_arg:
+        new_string = '{} for {} {}\n'.format(x[0], x[1], x[2])
+        text += new_string
+    return text
 
 def generate_queue(num):
     num = int(num)
@@ -46,7 +50,7 @@ def generate_queue(num):
         if len(stock) > 1:
             print('Stock data is screwed up for {}'.format(x.item_value))
         else:
-            if stock[0].amount == 0:
+            if len(stock) == 0 or stock[0].amount == 0:
                 transaction_list = Transaction.query.filter_by(item_value=x.item_value, user_id=user_id).all()
                 sales_list = [y for y in transaction_list if (y.gil_value > 0 and y.amount < 0)]
                 if len(sales_list) > 0:
@@ -79,7 +83,7 @@ def generate_queue(num):
         craft_list = get_from_craft_lists(craft_list, secondary_craft_list, num)
         if len(craft_list) < num:
             craft_list = get_from_craft_lists(craft_list, tertiary_craft_list, num)
-    return craft_list
+    return craft_list, error_list
 
 
 def get_from_craft_lists(craft_list, secondary_craft_list, num):
