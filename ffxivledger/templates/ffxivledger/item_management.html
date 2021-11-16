@@ -3,6 +3,11 @@
 {% block content %}
     <div class="items-wrapper">
         <table>
+            <tr>
+                <th>Item name</th>
+                <th>Type</th>
+                <th><a href="{{ url_for('item.create_item') }}">Create new</a></th>
+            </tr>
             {% for item in item_list %}
                 <tr>
                     <td>{{ item.name }}</td>
