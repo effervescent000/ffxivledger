@@ -96,7 +96,7 @@ def get_from_craft_lists(craft_list, secondary_craft_list, num):
     n = num - len(craft_list)
     if n < len(secondary_craft_list):
         for i in range(n):
-            craft_list.append(secondary_craft_list)
+            craft_list.append(secondary_craft_list[i])
     else:
         for i in range(len(secondary_craft_list)):
             craft_list.append(secondary_craft_list[i])
@@ -165,14 +165,16 @@ def get_profit(item_value, error_list=None):
 def get_average_price(item_value,mode=None):
     price_list = []
     transaction_list = Transaction.query.filter_by(item_value=item_value, user_id=get_user_id()).all()
-    if mode is None:
-        price_list = [x.gil_value for x in transaction_list if x.gil_value != 0]
-    elif mode == 'sale' or mode == 'sales' or mode == 1 or mode == 's':
-        price_list = [x.gil_value for x in transaction_list if x.gil_value > 0]
-    elif mode == 'purchase' or mode == 'purchases' or mode == -1 or mode == 'p':
-        price_list = [x.gil_value * -1 for x in transaction_list if x.gil_value < 0]
-    else:
-        print('Invalid mode passed to get_average_price')
+    if len(transaction_list) > 0:
+        if mode is None:
+            price_list = [x.gil_value for x in transaction_list if x.gil_value != 0]
+        elif mode == 'sale' or mode == 'sales' or mode == 1 or mode == 's':
+            price_list = [x.gil_value for x in transaction_list if x.gil_value > 0]
+        elif mode == 'purchase' or mode == 'purchases' or mode == -1 or mode == 'p':
+            price_list = [x.gil_value * -1 for x in transaction_list if x.gil_value < 0]
+        else:
+            print('Invalid mode passed to get_average_price')
+
     if len(price_list) > 0:
         return sum(price_list) / len(price_list)
     else:
@@ -202,5 +204,8 @@ def get_crafting_cost(item_value, error_list=None):
             return [craft_cost, error_list]
     else:
         craft_cost = get_average_price(item_value, mode='p')
+        if craft_cost is None:
+            error_list.append('{} has None for craft_cost, setting to 0'.format(item_value))
+            craft_cost = 0
         return [craft_cost, error_list]
     return None

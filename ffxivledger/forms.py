@@ -69,7 +69,7 @@ class TransactionForm(FlaskForm):
 class CraftingQueueForm(FlaskForm):
     queue_dropdown = SelectField('Number to queue', choices=[3,5,10])
     queue_button = SubmitField('Queue')
-    queue_text = TextAreaField()
+    queue_text = TextAreaField(render_kw={'readonly': True})
 
 
 class CraftingOutputForm(FlaskForm):
