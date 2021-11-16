@@ -34,7 +34,7 @@ def create_item():
         new_item = Item(name=name, value=value, type=item_type)
         db.session.add(new_item)
         db.session.commit()
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('item.manage_items'))
     return render_template('ffxivledger/item_edit.html', form=form)
 
 
