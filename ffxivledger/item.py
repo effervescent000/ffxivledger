@@ -29,6 +29,7 @@ def create_item():
     if request.method == 'POST':
         name = form.item_name.data
         value = name_to_value(name)
+        # TODO make this prevent duplicate item entry
         item_type = form.item_type.data
 
         new_item = Item(name=name, value=value, type=item_type)

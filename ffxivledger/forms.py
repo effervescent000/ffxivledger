@@ -1,9 +1,9 @@
-from flask.app import Flask
+from flask import Flask
 from flask_wtf import FlaskForm
 from wtforms import (
     IntegerField, SelectField, Form, FormField, StringField, SubmitField, PasswordField, ValidationError, TextAreaField
 )
-from wtforms.validators import InputRequired, Length, Email, EqualTo, Optional
+from wtforms.validators import InputRequired, Length, Email, EqualTo
 from wtforms.fields import FieldList
 from flask_login import current_user
 

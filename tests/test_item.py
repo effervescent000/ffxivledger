@@ -8,7 +8,7 @@ from ffxivledger.utils import get_item, name_to_value
     'test_item', 'patricians_bottoms'
 ])
 def test_view_item(client, item_value):
-    rv = client.get('item/view/{}'.format(item_value))
+    rv = client.get(f'item/view/{item_value}')
     item = get_item(item_value)
 
     # did it load successfully?
@@ -37,7 +37,7 @@ def test_edit_item(client, item_value, new_name, new_type):
     item_old_name = get_item(item_value).name
     data = {'item_name': new_name, 'item_type': new_type}
 
-    client.post('item/edit/{}'.format(item_value), data=data)
+    client.post(f'item/edit/{item_value}', data=data)
     assert get_item(name_to_value(new_name)).name == new_name
 
 @pytest.mark.parametrize('item_value', [
@@ -45,5 +45,5 @@ def test_edit_item(client, item_value, new_name, new_type):
     'not_a_valid_item' # what it says
 ])
 def test_delete_item(client, item_value):
-    client.post('item/delete/{}'.format(item_value))
+    client.post(f'item/delete/{item_value}')
     assert Item.query.get(item_value) is None

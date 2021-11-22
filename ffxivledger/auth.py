@@ -3,7 +3,7 @@ from flask import (
 )
 from flask_login import login_required, logout_user, current_user, login_user
 
-from ffxivledger.utils import admin_required
+from .utils import admin_required
 
 from .models import User
 from .forms import SignUpForm, LoginForm, ManageUserForm

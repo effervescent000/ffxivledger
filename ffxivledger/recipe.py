@@ -2,14 +2,12 @@ from os import abort
 from flask import (
     Blueprint, flash, redirect, render_template, request, url_for
 )
-from flask.wrappers import Response
+
 from flask_login import login_required
-from wtforms.fields.form import FormField
-from wtforms.fields.list import FieldList
 
 from . import db
-from .models import Item, Recipe, Component, Product
-from .forms import CreateRecipeForm, RecipeLineForm
+from .models import Recipe, Component, Product
+from .forms import CreateRecipeForm
 from .utils import get_item, admin_required
 
 bp = Blueprint('recipe', __name__, url_prefix='/recipe')
