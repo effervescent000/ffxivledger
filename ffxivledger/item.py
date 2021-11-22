@@ -13,12 +13,12 @@ bp = Blueprint('item', __name__, url_prefix='/item')
 
 @bp.route('/view/<value>', methods=('GET', 'POST'))
 def view_item(value):
-    item = get_item(value)
-
-    sale_list = Transaction.query.filter(Transaction.item_value == value, Transaction.gil_value > 0).all()
-    purchase_list = Transaction.query.filter(Transaction.item_value == value, Transaction.gil_value < 0).all()
-    return render_template('ffxivledger/item_view.html', item=item, sale_price_list=sale_list,
-                           purchase_price_list=purchase_list)
+    return render_template(
+        'ffxivledger/item_view.html', 
+        item=get_item(value), 
+        sale_price_list=Transaction.query.filter(Transaction.item_value == value, Transaction.gil_value > 0).all(),
+        purchase_price_list=Transaction.query.filter(Transaction.item_value == value, Transaction.gil_value < 0).all()
+    )
 
 
 @bp.route('/edit/new', methods=('GET', 'POST'))
@@ -27,12 +27,12 @@ def view_item(value):
 def create_item():
     form = CreateItemForm()
     if request.method == 'POST':
-        name = form.item_name.data
-        value = name_to_value(name)
         # TODO make this prevent duplicate item entry
-        item_type = form.item_type.data
-
-        new_item = Item(name=name, value=value, type=item_type)
+        new_item = Item(
+            name=form.item_name.data, 
+            value=name_to_value(form.item_name.data), 
+            type=form.item_type.data
+        )
         db.session.add(new_item)
         db.session.commit()
         return redirect(url_for('item.manage_items'))
@@ -59,8 +59,7 @@ def edit_item(value):
 @login_required
 @admin_required
 def manage_items():
-    item_list = Item.query.all()
-    return render_template('ffxivledger/item_management.html', item_list=item_list)
+    return render_template('ffxivledger/item_management.html', item_list=Item.query.all())
 
 @bp.route('/delete/<value>', methods=('GET', 'POST'))
 @login_required
