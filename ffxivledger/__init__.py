@@ -3,9 +3,11 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_marshmallow import Marshmallow
 
 db = SQLAlchemy()
 login_manager = LoginManager()
+ma = Marshmallow()
 
 
 def create_app(test_config=None):
@@ -23,6 +25,7 @@ def create_app(test_config=None):
 
     db.init_app(app)
     login_manager.init_app(app)
+    ma.init_app(app)
 
     with app.app_context():
 
