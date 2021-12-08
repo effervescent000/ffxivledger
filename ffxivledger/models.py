@@ -116,8 +116,7 @@ class Component(db.Model):
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'))
 
     def __repr__(self):
-        return '<Component {} for recipe {} for {}>'.format(self.item_value, self.recipe.id,
-                                                            self.recipe.product.item_value)
+        return '<Component {} for recipe {} for {}>'.format(self.item_value, self.recipe.id, self.recipe.product.item_value)
 
 
 class Product(db.Model):
