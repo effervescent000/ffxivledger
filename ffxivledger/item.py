@@ -77,20 +77,37 @@ def create_item():
 #     return render_template('ffxivledger/item_edit.html', form=form)
 
 
-@bp.route('/edit/<value>', methods=('GET', 'POST'))
-@login_required
-@admin_required
+@bp.route('edit/<value>', methods=['PUT'])
 def edit_item(value):
     item = get_item(value)
-    form = CreateItemForm(item_name=item.name,item_type=item.type)
-    if form.validate_on_submit():
-        if item.name != form.item_name.data:
-            rename_item(item, form.item_name.data)
-        if item.type != form.item_type.data:
-            item.type = form.item_type.data
-        db.session.commit()
-        return redirect(url_for('item.manage_items'))
-    return render_template('ffxivledger/item_edit.html', form=form)
+    data = request.get_json()
+    name = data.get('name')
+    # value = None
+    type = data.get('type')
+
+    if name != None:
+        item.value = name_to_value(name)
+        item.name = name
+    if type != None:
+        item.type = type
+    db.session.commit()
+    return jsonify(one_item_schema.dump(item))
+    
+
+# @bp.route('/edit/<value>', methods=('GET', 'POST'))
+# @login_required
+# @admin_required
+# def edit_item(value):
+#     item = get_item(value)
+#     form = CreateItemForm(item_name=item.name,item_type=item.type)
+#     if form.validate_on_submit():
+#         if item.name != form.item_name.data:
+#             rename_item(item, form.item_name.data)
+#         if item.type != form.item_type.data:
+#             item.type = form.item_type.data
+#         db.session.commit()
+#         return redirect(url_for('item.manage_items'))
+#     return render_template('ffxivledger/item_edit.html', form=form)
 
 
 @bp.route('/manage')
