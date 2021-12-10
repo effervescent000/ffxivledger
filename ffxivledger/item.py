@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, json, redirect, render_template, request, url_for, jsonify
+from flask import Blueprint, flash, redirect, render_template, request, url_for, jsonify
 from flask_login import login_required
 
 from .models import Item, Transaction
@@ -120,7 +120,7 @@ def manage_items():
     return render_template("ffxivledger/item_management.html", item_list=Item.query.all())
 
 
-@bp.route("/delete/<value>", methods=("GET", "POST"))
+@bp.route("/delete/<value>", methods=["DELETE"])
 @login_required
 @admin_required
 def delete_item(value):
@@ -128,4 +128,16 @@ def delete_item(value):
     if item is not None:
         db.session.delete(item)
         db.session.commit()
-    return redirect(url_for("item.manage_items"))
+        return jsonify("Item deleted successfully")
+    return jsonify("Item not found")
+
+
+# @bp.route("/delete/<value>", methods=("GET", "POST"))
+# @login_required
+# @admin_required
+# def delete_item(value):
+#     item = Item.query.get(value)
+#     if item is not None:
+#         db.session.delete(item)
+#         db.session.commit()
+#     return redirect(url_for("item.manage_items"))
