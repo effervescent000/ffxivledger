@@ -1,8 +1,8 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for, jsonify
 from flask_login import login_required
 
-from .models import Item, Transaction
-from .schema import ItemSchema, TransactionSchema
+from .models import Item, Transaction, Stock
+from .schema import ItemSchema, StockSchema, TransactionSchema
 from . import db
 from .utils import get_item, name_to_value, admin_required, rename_item
 from .forms import CreateItemForm
@@ -11,6 +11,7 @@ bp = Blueprint("item", __name__, url_prefix="/item")
 one_item_schema = ItemSchema()
 multi_item_schema = ItemSchema(many=True)
 multi_transaction_schema = TransactionSchema(many=True)
+multi_stock_schema = StockSchema(many=True)
 
 
 @bp.route("/view/<value>", methods=["GET"])
@@ -39,6 +40,11 @@ def get_item_purchases(value):
     purchases_list = Transaction.query.filter(Transaction.item_value == value, Transaction.gil_value < 0).all()
     return jsonify(multi_transaction_schema.dump(purchases_list))
 
+
+@bp.route("/stock/user/<user_id>", methods=['GET'])
+def get_stock_list(user_id):
+    stock_list = Stock.query.filter(Stock.user_id==user_id, Stock.amount>0).all()
+    return jsonify(multi_stock_schema.dump(stock_list))
 
 @bp.route("/edit/new", methods=["POST"])
 @login_required
