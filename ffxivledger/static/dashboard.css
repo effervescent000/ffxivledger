@@ -10,8 +10,11 @@
   margin: 10px;
 }
 
-#content-wrapper #left-content-wrapper table {
-  width: 300px;
+#content-wrapper #left-content-wrapper #stock-frame {
+  display: -ms-grid;
+  display: grid;
+  -ms-grid-columns: 2fr 1fr;
+      grid-template-columns: 2fr 1fr;
 }
 
 #content-wrapper #right-content-wrapper {
