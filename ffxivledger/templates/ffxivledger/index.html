@@ -14,21 +14,7 @@
         </div>
         <div id="stock-frame">
             <script>
-                fetch("{{ url_for('item.get_stock_list', user_id=current_user.id) }}")
-                .then(data => data.json())
-                .then(data => {
-                    // console.log(data)
-                    data.forEach(stock => {
-                        const nameDiv = document.createElement('div');
-                        nameDiv.className = "stock-name"
-                        const amountDiv = document.createElement('div');
-                        amountDiv.className = "stock-amount"
-                        nameDiv.innerHTML = stock.item_value;
-                        amountDiv.innerHTML = stock.amount;
-                        document.getElementById("stock-frame").appendChild(nameDiv)
-                        document.getElementById("stock-frame").appendChild(amountDiv)
-                    })
-                })
+                loadStockFrame( {{ current_user.id }} );
             </script>
         </div>
     </div>
