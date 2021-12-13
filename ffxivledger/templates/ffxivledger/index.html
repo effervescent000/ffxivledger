@@ -3,6 +3,7 @@
 {% block header %}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 {% endblock header %}
 {% block content %}
 <div class="spacer-60"></div>
@@ -32,7 +33,18 @@
         </div>
     </div>
     <div id="center-content-wrapper">
-        <div class="NYI">Crafting calc goes here</div>
+        <div id="crafting-wrapper">
+            <div id="crafting-input-wrapper">
+                <select id="crafting-amount">Select amount to craft
+                    <option value="1">1</option>
+                    <option value="3">3</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                </select>
+                <button onclick="getCraftQueue(document.getElementById('crafting-amount').value, {{ current_user.id }})">Generate queue</button>
+            </div>
+            <div id="crafting-output-wrapper"></div>
+        </div>
     </div>
     <div id="right-content-wrapper">
         <div id="item-form">
