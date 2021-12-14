@@ -99,6 +99,8 @@ class Queue:
 
     def get_gph(self, item_value, sales_list=None, error_list=None):
         new_error_list = []
+        if type(item_value) == tuple:
+            item_value = item_value[0]
         transaction_list = Transaction.query.filter_by(item_value=item_value, user_id=get_user_id()).all()
         if sales_list is None:
             sales_list = [x for x in transaction_list if (x.gil_value > 0 and x.amount < 0)]
@@ -109,7 +111,7 @@ class Queue:
             for x in sales_list:
                 matching_restock = self.match_stock(x.time, restock_list)
                 if matching_restock is not None:
-                    deltas.append(convert_string_to_datetime(x.time), convert_string_to_datetime(x.time))
+                    deltas.append(convert_string_to_datetime(matching_restock.time) - convert_string_to_datetime(x.time))
                     restock_list.remove(matching_restock)
             if len(deltas) > 0:
                 total_time = timedelta()
@@ -117,7 +119,7 @@ class Queue:
                     total_time += x
                 avg_time = total_time / len(deltas)
                 if error_list is None:
-                    return floor(self.get_profit(item_value) / (avg_time.days * 24 + avg_time.seconds / 3600))
+                    return floor(self.get_profit(item_value)[0] / (avg_time.days * 24 + avg_time.seconds / 3600))
                 else:
                     profit = self.get_profit(item_value)
                     new_error_list = profit[1]
@@ -156,7 +158,7 @@ class Queue:
             new_error_list = result[1]
             return [avg - cost, error_list + new_error_list]
         else:
-            return avg - cost
+            return [avg - cost, new_error_list]
 
     def get_average_price(self, item_value, mode=None):
         price_list = []
