@@ -55,6 +55,7 @@ class Item(db.Model):
         db.session.commit()
         # now adjust the amount stored in the stock table
         self._adjust_stock(amount, user_id)
+        return transaction
 
 
     def _adjust_stock(self, num, user_id, overwrite=False):
