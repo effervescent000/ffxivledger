@@ -14,7 +14,7 @@
         </div>
         <div id="stock-frame">
             <script>
-                loadStockFrame( {{ current_user.id }} );
+                loadStockFrame();
             </script>
         </div>
     </div>
@@ -27,7 +27,7 @@
                     <option value="5">5</option>
                     <option value="10">10</option>
                 </select>
-                <button onclick="getCraftQueue(document.getElementById('crafting-amount').value, {{ current_user.id }})">Generate queue</button>
+                <button onclick="getCraftQueue(document.getElementById('crafting-amount').value)">Generate queue</button>
             </div>
             <div id="crafting-output-wrapper"></div>
         </div>

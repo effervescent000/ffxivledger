@@ -1,5 +1,5 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for, jsonify
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 from .models import Item, Transaction, Stock
 from .schema import ItemSchema, StockSchema, TransactionSchema
@@ -14,7 +14,7 @@ multi_transaction_schema = TransactionSchema(many=True)
 multi_stock_schema = StockSchema(many=True)
 
 
-@bp.route("/view/<value>", methods=["GET"])
+@bp.route("/get/<value>", methods=["GET"])
 def get_item_by_value(value):
     item = Item.query.get(value)
     return jsonify(one_item_schema.dump(item))
@@ -41,8 +41,9 @@ def get_item_purchases(value):
     return jsonify(multi_transaction_schema.dump(purchases_list))
 
 
-@bp.route("/stock/user/<user_id>", methods=['GET'])
-def get_stock_list(user_id):
+@bp.route("/stock", methods=['GET'])
+def get_stock_list():
+    user_id = current_user.id
     stock_list = Stock.query.filter(Stock.user_id==user_id, Stock.amount>0).all()
     return jsonify(multi_stock_schema.dump(stock_list))
 

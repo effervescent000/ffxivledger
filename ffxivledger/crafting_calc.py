@@ -5,32 +5,13 @@ from flask_login import current_user
 
 from .models import Item, Stock, Transaction, Recipe, Component, Product
 from .utils import get_item, convert_string_to_datetime, get_user_id
-from .forms import CraftingQueueForm, CraftingOutputForm
 
 bp = Blueprint("crafting", __name__, url_prefix="/craft")
 
-# @bp.route('/queue', methods=['GET'])
-# def view_queue():
-#     queue_form = CraftingQueueForm()
-#     log_form = CraftingOutputForm()
-#     if request.method == 'POST':
-#         if queue_form.queue_button.data:
-#             queue_amount = queue_form.queue_dropdown.data
-#             result = generate_queue(queue_amount)
-#             craft_list = result[0]
-#             error_list = result[1]
-#             queue_form.queue_text.data = list_to_string(craft_list)
-#             log_form.output_text.data = list_to_string(error_list)
-#             return render_template('ffxivledger/crafting.html', queue_form=queue_form, log_form=log_form)
-#         elif log_form.clear_button.data:
-#             pass
-#         else:
-#             print('Neither button was pressed???')
-#     return render_template('ffxivledger/crafting.html', queue_form=queue_form, log_form=log_form)
 
-
-@bp.route("/get_queue/<user_id>-<amount>", methods=["GET"])
-def get_queue(amount, user_id):
+@bp.route("/get_queue/<amount>", methods=["GET"])
+def get_queue(amount):
+    user_id = current_user.id
     queue = Queue(amount, user_id)
     return jsonify(queue.generate_queue())
 

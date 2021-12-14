@@ -1,8 +1,8 @@
 from datetime import datetime
-from flask import Blueprint, flash, redirect, render_template, request, url_for, jsonify
-from flask_login import login_required
+from flask import Blueprint, redirect, render_template, request, url_for, jsonify
+from flask_login import login_required, current_user
 
-from .models import Item, Transaction
+from .models import Transaction, Item
 from . import db
 from .forms import TransactionForm
 from .utils import convert_to_time_format
@@ -49,8 +49,9 @@ def get_transaction_by_id(id):
     return jsonify(one_transaction_schema.dump(Transaction.query.get(id)))
 
 
-@bp.route("get/item/<user_id>-<item_value>", methods=["GET"])
-def get_transactions_by_item(item_value, user_id):
+@bp.route("/get/item/<item_value>", methods=["GET"])
+def get_transactions_by_item(item_value):
+    user_id = current_user.id
     return jsonify(
         multi_transaction_schema.dump(Transaction.query.filter_by(item_value=item_value, user_id=user_id).all())
     )
@@ -75,6 +76,8 @@ def add_transaction():
         # TODO figure out how JS passes this and convert it appropriately
         pass
 
-    new_xaction = Transaction(gil_value=gil_value, time=time, amount=amount, item_value=item_value, user_id=user_id)
-    db.session.add(new_xaction)
-    db.session.commit()
+    item = Item.query.get(item_value)
+    transaction = None
+    if item != None:
+        transaction = item.process_transaction(gil_value=gil_value, time=time, amount=amount, user_id=user_id)
+    return jsonify(one_transaction_schema.dump(transaction))
