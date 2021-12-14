@@ -34,34 +34,31 @@
     </div>
     <div id="right-content-wrapper">
         <div id="item-form">
-            <form method="post">
-                {{ form.hidden_tag() }}
-                <div class="entry-forms-wrapper">
-                    {{ render_field(form.item) }}
-                    {{ render_field(form.amount) }}
-                    {{ render_field(form.gil_value) }}
+            <div class="entry-forms-wrapper">
+                {{ render_field(form.item) }}
+                {{ render_field(form.amount) }}
+                {{ render_field(form.gil_value) }}
+            </div>
+            <div class="buttons-wrapper">
+                <div class="button">
+                    <button id="sale-btn">Add sale</button>
                 </div>
-                <div class="buttons-wrapper">
-                    <div class="button">
-                        {{ render_field_no_label(form.sale_button) }}
-                    </div>
-                    <div class="button">
-                        {{ render_field_no_label(form.purchase_button) }}
-                    </div>
-                    <div class="button">
-                        {{ render_field_no_label(form.view_button) }}
-                    </div>
-                    <div class="button">
-                        {{ render_field_no_label(form.remove_stock_button) }}
-                    </div>
-                    <div class="button">
-                        {{ render_field_no_label(form.add_stock_button) }}
-                    </div>
-                    <div class="button">
-                        {{ render_field_no_label(form.view_recipes_button) }}
-                    </div>
+                <div class="button">
+                    {{ render_field_no_label(form.purchase_button) }}
                 </div>
-            </form>
+                <div class="button">
+                    {{ render_field_no_label(form.view_button) }}
+                </div>
+                <div class="button">
+                    {{ render_field_no_label(form.remove_stock_button) }}
+                </div>
+                <div class="button">
+                    {{ render_field_no_label(form.add_stock_button) }}
+                </div>
+                <div class="button">
+                    {{ render_field_no_label(form.view_recipes_button) }}
+                </div>
+            </div>
         </div>
         <div id="log-frame-wrapper">
             <div id="log-wrapper">
@@ -73,4 +70,8 @@
         </div>
     </div>
 </div>
+<script>
+    // event listeners
+    document.getElementById("sale-btn").addEventListener('click', (event) => addSale())
+</script>
 {% endblock content %}

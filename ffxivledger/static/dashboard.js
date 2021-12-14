@@ -62,7 +62,7 @@ function getSelectedItem() {
 
 function getAmount() {
     const amount = document.getElementById("amount").value;
-    console.log(amount);
+    // console.log(amount);
     if (amount !== 0 || amount !== "") {
         return amount;
     } else {
@@ -72,7 +72,7 @@ function getAmount() {
 
 function getGilValue() {
     const gilValue = document.getElementById("gil_value").value;
-    console.log(gilValue);
+    // console.log(gilValue);
     if (gilValue !== "" || gilValue !== 0) {
         return gilValue;
     } else {
@@ -94,11 +94,11 @@ function addSale() {
             item_value: selectedItem,
             amount: amount,
             gil_value: gilValue,
-            user_id: currentUser,
         };
         const xhr = new XMLHttpRequest();
         const url = "/transaction/add";
         xhr.open("POST", url);
+        xhr.setRequestHeader("Content-Type", "application/json");
         xhr.withCredentials = true;
         xhr.send(JSON.stringify(newTransaction));
     }
