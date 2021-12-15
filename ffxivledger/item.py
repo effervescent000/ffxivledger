@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for, jsonify, current_app
+from flask import Blueprint, flash, json, redirect, render_template, request, url_for, jsonify, current_app
 from flask_login import login_required, current_user
 
 import requests as req
@@ -79,7 +79,18 @@ def get_all_items():
 
 @bp.route("/add", methods=["POST"])
 def create_item():
+    return process_item(request.get_json())
+
+@bp.route("/add/many", methods=['POST'])
+def create_multi_items():
+    items_list = []
     data = request.get_json()
+    for item in data:
+        items_list.append(process_item(item))
+    return jsonify(items_list)
+
+
+def process_item(data):
     name = data.get("name")
     # GET request to xivapi to search for the item
     search = req.get(
@@ -110,10 +121,8 @@ def create_item():
         if recipes != None and len(recipes) > 0:
             for recipe in recipes:
                 data = {"id": recipe.get("ID")}
-                headers = {"content-type": "application/json"}
                 req.post("http://127.0.0.1:5000/recipe/add", json=data)
     return jsonify(one_item_schema.dump(item))
-
 
 # @bp.route('/edit/new', methods=('GET', 'POST'))
 # @login_required
