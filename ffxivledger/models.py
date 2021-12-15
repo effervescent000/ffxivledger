@@ -62,6 +62,7 @@ class Item(db.Model):
     def _adjust_stock(self, num, user_id, overwrite=False):
         """Adjust the amount of a product in stock. If override is True, then overwrite the current stock value.
         If False, then +/- it"""
+        num = int(num)
         stock_row = Stock.query.filter_by(item_value=self.value,user_id=user_id).one_or_none()
         if stock_row is None:
             # always overwrite if creating a new row

@@ -1,3 +1,12 @@
+// event listeners
+// document
+//     .getElementById("sale-btn")
+//     .addEventListener("click", (event) => addSale());
+// document.getElementById("purchase-btn").addEventListener("click", (event) => addPurchase());
+// document.getElementById("remove-stock-btn").addEventListener("click", (event) => removeStock());
+// document.getElementById("add-stock-btn").addEventListener("click", (event) => addStock())
+
+// functions
 function getCraftQueue(num, currentUser) {
     if (typeof num === "string") {
         num = parseInt(num);
@@ -10,7 +19,7 @@ function getCraftQueue(num, currentUser) {
 
     // next retrieve the crafting queue from the backend
     fetch(`/craft/get_queue/${num}`, {
-        credentials: "include"
+        credentials: "include",
     })
         .then((data) => data.json())
         .then((data) => {
@@ -34,7 +43,7 @@ async function getName(value) {
 
 async function loadStockFrame() {
     fetch(`/item/stock`, {
-        credentials: "include"
+        credentials: "include",
     })
         .then((data) => data.json())
         .then((data) => {
@@ -80,11 +89,7 @@ function getGilValue() {
     }
 }
 
-function addSale() {
-    const selectedItem = getSelectedItem();
-    const amount = getAmount() * -1;
-    const gilValue = getGilValue();
-
+function postTransaction(selectedItem, amount, gilValue) {
     if (
         selectedItem != undefined &&
         amount != undefined &&
@@ -102,4 +107,36 @@ function addSale() {
         xhr.withCredentials = true;
         xhr.send(JSON.stringify(newTransaction));
     }
+}
+
+function addSale() {
+    const selectedItem = getSelectedItem();
+    const amount = getAmount() * -1;
+    const gilValue = getGilValue();
+
+    postTransaction(selectedItem, amount, gilValue);
+}
+
+function addPurchase() {
+    const selectedItem = getSelectedItem();
+    const amount = getAmount();
+    const gilValue = getGilValue() * -1;
+
+    postTransaction(selectedItem, amount, gilValue);
+}
+
+function removeStock() {
+    const selectedItem = getSelectedItem();
+    const amount = getAmount() * -1;
+    const gilValue = 0;
+
+    postTransaction(selectedItem, amount, gilValue);
+}
+
+function addStock() {
+    const selectedItem = getSelectedItem();
+    const amount = getAmount();
+    const gilValue = 0;
+
+    postTransaction(selectedItem, amount, gilValue);
 }

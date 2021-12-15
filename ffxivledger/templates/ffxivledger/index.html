@@ -44,19 +44,19 @@
                     <button id="sale-btn">Add sale</button>
                 </div>
                 <div class="button">
-                    {{ render_field_no_label(form.purchase_button) }}
+                    <button id="purchase-btn">Add purchase</button>
                 </div>
                 <div class="button">
-                    {{ render_field_no_label(form.view_button) }}
+                    <button id="view-item-btn">View data</button>
                 </div>
                 <div class="button">
-                    {{ render_field_no_label(form.remove_stock_button) }}
+                    <button id="remove-stock-btn">Remove stock</button>
                 </div>
                 <div class="button">
-                    {{ render_field_no_label(form.add_stock_button) }}
+                    <button id="add-stock-btn">Add stock</button>
                 </div>
                 <div class="button">
-                    {{ render_field_no_label(form.view_recipes_button) }}
+                    <button id="view-recipes-btn">View recipes</button>
                 </div>
             </div>
         </div>
@@ -71,7 +71,11 @@
     </div>
 </div>
 <script>
-    // event listeners
-    document.getElementById("sale-btn").addEventListener('click', (event) => addSale())
+    document
+        .getElementById("sale-btn")
+        .addEventListener("click", (event) => addSale());
+    document.getElementById("purchase-btn").addEventListener("click", (event) => addPurchase());
+    document.getElementById("remove-stock-btn").addEventListener("click", (event) => removeStock());
+    document.getElementById("add-stock-btn").addEventListener("click", (event) => addStock())
 </script>
 {% endblock content %}
