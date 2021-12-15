@@ -23,10 +23,26 @@ class ProfileSchema(ma.Schema):
         )
 
 
+class ComponentSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "item_value", "item_quantity", "recipe_id")
+
+components_schema = ComponentSchema(many=True)
+
+class RecipeSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "job", "level", "item_id", "components")
+    components = ma.Nested(components_schema)
+
+
+multi_recipe_schema = RecipeSchema(many=True)
+
 class ItemSchema(ma.Schema):
     class Meta:
-        fields = ("id", "name")
+        fields = ("id", "name", "recipes")
+    recipes = ma.Nested(multi_recipe_schema)
 
+one_item_schema = ItemSchema()
 
 class TransactionSchema(ma.Schema):
     class Meta:
@@ -35,19 +51,6 @@ class TransactionSchema(ma.Schema):
 
 class StockSchema(ma.Schema):
     class Meta:
-        fields = ("item_id", "amount")
+        fields = ("item_id", "amount", "item")
+    item = ma.Nested(one_item_schema)
 
-
-class RecipeSchema(ma.Schema):
-    class Meta:
-        fields = ("id", "job", "level")
-
-
-class ComponentSchema(ma.Schema):
-    class Meta:
-        fields = ("id", "item_value", "item_quantity", "recipe_id")
-
-
-# class ProductSchema(ma.Schema):
-#     class Meta:
-#         fields = ("id", "item_value", "item_quantity", "recipe_id")
