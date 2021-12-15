@@ -32,12 +32,13 @@ class Item(db.Model):
     value = db.Column(db.String(name_length), primary_key=True)
     name = db.Column(db.String(name_length), unique=True, nullable=False)
     # valid types are: 'product', 'intermediate', 'material'
-    type = db.Column(db.String(50), nullable=False)
+    # type = db.Column(db.String(50), nullable=False)
     transactions = db.relationship('Transaction', backref='item', lazy=True, cascade="all, delete-orphan")
     stock = db.relationship('Stock', backref='item', lazy=True, cascade="all, delete-orphan")
 
     components = db.relationship('Component', backref='item', lazy=True, cascade='all, delete-orphan')
-    products = db.relationship('Product', backref='item', lazy=True, cascade="all, delete-orphan")
+    recipes = db.relationship('Recipe', backref="item", lazy=True, cascade='all, delete-orphan')
+    # products = db.relationship('Product', backref='item', lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return '<Item {}>'.format(self.name)
@@ -102,11 +103,13 @@ class Recipe(db.Model):
     __tablename__ = 'recipes'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     job = db.Column(db.String(3), nullable=False)
+    level = db.Column(db.Integer, nullable=False)
+    item_value = db.Column(db.String(name_length), db.ForeignKey('items.value'), nullable=False)
+    item_quantity = db.Column(db.Integer, nullable=False)
     components = db.relationship('Component', backref='recipe', cascade='all, delete-orphan')
-    product = db.relationship('Product', backref='recipe', uselist=False, cascade='all, delete-orphan')
 
     def __repr__(self):
-        return '<Recipe {} for {}>'.format(int(self.id), self.product.item_value)
+        return '<Recipe {} for {}>'.format(int(self.id), self.item_value)
 
 
 class Component(db.Model):
@@ -120,12 +123,12 @@ class Component(db.Model):
         return '<Component {} for recipe {} for {}>'.format(self.item_value, self.recipe.id, self.recipe.product.item_value)
 
 
-class Product(db.Model):
-    __tablename__ = 'products'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    item_value = db.Column(db.String(name_length), db.ForeignKey('items.value'))
-    item_quantity = db.Column(db.Integer, nullable=False, default=1)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'))
+# class Product(db.Model):
+#     __tablename__ = 'products'
+#     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+#     item_value = db.Column(db.String(name_length), db.ForeignKey('items.value'))
+#     item_quantity = db.Column(db.Integer, nullable=False, default=1)
+#     recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'))
 
-    def __repr__(self):
-        return '<Product {} of recipe {}>'.format(self.item_value, int(self.recipe_id))
+#     def __repr__(self):
+#         return '<Product {} of recipe {}>'.format(self.item_value, int(self.recipe_id))

@@ -29,7 +29,7 @@ def create_app(test_config=None):
 
     with app.app_context():
 
-        from .models import User, Item, Transaction, Stock, Product, Recipe, Component
+        from .models import User, Item, Transaction, Stock, Recipe, Component
         db.create_all()
 
         from . import auth
