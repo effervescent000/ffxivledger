@@ -32,25 +32,26 @@ def add_recipe_from_api():
         return jsonify("No recipe found with that ID")
     # create the recipe
     recipe = Recipe(
+        id=query.get("ID"),
         job=query.get("ClassJob").get("Abbreviation"), 
         level=query.get("RecipeLevelTable").get("ClassJobLevel"),
-        item_value=name_to_value(query.get("Name")),
+        item_id=query.get("ItemResult").get("ID"),
         item_quantity=query.get("AmountResult")
     )
     db.session.add(recipe)
     db.session.commit()
-    # iterate through each ItemIngredient, see (by name_to_value) if it exists in the db already. if not, pass it back to item/add to create a new one
+    # iterate through each ItemIngredient, see if it exists in the db already. if not, pass it back to item/add to create a new one
     for i in range(9):
         # print(query.get(f"AmountIngredient{i}"))
         if query.get(f"AmountIngredient{i}") != 0:
             # print(f"I am adding component number {i}")
             # see if the item exists in the database, if not add it
-            item_value = name_to_value(query.get(f"ItemIngredient{i}").get("Name"))
-            if Item.query.get(item_value) == None:
+            comp_id = query.get(f"ItemIngredient{i}").get("ID")
+            if Item.query.get(comp_id) == None:
                 post_data = {"name": query.get(f"ItemIngredient{i}").get("Name")}
                 req.post("http://127.0.0.1:5000/item/add", json=post_data)
             # now generate the component
-            comp = Component(item_value=item_value, item_quantity=query.get(f"AmountIngredient{i}"))
+            comp = Component(item_id=comp_id, item_quantity=query.get(f"AmountIngredient{i}"))
             db.session.add(comp)
             db.session.commit()
     return jsonify(one_recipe_schema.dump(recipe))

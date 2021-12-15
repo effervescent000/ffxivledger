@@ -3,7 +3,7 @@ from . import ma
 
 class ItemSchema(ma.Schema):
     class Meta:
-        fields = ("value", "name", "type")
+        fields = ("id", "name")
 
 
 class TransactionSchema(ma.Schema):
@@ -13,7 +13,7 @@ class TransactionSchema(ma.Schema):
 
 class StockSchema(ma.Schema):
     class Meta:
-        fields = ("item_value", "amount")
+        fields = ("item_id", "amount")
 
 
 class RecipeSchema(ma.Schema):

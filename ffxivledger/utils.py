@@ -9,11 +9,11 @@ from . import db
 from .models import Item, User, Transaction, Component, Stock, time_format
 
 
-def get_item(value):
-    """Returns the product specified by the value (or throws a 404 error if no product is found)"""
-    item = Item.query.get(value)
+def get_item(id):
+    """Returns the item specified by the id (or throws a 404 error if no item is found)"""
+    item = Item.query.get(id)
     if item is None:
-        print(value)
+        print(id)
         abort(404)
     return item
 
@@ -29,7 +29,7 @@ def name_to_value(name):
 def get_item_options():
     item_options = [('', '---')]
     for x in Item.query.all():
-        item_options.append((x.value, x.name))
+        item_options.append((str(x.id), x.name))
     item_options.sort()
     return item_options
 
@@ -40,7 +40,7 @@ def get_craftables_options():
         # if x.type != 'material':
         #     item_options.append((x.value, x.name))
         if len(x.recipes) > 0:
-            item_options.append((x.value, x.name))
+            item_options.append((str(x.id), x.name))
     item_options.sort()
     return item_options
 

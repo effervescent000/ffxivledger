@@ -100,9 +100,9 @@ def create_item():
     # GET request to xivapi again for the item id
     item_data = req.get(f"https://xivapi.com/Item/{item_id}").json()
     # populate item's data from the return JSON
-    item = Item.query.get(name_to_value(item_data.get("Name")))
+    item = Item.query.get(item_id)
     if item == None:
-        item = Item(name=item_data.get("Name"), value=name_to_value(item_data.get("Name")))
+        item = Item(name=item_data.get("Name"), id=item_id)
         db.session.add(item)
         db.session.commit()
         # if any recipes are found, then query them as well and repeat the process
