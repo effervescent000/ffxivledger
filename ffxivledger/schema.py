@@ -18,7 +18,7 @@ class StockSchema(ma.Schema):
 
 class RecipeSchema(ma.Schema):
     class Meta:
-        fields = ("id", "job")
+        fields = ("id", "job", "level")
 
 
 class ComponentSchema(ma.Schema):

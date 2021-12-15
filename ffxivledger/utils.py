@@ -6,7 +6,7 @@ from datetime import datetime
 
 from . import db
 
-from .models import Item, User, Transaction, Component, Stock, Product, time_format
+from .models import Item, User, Transaction, Component, Stock, time_format
 
 
 def get_item(value):
@@ -37,7 +37,9 @@ def get_item_options():
 def get_craftables_options():
     item_options = [('', '---')]
     for x in Item.query.all():
-        if x.type != 'material':
+        # if x.type != 'material':
+        #     item_options.append((x.value, x.name))
+        if len(x.recipes) > 0:
             item_options.append((x.value, x.name))
     item_options.sort()
     return item_options
