@@ -14,7 +14,7 @@ class User(db.Model, UserMixin):
     stock_list = db.relationship('Stock', backref='user', lazy=True, cascade="all, delete-orphan")
     # valid roles are admin and super_user
     role = db.Column(db.String(50))
-    world = db.Column(db.String(50), nullable=False)
+    profiles = db.relationship('Profile', backref='user', lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -25,6 +25,21 @@ class User(db.Model, UserMixin):
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
+
+
+class Profile(db.Model):
+    __tablename__ = "profiles"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    world = db.Column(db.String(50), nullable=False)
+    alc_level = db.Column(db.Integer)
+    arm_level = db.Column(db.Integer)
+    bsm_level = db.Column(db.Integer)
+    crp_level = db.Column(db.Integer)
+    cul_level = db.Column(db.Integer)
+    gsm_level = db.Column(db.Integer)
+    ltw_level = db.Column(db.Integer)
+    wvr_level = db.Column(db.Integer)
 
 
 class Item(db.Model):
