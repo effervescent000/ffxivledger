@@ -101,7 +101,7 @@ class Transaction(db.Model):
     time = db.Column(db.String(50), nullable=False)
     # the amount purchased/sold at this value
     amount = db.Column(db.Integer, nullable=False, default=1)
-    item_id = db.Column(db.String(name_length), db.ForeignKey('items.id'))
+    item_id = db.Column(db.Integer, db.ForeignKey('items.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     def __repr__(self):
@@ -114,7 +114,7 @@ class Stock(db.Model):
     # keep track of the amount currently in stock
     amount = db.Column(db.Integer, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    item_id = db.Column(db.String(200), db.ForeignKey('items.id'))
+    item_id = db.Column(db.Integer, db.ForeignKey('items.id'))
 
 
 class Recipe(db.Model):
@@ -122,7 +122,7 @@ class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     job = db.Column(db.String(3), nullable=False)
     level = db.Column(db.Integer, nullable=False)
-    item_id = db.Column(db.String(name_length), db.ForeignKey('items.id'), nullable=False)
+    item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
     item_quantity = db.Column(db.Integer, nullable=False)
     components = db.relationship('Component', backref='recipe', cascade='all, delete-orphan')
 
@@ -133,7 +133,7 @@ class Recipe(db.Model):
 class Component(db.Model):
     __tablename__ = 'components'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    item_id = db.Column(db.String(name_length), db.ForeignKey('items.id'))
+    item_id = db.Column(db.Integer, db.ForeignKey('items.id'))
     item_quantity = db.Column(db.Integer, nullable=False, default=1)
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'))
 
