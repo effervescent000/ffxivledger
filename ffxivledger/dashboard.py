@@ -58,3 +58,6 @@ def index():
     #             return "Somehow some other button was pressed on the dashboard ???"
     form.item.choices = get_item_options()
     return render_template('ffxivledger/index.html', form=form)
+
+
+# route to append something to the error log so I'm not just passing that stupid list around in CraftingCalc forever

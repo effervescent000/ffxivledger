@@ -23,19 +23,19 @@ function getCraftQueue(num, currentUser) {
     })
         .then((data) => data.json())
         .then((data) => {
-            // console.log(data)
-            const craftList = data[0];
+            console.log(data);
+            const craftList = data;
             craftList.forEach((craft) => {
                 const craftDiv = document.createElement("div");
                 craftDiv.className = "craft-queue-item";
-                craftDiv.innerHTML = `${craft[0]} for ${craft[1]} ${craft[2]}`;
+                craftDiv.innerHTML = `${craft[0]} for ${craft[1]}`;
                 parent.appendChild(craftDiv);
             });
         });
 }
 
-async function getName(value) {
-    let data = await fetch(`/item/view/${value}`)
+async function getName(id) {
+    let data = await fetch(`/item/view/${id}`)
         .then((data) => data.json())
         .then((data) => data.name);
     return data.name;
@@ -52,7 +52,7 @@ async function loadStockFrame() {
                 nameDiv.className = "stock-name";
                 const amountDiv = document.createElement("div");
                 amountDiv.className = "stock-amount";
-                nameDiv.innerHTML = stock.item_value;
+                nameDiv.innerHTML = stock.item.name;
                 amountDiv.innerHTML = stock.amount;
                 document.getElementById("stock-frame").appendChild(nameDiv);
                 document.getElementById("stock-frame").appendChild(amountDiv);
@@ -62,6 +62,7 @@ async function loadStockFrame() {
 
 function getSelectedItem() {
     const selectedItem = document.getElementById("item").value;
+    console.log(selectedItem);
     if (selectedItem !== "") {
         return selectedItem;
     } else {
