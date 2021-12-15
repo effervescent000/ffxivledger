@@ -51,7 +51,7 @@ def add_recipe_from_api():
                 post_data = {"name": query.get(f"ItemIngredient{i}").get("Name")}
                 req.post("http://127.0.0.1:5000/item/add", json=post_data)
             # now generate the component
-            comp = Component(item_id=comp_id, item_quantity=query.get(f"AmountIngredient{i}"))
+            comp = Component(item_id=comp_id, item_quantity=query.get(f"AmountIngredient{i}"),recipe_id=recipe.id)
             db.session.add(comp)
             db.session.commit()
     return jsonify(one_recipe_schema.dump(recipe))
