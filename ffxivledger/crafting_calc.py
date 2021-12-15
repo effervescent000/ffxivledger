@@ -40,8 +40,9 @@ class Queue:
         secondary_craft_list = []
         tertiary_craft_list = []
         error_list = []
+        product_list = [x for x in Item.query.all() if x.recipes != None]
 
-        for product in Product.query.all():
+        for product in product_list:
             stock = Stock.query.filter_by(item_value=product.item_value, user_id=self.user_id).all()
             if len(stock) > 1:
                 print("Stock data is screwed up for {}".format(product.item_value))
@@ -182,23 +183,21 @@ class Queue:
         item = get_item(item_value)
         if error_list is None:
             error_list = []
-        if item.type != "material":
-            products = Product.query.filter_by(item_value=item_value).all()
-            if len(products) > 0:
-                # right now this will double-count the cost of products with more than 1 recipe
-                craft_cost = 0
-                recipe_list = [x.recipe_id for x in products]
-                for x in recipe_list:
-                    recipe = Recipe.query.get(x)
-                    for y in recipe.components:
-                        result = self.get_crafting_cost(y.item_value, error_list)
-                        if result is None:
-                            error_list.append("Component {} returned None for crafting cost".format(y.item_value))
-                        else:
-                            y_cost = result[0]
-                            error_list = result[1]
-                            craft_cost += y_cost
-                return [craft_cost, error_list]
+        if item.recipes != None:
+            # right now this will double-count the cost of products with more than 1 recipe
+            craft_cost = 0
+            recipe_list = [x.recipe_id for x in item.recipes]
+            for x in recipe_list:
+                recipe = Recipe.query.get(x)
+                for y in recipe.components:
+                    result = self.get_crafting_cost(y.item_value, error_list)
+                    if result is None:
+                        error_list.append("Component {} returned None for crafting cost".format(y.item_value))
+                    else:
+                        y_cost = result[0]
+                        error_list = result[1]
+                        craft_cost += y_cost
+            return [craft_cost, error_list]
         else:
             craft_cost = self.get_average_price(item_value, mode="p")
             if craft_cost is None:

@@ -70,8 +70,6 @@ def rename_item(item, new_name):
             x.item_value = item.value
         for x in Component.query.filter_by(item_value=old_value).all():
             x.item_value = item.value
-        for x in Product.query.filter_by(item_value=old_value).all():
-            x.item_value = item.value
         db.session.commit()
 
 
