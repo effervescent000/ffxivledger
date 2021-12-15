@@ -1,5 +1,7 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for, jsonify
+from flask import Blueprint, flash, redirect, render_template, request, url_for, jsonify, current_app
 from flask_login import login_required, current_user
+
+import requests as req
 
 from .models import Item, Transaction, Stock
 from .schema import ItemSchema, StockSchema, TransactionSchema
@@ -41,32 +43,76 @@ def get_item_purchases(value):
     return jsonify(multi_transaction_schema.dump(purchases_list))
 
 
-@bp.route("/stock", methods=['GET'])
+@bp.route("/stock", methods=["GET"])
 def get_stock_list():
     user_id = current_user.id
-    stock_list = Stock.query.filter(Stock.user_id==user_id, Stock.amount>0).all()
+    stock_list = Stock.query.filter(Stock.user_id == user_id, Stock.amount > 0).all()
     return jsonify(multi_stock_schema.dump(stock_list))
 
-@bp.route("/edit/new", methods=["POST"])
-@login_required
-@admin_required
+
+@bp.route("/get/all", methods=['GET'])
+def get_all_items():
+    return jsonify(multi_item_schema.dump(Item.query.all()))
+
+
+# @bp.route("/add", methods=["POST"])
+# @login_required
+# @admin_required
+# def create_item():
+#     data = request.get_json()
+#     name = data.get("name")
+#     value = None
+#     type = data.get("type")
+
+#     if name != None:
+#         value = name_to_value(name)
+#     else:
+#         return jsonify("Must return a name")
+#     if type == None:
+#         return jsonify("Must return a type")
+
+#     new_item = Item(name=name, value=value, type=type)
+#     db.session.add(new_item)
+#     db.session.commit()
+#     return jsonify(one_item_schema.dump(new_item))
+
+
+@bp.route("/add", methods=["POST"])
 def create_item():
     data = request.get_json()
     name = data.get("name")
-    value = None
-    type = data.get("type")
-
-    if name != None:
-        value = name_to_value(name)
+    # GET request to xivapi to search for the item
+    search = req.get(
+        f'https://xivapi.com/search?indexes=Item&string={name}&private_key={current_app.config.get("XIVAPI_KEY")}'
+    ).json()
+    # iterate through results (ideally only 1 result) for an exact name much (with .lower() run)
+    results = search.get("Results")
+    item_id = None
+    if len(results) > 1:
+        for result in results:
+            if name.lower() == result.get("Name").lower():
+                item_id = result.get("ID")
+    elif len(results) == 1:
+        item_id = results[0].get("ID")
     else:
-        return jsonify("Must return a name")
-    if type == None:
-        return jsonify("Must return a type")
-
-    new_item = Item(name=name, value=value, type=type)
-    db.session.add(new_item)
-    db.session.commit()
-    return jsonify(one_item_schema.dump(new_item))
+        # if no match is found, then return error
+        return jsonify("No results found in XIVAPI search")
+    # GET request to xivapi again for the item id
+    item_data = req.get(f"https://xivapi.com/Item/{item_id}").json()
+    # populate item's data from the return JSON
+    item = Item.query.get(name_to_value(item_data.get("Name")))
+    if item == None:
+        item = Item(name=item_data.get("Name"), value=name_to_value(item_data.get("Name")))
+        db.session.add(item)
+        db.session.commit()
+        # if any recipes are found, then query them as well and repeat the process
+        recipes = item_data.get("Recipes")
+        if recipes != None and len(recipes) > 0:
+            for recipe in recipes:
+                data = {"id": recipe.get("ID")}
+                headers = {"content-type": "application/json"}
+                req.post("http://127.0.0.1:5000/recipe/add", json=data)
+    return jsonify(one_item_schema.dump(item))
 
 
 # @bp.route('/edit/new', methods=('GET', 'POST'))

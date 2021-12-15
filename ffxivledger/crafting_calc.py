@@ -3,7 +3,7 @@ from math import floor
 from flask import Blueprint, flash, redirect, render_template, request, url_for, current_app, jsonify
 from flask_login import current_user
 
-from .models import Item, Stock, Transaction, Recipe, Component, Product
+from .models import Item, Stock, Transaction, Recipe, Component
 from .utils import get_item, convert_string_to_datetime, get_user_id
 
 bp = Blueprint("crafting", __name__, url_prefix="/craft")
