@@ -60,13 +60,13 @@ def get_transactions_by_item(item_value):
 @bp.route("/add", methods=["POST"])
 def add_transaction():
     data = request.get_json()
-    item_value = data.get("item_value")
+    item_id = data.get("item_id")
     user_id = current_user.id
     amount = data.get("amount")
     gil_value = data.get("gil_value")
     time = data.get("time")
 
-    if item_value == None:
+    if item_id == None:
         return jsonify("Must include an item value")
     if user_id == None:
         return jsonify("Must include a user")
@@ -76,7 +76,7 @@ def add_transaction():
         # TODO figure out how JS passes this and convert it appropriately
         pass
 
-    item = Item.query.get(item_value)
+    item = Item.query.get(item_id)
     transaction = None
     if item != None:
         transaction = item.process_transaction(gil_value=gil_value, time=time, amount=amount, user_id=user_id)
