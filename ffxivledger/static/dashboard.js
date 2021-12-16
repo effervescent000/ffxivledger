@@ -62,7 +62,7 @@ async function loadStockFrame() {
 
 function getSelectedItem() {
     const selectedItem = document.getElementById("item").value;
-    console.log(selectedItem);
+    // console.log(selectedItem);
     if (selectedItem !== "") {
         return selectedItem;
     } else {
@@ -97,7 +97,7 @@ function postTransaction(selectedItem, amount, gilValue) {
         gilValue != undefined
     ) {
         const newTransaction = {
-            item_value: selectedItem,
+            item_id: selectedItem,
             amount: amount,
             gil_value: gilValue,
         };
@@ -139,5 +139,5 @@ function addStock() {
     const amount = getAmount();
     const gilValue = 0;
 
-    postTransaction(selectedItem, amount, gilValue);
+    console.log(postTransaction(selectedItem, amount, gilValue));
 }

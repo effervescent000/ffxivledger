@@ -87,7 +87,7 @@ def create_multi_items():
     data = request.get_json()
     for item in data:
         items_list.append(process_item(item))
-    return jsonify(items_list)
+    return jsonify(multi_item_schema.dump(items_list))
 
 
 def process_item(data):
