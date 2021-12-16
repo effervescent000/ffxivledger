@@ -41,7 +41,7 @@ def add_recipe_from_api():
     db.session.add(recipe)
     db.session.commit()
     # iterate through each ItemIngredient, see if it exists in the db already. if not, pass it back to item/add to create a new one
-    for i in range(9):
+    for i in range(10):
         # print(query.get(f"AmountIngredient{i}"))
         if query.get(f"AmountIngredient{i}") != 0:
             # print(f"I am adding component number {i}")
