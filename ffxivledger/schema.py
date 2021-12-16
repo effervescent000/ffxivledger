@@ -25,7 +25,7 @@ class ProfileSchema(ma.Schema):
 
 class ComponentSchema(ma.Schema):
     class Meta:
-        fields = ("id", "item_value", "item_quantity", "recipe_id")
+        fields = ("id", "item_id", "item_quantity", "recipe_id")
 
 components_schema = ComponentSchema(many=True)
 

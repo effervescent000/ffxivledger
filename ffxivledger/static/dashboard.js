@@ -41,7 +41,7 @@ async function getName(id) {
     return data.name;
 }
 
-async function loadStockFrame() {
+function loadStockFrame() {
     fetch(`/item/stock`, {
         credentials: "include",
     })
