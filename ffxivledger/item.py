@@ -139,19 +139,18 @@ def process_item(data):
 #     return render_template('ffxivledger/item_edit.html', form=form)
 
 
-@bp.route("edit/<value>", methods=["PUT"])
-def edit_item(value):
-    item = get_item(value)
+@bp.route("/edit/<id>", methods=["PUT"])
+def edit_item_by_id(id):
+    item = Item.query.get(id)
     data = request.get_json()
     name = data.get("name")
     # value = None
-    type = data.get("type")
+    # type = data.get("type")
 
     if name != None:
-        item.value = name_to_value(name)
         item.name = name
-    if type != None:
-        item.type = type
+    # if type != None:
+    #     item.type = type
     db.session.commit()
     return jsonify(one_item_schema.dump(item))
 
@@ -182,12 +181,3 @@ def delete_item_by_name(name):
         return jsonify("Item deleted successfully")
     return jsonify("Item not found")
 
-# @bp.route("/delete/<value>", methods=("GET", "POST"))
-# @login_required
-# @admin_required
-# def delete_item(value):
-#     item = Item.query.get(value)
-#     if item is not None:
-#         db.session.delete(item)
-#         db.session.commit()
-#     return redirect(url_for("item.manage_items"))
