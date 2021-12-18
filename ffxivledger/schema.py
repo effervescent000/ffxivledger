@@ -46,7 +46,7 @@ one_item_schema = ItemSchema()
 
 class TransactionSchema(ma.Schema):
     class Meta:
-        fields = ("id", "gil_value", "time", "amount", "item_value")
+        fields = ("id", "gil_value", "time", "amount", "item_id")
 
 
 class StockSchema(ma.Schema):

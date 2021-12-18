@@ -60,7 +60,7 @@ def get_transactions_by_item(item_value):
 @bp.route("/add", methods=["POST"])
 def add_transaction():
     data = request.get_json()
-    item_id = data.get("item_id")
+    item_id = int(data.get("item_id"))
     user_id = current_user.id
     amount = data.get("amount")
     gil_value = data.get("gil_value")
