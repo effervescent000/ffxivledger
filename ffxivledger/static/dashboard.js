@@ -111,12 +111,14 @@ function postTransaction(selectedItem, amount, gilValue) {
             amount: amount,
             gil_value: gilValue,
         };
-        const xhr = new XMLHttpRequest();
-        const url = "/transaction/add";
-        xhr.open("POST", url);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.withCredentials = true;
-        xhr.send(JSON.stringify(newTransaction));
+
+        fetch("http://127.0.0.1:5000/transaction/add", {
+            method: 'POST',
+            headers: {"content-type": "application/json"},
+            body: JSON.stringify(newTransaction)
+        })
+            .then(response => response.json())
+            .then(data => console.log(data))
     }
 }
 
