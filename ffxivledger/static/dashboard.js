@@ -19,11 +19,12 @@ function getCraftQueue(num) {
             const craftList = data;
             craftList.forEach((craft) => {
                 const craftWrapperDiv = document.createElement("div");
-                craftWrapperDiv.className = "craft-queue-wrapper";
+                craftWrapperDiv.className = "craft-item-wrapper";
                 parent.appendChild(craftWrapperDiv);
 
                 const craftTextDiv = document.createElement("div");
                 craftTextDiv.innerHTML = `${craft[0]} for ${craft[1]} gil/hour`;
+                const craftButtonWrapper = document.createElement("div");
                 const craftButton = document.createElement("button");
                 craftButton.innerHTML = "Craft 1";
                 let craftId = null
@@ -37,7 +38,8 @@ function getCraftQueue(num) {
                 );
 
                 craftWrapperDiv.appendChild(craftTextDiv);
-                craftWrapperDiv.appendChild(craftButton);
+                craftWrapperDiv.appendChild(craftButtonWrapper);
+                craftButtonWrapper.appendChild(craftButton);
             });
         });
 }

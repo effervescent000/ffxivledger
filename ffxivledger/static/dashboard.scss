@@ -15,6 +15,18 @@
         }
     }
 
+    #center-content-wrapper {
+        #crafting-wrapper {
+            #crafting-output-wrapper {
+                .craft-item-wrapper {
+                    display: flex;
+                    gap: 10px;
+                    padding: 2px 0;
+                }
+            }
+        }
+    }
+
     #right-content-wrapper {
         display: flex;
         flex-direction: column;
@@ -40,10 +52,6 @@
                 grid-template-columns: repeat(3, 1fr);
                 gap: 10px;
                 justify-items: center;
-
-                input[type="submit"] {
-                    @include button-styling;
-                }
             }
         }
         #log-frame-wrapper {
@@ -51,9 +59,6 @@
                 @include textarea-styling;
                 width: 50%;
                 height: 12em;
-            }
-            #log-buttons button {
-                @include button-styling;
             }
         }
     }
@@ -65,4 +70,8 @@
 
 #amount {
     width: 60px;
+}
+
+button {
+    @include button-styling;
 }
