@@ -24,7 +24,7 @@ def get_item_by_value(id):
 
 @bp.route("/get_name/<name>", methods=["GET"])
 def get_item_by_name(name):
-    item = Item.query.filter_by(name=name)
+    item = Item.query.filter_by(name=name).first()
     return jsonify(one_item_schema.dump(item))
 
 
