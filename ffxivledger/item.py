@@ -47,7 +47,7 @@ def get_stock_list():
     return jsonify(multi_stock_schema.dump(stock_list))
 
 
-@bp.route("/get/all", methods=['GET'])
+@bp.route("/get/all", methods=["GET"])
 def get_all_items():
     return jsonify(multi_item_schema.dump(Item.query.all()))
 
@@ -78,12 +78,29 @@ def get_all_items():
 def create_item():
     return jsonify(one_item_schema.dump(process_item(request.get_json())))
 
-@bp.route("/add/many", methods=['POST'])
-def create_multi_items():
+
+@bp.route("/add/many", methods=["POST"])
+def create_multiple_items_from_dump():
     items_list = []
     data = request.get_json()
     for item in data:
         items_list.append(process_item(item))
+    return jsonify(multi_item_schema.dump(items_list))
+
+
+@bp.route("/add/search", methods=['POST'])
+def create_multiple_items_from_search():
+    data = request.get_json()
+    items_list = []
+    name = data.get("name")
+    search = req.get(
+        f'https://xivapi.com/search?indexes=Item&string={name}&private_key={current_app.config.get("XIVAPI_KEY")}'
+    ).json()
+    results = search.get("Results")
+    for result in results:
+        result_name = result.get("Name")
+        if result_name.startswith(name):
+            items_list.append(process_item({"name": result_name}))
     return jsonify(multi_item_schema.dump(items_list))
 
 
@@ -120,6 +137,7 @@ def process_item(data):
                 data = {"id": recipe.get("ID")}
                 req.post("http://127.0.0.1:5000/recipe/add", json=data)
     return item
+
 
 # @bp.route('/edit/new', methods=('GET', 'POST'))
 # @login_required
@@ -172,7 +190,7 @@ def delete_item_by_id(id):
     return jsonify("Item not found")
 
 
-@bp.route("/delete_name/<name>", methods=['DELETE'])
+@bp.route("/delete_name/<name>", methods=["DELETE"])
 def delete_item_by_name(name):
     item = Item.query.filter_by(name=name).first()
     if item != None:
@@ -180,4 +198,3 @@ def delete_item_by_name(name):
         db.session.commit()
         return jsonify("Item deleted successfully")
     return jsonify("Item not found")
-
