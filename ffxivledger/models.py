@@ -55,7 +55,11 @@ class Item(db.Model):
 
     components = db.relationship('Component', backref='item', lazy=True, cascade='all, delete-orphan')
     recipes = db.relationship('Recipe', backref="item", lazy=True, cascade='all, delete-orphan')
-    # products = db.relationship('Product', backref='item', lazy=True, cascade="all, delete-orphan")
+    
+    stats_updated = db.Column(db.String(200))
+    avg_price = db.Column(db.Float)
+    sales_velocity = db.Column(db.Float)
+
 
     def __repr__(self):
         return '<Item {}>'.format(self.name)
