@@ -156,22 +156,6 @@ def edit_item(value):
     return jsonify(one_item_schema.dump(item))
 
 
-# @bp.route('/edit/<value>', methods=('GET', 'POST'))
-# @login_required
-# @admin_required
-# def edit_item(value):
-#     item = get_item(value)
-#     form = CreateItemForm(item_name=item.name,item_type=item.type)
-#     if form.validate_on_submit():
-#         if item.name != form.item_name.data:
-#             rename_item(item, form.item_name.data)
-#         if item.type != form.item_type.data:
-#             item.type = form.item_type.data
-#         db.session.commit()
-#         return redirect(url_for('item.manage_items'))
-#     return render_template('ffxivledger/item_edit.html', form=form)
-
-
 @bp.route("/manage")
 @login_required
 @admin_required
@@ -179,17 +163,24 @@ def manage_items():
     return render_template("ffxivledger/item_management.html", item_list=Item.query.all())
 
 
-@bp.route("/delete/<value>", methods=["DELETE"])
-@login_required
-@admin_required
-def delete_item(value):
-    item = Item.query.get(value)
-    if item is not None:
+@bp.route("/delete/<id>", methods=["DELETE"])
+def delete_item_by_id(id):
+    item = Item.query.get(id)
+    if item != None:
         db.session.delete(item)
         db.session.commit()
         return jsonify("Item deleted successfully")
     return jsonify("Item not found")
 
+
+@bp.route("/delete_name/<name>", methods=['DELETE'])
+def delete_item_by_name(name):
+    item = Item.query.filter_by(name=name).first()
+    if item != None:
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify("Item deleted successfully")
+    return jsonify("Item not found")
 
 # @bp.route("/delete/<value>", methods=("GET", "POST"))
 # @login_required
