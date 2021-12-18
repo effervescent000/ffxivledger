@@ -16,19 +16,16 @@ multi_transaction_schema = TransactionSchema(many=True)
 multi_stock_schema = StockSchema(many=True)
 
 
-@bp.route("/get/<value>", methods=["GET"])
-def get_item_by_value(value):
-    item = Item.query.get(value)
+@bp.route("/get/<id>", methods=["GET"])
+def get_item_by_value(id):
+    item = Item.query.get(id)
     return jsonify(one_item_schema.dump(item))
 
 
-# def view_item(value):
-#     return render_template(
-#         'ffxivledger/item_view.html',
-#         item=get_item(value),
-#         sale_price_list=Transaction.query.filter(Transaction.item_value == value, Transaction.gil_value > 0).all(),
-#         purchase_price_list=Transaction.query.filter(Transaction.item_value == value, Transaction.gil_value < 0).all()
-#     )
+@bp.route("/get_name/<name>", methods=["GET"])
+def get_item_by_name(name):
+    item = Item.query.filter_by(name=name)
+    return jsonify(one_item_schema.dump(item))
 
 
 @bp.route("/view/<value>/sales", methods=["GET"])
