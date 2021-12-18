@@ -1,13 +1,5 @@
-// event listeners
-// document
-//     .getElementById("sale-btn")
-//     .addEventListener("click", (event) => addSale());
-// document.getElementById("purchase-btn").addEventListener("click", (event) => addPurchase());
-// document.getElementById("remove-stock-btn").addEventListener("click", (event) => removeStock());
-// document.getElementById("add-stock-btn").addEventListener("click", (event) => addStock())
-
 // functions
-function getCraftQueue(num, currentUser) {
+function getCraftQueue(num) {
     if (typeof num === "string") {
         num = parseInt(num);
     }
@@ -26,10 +18,26 @@ function getCraftQueue(num, currentUser) {
             console.log(data);
             const craftList = data;
             craftList.forEach((craft) => {
-                const craftDiv = document.createElement("div");
-                craftDiv.className = "craft-queue-item";
-                craftDiv.innerHTML = `${craft[0]} for ${craft[1]}`;
-                parent.appendChild(craftDiv);
+                const craftWrapperDiv = document.createElement("div");
+                craftWrapperDiv.className = "craft-queue-wrapper";
+                parent.appendChild(craftWrapperDiv);
+
+                const craftTextDiv = document.createElement("div");
+                craftTextDiv.innerHTML = `${craft[0]} for ${craft[1]} gil/hour`;
+                const craftButton = document.createElement("button");
+                craftButton.innerHTML = "Craft 1";
+                let craftId = null
+                fetch(`/item/get_name/${craft[0]}`)
+                    .then(data => data.json())
+                    .then(data => {
+                        craftId = data.id
+                    })
+                craftButton.addEventListener("click", (event) =>
+                    addStock(craftId, 1)
+                );
+
+                craftWrapperDiv.appendChild(craftTextDiv);
+                craftWrapperDiv.appendChild(craftButton);
             });
         });
 }
@@ -134,9 +142,13 @@ function removeStock() {
     postTransaction(selectedItem, amount, gilValue);
 }
 
-function addStock() {
-    const selectedItem = getSelectedItem();
-    const amount = getAmount();
+function addStock(selectedItem = null, amount = null) {
+    if (selectedItem === null) {
+        selectedItem = getSelectedItem();
+    }
+    if (amount === null) {
+        amount = getAmount();
+    }
     const gilValue = 0;
 
     console.log(postTransaction(selectedItem, amount, gilValue));

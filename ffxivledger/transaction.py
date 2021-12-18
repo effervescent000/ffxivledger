@@ -67,7 +67,7 @@ def add_transaction():
     time = data.get("time")
 
     if item_id == None:
-        return jsonify("Must include an item value")
+        return jsonify("Must include an item id")
     if user_id == None:
         return jsonify("Must include a user")
     if time == None:
