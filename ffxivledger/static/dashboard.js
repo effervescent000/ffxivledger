@@ -1,13 +1,5 @@
-// event listeners
-// document
-//     .getElementById("sale-btn")
-//     .addEventListener("click", (event) => addSale());
-// document.getElementById("purchase-btn").addEventListener("click", (event) => addPurchase());
-// document.getElementById("remove-stock-btn").addEventListener("click", (event) => removeStock());
-// document.getElementById("add-stock-btn").addEventListener("click", (event) => addStock())
-
 // functions
-function getCraftQueue(num, currentUser) {
+function getCraftQueue(num) {
     if (typeof num === "string") {
         num = parseInt(num);
     }
@@ -26,10 +18,28 @@ function getCraftQueue(num, currentUser) {
             console.log(data);
             const craftList = data;
             craftList.forEach((craft) => {
-                const craftDiv = document.createElement("div");
-                craftDiv.className = "craft-queue-item";
-                craftDiv.innerHTML = `${craft[0]} for ${craft[1]}`;
-                parent.appendChild(craftDiv);
+                const craftWrapperDiv = document.createElement("div");
+                craftWrapperDiv.className = "craft-item-wrapper";
+                parent.appendChild(craftWrapperDiv);
+
+                const craftTextDiv = document.createElement("div");
+                craftTextDiv.innerHTML = `${craft[0]} for ${craft[1]} gil/hour`;
+                const craftButtonWrapper = document.createElement("div");
+                const craftButton = document.createElement("button");
+                craftButton.innerHTML = "Craft 1";
+                let craftId = null
+                fetch(`/item/get_name/${craft[0]}`)
+                    .then(data => data.json())
+                    .then(data => {
+                        craftId = data.id
+                    })
+                craftButton.addEventListener("click", (event) =>
+                    addStock(craftId, 1)
+                );
+
+                craftWrapperDiv.appendChild(craftTextDiv);
+                craftWrapperDiv.appendChild(craftButtonWrapper);
+                craftButtonWrapper.appendChild(craftButton);
             });
         });
 }
@@ -101,12 +111,14 @@ function postTransaction(selectedItem, amount, gilValue) {
             amount: amount,
             gil_value: gilValue,
         };
-        const xhr = new XMLHttpRequest();
-        const url = "/transaction/add";
-        xhr.open("POST", url);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.withCredentials = true;
-        xhr.send(JSON.stringify(newTransaction));
+
+        fetch("http://127.0.0.1:5000/transaction/add", {
+            method: 'POST',
+            headers: {"content-type": "application/json"},
+            body: JSON.stringify(newTransaction)
+        })
+            .then(response => response.json())
+            .then(data => console.log(data))
     }
 }
 
@@ -134,9 +146,13 @@ function removeStock() {
     postTransaction(selectedItem, amount, gilValue);
 }
 
-function addStock() {
-    const selectedItem = getSelectedItem();
-    const amount = getAmount();
+function addStock(selectedItem = null, amount = null) {
+    if (selectedItem === null) {
+        selectedItem = getSelectedItem();
+    }
+    if (amount === null) {
+        amount = getAmount();
+    }
     const gilValue = 0;
 
     console.log(postTransaction(selectedItem, amount, gilValue));

@@ -17,6 +17,14 @@
       grid-template-columns: 2fr 1fr;
 }
 
+#content-wrapper #center-content-wrapper #crafting-wrapper #crafting-output-wrapper .craft-item-wrapper {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  gap: 10px;
+  padding: 2px 0;
+}
+
 #content-wrapper #right-content-wrapper {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -65,18 +73,6 @@
   justify-items: center;
 }
 
-#content-wrapper #right-content-wrapper #item-form form .buttons-wrapper input[type="submit"] {
-  background-color: #C5CAE7;
-  border: 1px transparent solid;
-  border-radius: 3px;
-  color: #362A6B;
-  padding: 2px 5px;
-}
-
-#content-wrapper #right-content-wrapper #item-form form .buttons-wrapper input[type="submit"]:active {
-  border: 1px #362A6B solid;
-}
-
 #content-wrapper #right-content-wrapper #log-frame-wrapper #log-wrapper textarea {
   resize: none;
   background-color: #362A6B;
@@ -88,7 +84,15 @@
   height: 12em;
 }
 
-#content-wrapper #right-content-wrapper #log-frame-wrapper #log-buttons button {
+#gil_value {
+  width: 70px;
+}
+
+#amount {
+  width: 60px;
+}
+
+button {
   background-color: #C5CAE7;
   border: 1px transparent solid;
   border-radius: 3px;
@@ -96,15 +100,7 @@
   padding: 2px 5px;
 }
 
-#content-wrapper #right-content-wrapper #log-frame-wrapper #log-buttons button:active {
+button:active {
   border: 1px #362A6B solid;
-}
-
-#gil_value {
-  width: 70px;
-}
-
-#amount {
-  width: 60px;
 }
 /*# sourceMappingURL=dashboard.css.map */

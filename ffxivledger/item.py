@@ -16,19 +16,16 @@ multi_transaction_schema = TransactionSchema(many=True)
 multi_stock_schema = StockSchema(many=True)
 
 
-@bp.route("/get/<value>", methods=["GET"])
-def get_item_by_value(value):
-    item = Item.query.get(value)
+@bp.route("/get/<id>", methods=["GET"])
+def get_item_by_value(id):
+    item = Item.query.get(id)
     return jsonify(one_item_schema.dump(item))
 
 
-# def view_item(value):
-#     return render_template(
-#         'ffxivledger/item_view.html',
-#         item=get_item(value),
-#         sale_price_list=Transaction.query.filter(Transaction.item_value == value, Transaction.gil_value > 0).all(),
-#         purchase_price_list=Transaction.query.filter(Transaction.item_value == value, Transaction.gil_value < 0).all()
-#     )
+@bp.route("/get_name/<name>", methods=["GET"])
+def get_item_by_name(name):
+    item = Item.query.filter_by(name=name).first()
+    return jsonify(one_item_schema.dump(item))
 
 
 @bp.route("/view/<value>/sales", methods=["GET"])
@@ -50,7 +47,7 @@ def get_stock_list():
     return jsonify(multi_stock_schema.dump(stock_list))
 
 
-@bp.route("/get/all", methods=['GET'])
+@bp.route("/get/all", methods=["GET"])
 def get_all_items():
     return jsonify(multi_item_schema.dump(Item.query.all()))
 
@@ -81,12 +78,29 @@ def get_all_items():
 def create_item():
     return jsonify(one_item_schema.dump(process_item(request.get_json())))
 
-@bp.route("/add/many", methods=['POST'])
-def create_multi_items():
+
+@bp.route("/add/many", methods=["POST"])
+def create_multiple_items_from_dump():
     items_list = []
     data = request.get_json()
     for item in data:
         items_list.append(process_item(item))
+    return jsonify(multi_item_schema.dump(items_list))
+
+
+@bp.route("/add/search", methods=['POST'])
+def create_multiple_items_from_search():
+    data = request.get_json()
+    items_list = []
+    name = data.get("name")
+    search = req.get(
+        f'https://xivapi.com/search?indexes=Item&string={name}&private_key={current_app.config.get("XIVAPI_KEY")}'
+    ).json()
+    results = search.get("Results")
+    for result in results:
+        result_name = result.get("Name")
+        if result_name.startswith(name):
+            items_list.append(process_item({"name": result_name}))
     return jsonify(multi_item_schema.dump(items_list))
 
 
@@ -124,6 +138,7 @@ def process_item(data):
                 req.post("http://127.0.0.1:5000/recipe/add", json=data)
     return item
 
+
 # @bp.route('/edit/new', methods=('GET', 'POST'))
 # @login_required
 # @admin_required
@@ -142,37 +157,20 @@ def process_item(data):
 #     return render_template('ffxivledger/item_edit.html', form=form)
 
 
-@bp.route("edit/<value>", methods=["PUT"])
-def edit_item(value):
-    item = get_item(value)
+@bp.route("/edit/<id>", methods=["PUT"])
+def edit_item_by_id(id):
+    item = Item.query.get(id)
     data = request.get_json()
     name = data.get("name")
     # value = None
-    type = data.get("type")
+    # type = data.get("type")
 
     if name != None:
-        item.value = name_to_value(name)
         item.name = name
-    if type != None:
-        item.type = type
+    # if type != None:
+    #     item.type = type
     db.session.commit()
     return jsonify(one_item_schema.dump(item))
-
-
-# @bp.route('/edit/<value>', methods=('GET', 'POST'))
-# @login_required
-# @admin_required
-# def edit_item(value):
-#     item = get_item(value)
-#     form = CreateItemForm(item_name=item.name,item_type=item.type)
-#     if form.validate_on_submit():
-#         if item.name != form.item_name.data:
-#             rename_item(item, form.item_name.data)
-#         if item.type != form.item_type.data:
-#             item.type = form.item_type.data
-#         db.session.commit()
-#         return redirect(url_for('item.manage_items'))
-#     return render_template('ffxivledger/item_edit.html', form=form)
 
 
 @bp.route("/manage")
@@ -182,24 +180,21 @@ def manage_items():
     return render_template("ffxivledger/item_management.html", item_list=Item.query.all())
 
 
-@bp.route("/delete/<value>", methods=["DELETE"])
-@login_required
-@admin_required
-def delete_item(value):
-    item = Item.query.get(value)
-    if item is not None:
+@bp.route("/delete/<id>", methods=["DELETE"])
+def delete_item_by_id(id):
+    item = Item.query.get(id)
+    if item != None:
         db.session.delete(item)
         db.session.commit()
         return jsonify("Item deleted successfully")
     return jsonify("Item not found")
 
 
-# @bp.route("/delete/<value>", methods=("GET", "POST"))
-# @login_required
-# @admin_required
-# def delete_item(value):
-#     item = Item.query.get(value)
-#     if item is not None:
-#         db.session.delete(item)
-#         db.session.commit()
-#     return redirect(url_for("item.manage_items"))
+@bp.route("/delete_name/<name>", methods=["DELETE"])
+def delete_item_by_name(name):
+    item = Item.query.filter_by(name=name).first()
+    if item != None:
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify("Item deleted successfully")
+    return jsonify("Item not found")

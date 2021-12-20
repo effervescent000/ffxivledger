@@ -1,11 +1,12 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 from math import floor
 from flask import Blueprint, flash, redirect, render_template, request, url_for, current_app, jsonify
 from flask_login import current_user
 import requests as req
 
+from . import db
 from .models import Item, Stock, Transaction, Recipe, Component, User, Profile
-from .utils import get_item, convert_string_to_datetime, get_user_id
+from .utils import get_item, convert_string_to_datetime, convert_to_time_format, get_user_id
 
 bp = Blueprint("crafting", __name__, url_prefix="/craft")
 
@@ -94,9 +95,34 @@ class Queue:
                 return crafting_cost / recipe.item_quantity
         else:
             # if no, query Universalis and get the going rate of the material, return this
-            world = self.profile.world
-            data = req.get(f"https://universalis.app/api/{world}/{item.id}").json()
-            return data.get("averagePrice")
+            self.check_cached_data(item)
+            return item.avg_price
+
+    # method to check freshness of queried data and requery if necessary
+    def check_cached_data(self, item):
+        # first check when stats_updated was last updated, if > 12hrs ago, requery
+        # grab stats_updated and convert to a date if it's valid
+        now = datetime.now()
+        if item.stats_updated != None:
+            last_update = convert_string_to_datetime(item.stats_updated)
+            # print(f"I think it's been {(now - last_update).total_seconds() / 3600 / 12} hours since last update for item {item.name}")
+            # if it's been more than 12 hours:
+            if (now - last_update).total_seconds() / 3600 / 12 > 12:
+                print(f"I think it's been more than 12 hrs, updating data for {item.name}")
+                self.update_cached_data(item)
+        else:
+            print(f"No data for {item.name}, updating...")
+            self.update_cached_data(item)
+
+    # method to actually query universalis
+    def update_cached_data(self, item):
+        world = self.profile.world
+        data = req.get(f"https://universalis.app/api/{world}/{item.id}").json()
+        item.stats_updated = convert_to_time_format(datetime.now())
+        item.avg_price = data.get("averagePrice")
+        item.sales_velocity = data.get("regularSaleVelocity")
+        db.session.commit()
+
 
     # method to estimate profit/hour
     def get_gph(self, item):
@@ -104,12 +130,10 @@ class Queue:
         crafting_cost = self.get_crafting_cost(item)
         print(f"{item.name} costs {crafting_cost} gil to make")
         # next, retrieve sale value of finished product
-        world = self.profile.world
-        data = req.get(f"https://universalis.app/api/{world}/{item.id}").json()
-        sale_value = data.get("averagePrice")
-        profit = sale_value - crafting_cost
+        self.check_cached_data(item)
+        profit = item.avg_price - crafting_cost
         # return: multiply profit by sale velocity HQ (which I believe is calculated per day)
-        return round(profit * data.get("hqSaleVelocity"))
+        return round((profit * item.sales_velocity) / 24)
 
 # class Queue:
 #     def __init__(self, num, user_id):
