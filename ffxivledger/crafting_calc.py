@@ -96,7 +96,7 @@ class Queue:
         else:
             # if no, query Universalis and get the going rate of the material, return this
             self.check_cached_data(item)
-            return item.avg_price
+            return item.price
 
     # method to check freshness of queried data and requery if necessary
     def check_cached_data(self, item):
@@ -116,12 +116,39 @@ class Queue:
 
     # method to actually query universalis
     def update_cached_data(self, item):
-        world = self.profile.world
-        data = req.get(f"https://universalis.app/api/{world}/{item.id}").json()
-        item.stats_updated = convert_to_time_format(datetime.now())
-        item.avg_price = data.get("averagePrice")
-        item.sales_velocity = data.get("regularSaleVelocity")
-        db.session.commit()
+        # world = self.profile.world
+        # data = req.get(f"https://universalis.app/api/{world}/{item.id}").json()
+        # item.stats_updated = convert_to_time_format(datetime.now())
+        # item.avg_price = data.get("averagePrice")
+        # item.sales_velocity = data.get("regularSaleVelocity")
+        # db.session.commit()
+
+        # pseudo-coding out a rewrite of this method
+        # first, get world data as normal
+        profile_world = self.profile.world
+        data = req.get(f"https://universalis.app/api/{profile_world}/{item.id}").json()
+        # if world data is below a certain # of listings, then grab datacenter data
+        if len(data.get("listings")) < 5:
+            # retrieve name of DC
+            search = req.get(f"https://xivapi.com/search?indexes=World&string={profile_world}").json()
+            world_id = search.get("Results")[0].get("ID")
+            world_search = req.get(f"https://xivapi.com/World/{world_id}").json()
+            dc_name = world_search.get("DataCenter").get("Name")
+            # overwrite data with dc data for given item
+            data = req.get(f"https://universalis.app/api/{dc_name}/{item.id}").json()
+            # now update item stats
+            item.stats_updated = convert_to_time_format(datetime.now())
+            item.price = data.get("averagePrice")
+            item.sales_velocity = data.get("regularSaleVelocity")
+            db.session.commit()
+        else:
+            # instead of using averagePrice, use minPrice (only with world data, continue using averagePrice for DC data)
+            item.stats_updated = convert_to_time_format(datetime.now())
+            item.price = data.get("minPrice")
+            item.sales_velocity = data.get("regularSaleVelocity")
+            db.session.commit()
+        # include checks for vanity items (does it require lvl 1 to use?), if so then do not pay attention to NQ vs HQ
+        # if it's an actual gear item, then preferentially use HQ data sources when available
 
 
     # method to estimate profit/hour
@@ -131,7 +158,7 @@ class Queue:
         print(f"{item.name} costs {crafting_cost} gil to make")
         # next, retrieve sale value of finished product
         self.check_cached_data(item)
-        profit = item.avg_price - crafting_cost
+        profit = item.price - crafting_cost
         # return: multiply profit by sale velocity HQ (which I believe is calculated per day)
         return round((profit * item.sales_velocity) / 24)
 

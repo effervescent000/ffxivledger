@@ -39,7 +39,7 @@ multi_recipe_schema = RecipeSchema(many=True)
 
 class ItemSchema(ma.Schema):
     class Meta:
-        fields = ("id", "name", "recipes")
+        fields = ("id", "name", "recipes", "stats_updated", "price", "sales_velocity")
     recipes = ma.Nested(multi_recipe_schema)
 
 one_item_schema = ItemSchema()

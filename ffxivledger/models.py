@@ -57,7 +57,7 @@ class Item(db.Model):
     recipes = db.relationship('Recipe', backref="item", lazy=True, cascade='all, delete-orphan')
     
     stats_updated = db.Column(db.String(200))
-    avg_price = db.Column(db.Float)
+    price = db.Column(db.Float)
     sales_velocity = db.Column(db.Float)
 
 
