@@ -69,7 +69,7 @@ class Queue:
                         if self.profile.cul_level >= recipe.level:
                             queue.append((recipe.item.name, self.get_gph(Item.query.get(recipe.item_id))))
                     elif recipe.job == "GSM":
-                        if self.profile.wvr_level >= recipe.level:
+                        if self.profile.gsm_level >= recipe.level:
                             queue.append((recipe.item.name, self.get_gph(Item.query.get(recipe.item_id))))
                     elif recipe.job == "LTW":
                         if self.profile.ltw_level >= recipe.level:
@@ -105,7 +105,7 @@ class Queue:
         now = datetime.now()
         if item.stats_updated != None:
             last_update = convert_string_to_datetime(item.stats_updated)
-            # print(f"I think it's been {(now - last_update).total_seconds() / 3600 / 60} hours since last update for item {item.name}")
+            # print(f"I think it's been {(now - last_update).total_seconds() / 3600} hours since last update for item {item.name}")
             # if it's been more than 6 hours:
             if (now - last_update).total_seconds() / 3600 > 6:
                 print(f"I think it's been more than 6 hrs, updating data for {item.name}")
