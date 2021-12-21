@@ -105,10 +105,10 @@ class Queue:
         now = datetime.now()
         if item.stats_updated != None:
             last_update = convert_string_to_datetime(item.stats_updated)
-            # print(f"I think it's been {(now - last_update).total_seconds() / 3600 / 12} hours since last update for item {item.name}")
-            # if it's been more than 12 hours:
-            if (now - last_update).total_seconds() / 3600 / 12 > 12:
-                print(f"I think it's been more than 12 hrs, updating data for {item.name}")
+            # print(f"I think it's been {(now - last_update).total_seconds() / 3600 / 60} hours since last update for item {item.name}")
+            # if it's been more than 6 hours:
+            if (now - last_update).total_seconds() / 3600 > 6:
+                print(f"I think it's been more than 6 hrs, updating data for {item.name}")
                 self.update_cached_data(item)
         else:
             print(f"No data for {item.name}, updating...")
@@ -116,14 +116,6 @@ class Queue:
 
     # method to actually query universalis
     def update_cached_data(self, item):
-        # world = self.profile.world
-        # data = req.get(f"https://universalis.app/api/{world}/{item.id}").json()
-        # item.stats_updated = convert_to_time_format(datetime.now())
-        # item.avg_price = data.get("averagePrice")
-        # item.sales_velocity = data.get("regularSaleVelocity")
-        # db.session.commit()
-
-        # pseudo-coding out a rewrite of this method
         # first, get world data as normal
         profile_world = self.profile.world
         data = req.get(f"https://universalis.app/api/{profile_world}/{item.id}").json()
