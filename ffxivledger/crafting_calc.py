@@ -3,13 +3,14 @@ from math import floor
 from flask import Blueprint, flash, redirect, render_template, request, url_for, current_app, jsonify
 from flask_login import current_user
 import requests as req
+from flask_cors import CORS
 
 from . import db
 from .models import Item, Stock, Transaction, Recipe, Component, User, Profile
 from .utils import get_item, convert_string_to_datetime, convert_to_time_format, get_user_id
 
 bp = Blueprint("crafting", __name__, url_prefix="/craft")
-
+CORS(bp)
 
 @bp.route("/get_queue/<amount>", methods=["GET"])
 def get_queue(amount):

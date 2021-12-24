@@ -4,14 +4,17 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_marshmallow import Marshmallow
+from flask_cors import CORS
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 ma = Marshmallow()
+cors = CORS()
 
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
+    
 
     if test_config is None:
         app.config.from_object('config.Config')
@@ -23,14 +26,16 @@ def create_app(test_config=None):
     except OSError:
         pass
 
+    cors.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
     ma.init_app(app)
 
+
     with app.app_context():
 
-        from .models import User, Profile, Item, Transaction, Stock, Recipe, Component
-        db.create_all()
+        # from .models import User, Profile, Item, Transaction, Stock, Recipe, Component
+        # db.create_all()
 
         from . import auth
         app.register_blueprint(auth.bp)
