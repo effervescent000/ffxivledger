@@ -1,4 +1,13 @@
+from ffxivledger.models import World
 from . import ma
+
+
+class WorldSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "name", "datacenter_id")
+
+one_world_schema = WorldSchema()
+multi_worlds_schema = WorldSchema(many=True)
 
 
 class ProfileSchema(ma.Schema):
@@ -6,7 +15,7 @@ class ProfileSchema(ma.Schema):
         fields = (
             "id",
             "user_id",
-            "world.id",
+            "world",
             "alc_level",
             "arm_level",
             "bsm_level",
@@ -16,17 +25,10 @@ class ProfileSchema(ma.Schema):
             "ltw_level",
             "wvr_level",
         )
+    world = ma.Nested(one_world_schema)
 
 
 profiles_schema = ProfileSchema(many=True)
-
-
-# class ProfileListSchema(ma.Schema):
-#     class Meta:
-#         fields = ("id", "user_id", "profiles")
-
-#     profiles = ma.Nested(profiles_schema)
-
 
 class UserSchema(ma.Schema):
     class Meta:
@@ -71,14 +73,6 @@ class StockSchema(ma.Schema):
         fields = ("item_id", "amount", "item")
 
     item = ma.Nested(one_item_schema)
-
-
-class WorldSchema(ma.Schema):
-    class Meta:
-        fields = ("id", "name", "datacenter_id")
-
-
-multi_worlds_schema = WorldSchema(many=True)
 
 
 class DatacenterSchema(ma.Schema):

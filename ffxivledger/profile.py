@@ -71,7 +71,9 @@ def get_profile_by_id(id):
 
 
 @bp.route("/update/<id>", methods=['PUT'])
+@fp.auth_required
 def modify_profile_by_id(id):
+    # add a check to ensure that the profile ID in question belongs to the logged-in user
     data = request.get_json()
     # check if the current_user also has a profile on this world, if so reject
     profile = Profile.query.get(id)
