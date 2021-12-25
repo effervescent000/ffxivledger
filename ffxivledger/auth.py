@@ -1,10 +1,8 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for, jsonify
-from flask_login import login_required, logout_user, current_user, login_user
-
-from .utils import admin_required
 
 from .models import User
 from .schema import UserSchema
+
 # from .forms import SignUpForm, LoginForm, ManageUserForm
 from . import db, login_manager, guard
 
@@ -70,10 +68,16 @@ def login():
     return jsonify({"access_token": guard.encode_jwt_token(user)}, 200)
 
 
-@bp.route("/logout")
-def logout():
-    logout_user()
-    return redirect(url_for("dashboard.index"))
+# @bp.route("/logout", methods=["POST"])
+# def logout():
+#     logout_user()
+#     return redirect(url_for("dashboard.index"))
+
+
+@bp.route("/refresh", methods=["POST"])
+def refresh_token():
+    data = request.get_json().get("loggedInUser")
+    return guard.refresh_jwt_token(data)
 
 
 # @bp.route("/manage")
@@ -100,9 +104,10 @@ def logout():
 #     return render_template("auth/edit_user.html", form=form, user=user)
 
 
-@bp.route("/get/all", methods=['GET'])
+@bp.route("/get/all", methods=["GET"])
 def get_all_users():
     return jsonify(multi_user_schema.dump(User.query.all()))
+
 
 @login_manager.user_loader
 def load_user(user_id):
