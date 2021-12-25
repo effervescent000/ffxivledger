@@ -58,11 +58,16 @@ def add_profile():
     return jsonify(one_profile_schema.dump(profile))
 
 
-@bp.route("/get", methods=["GET"])
+@bp.route("/get/all", methods=["GET"])
 @fp.auth_required
 def get_user_profiles():
     user_id = fp.current_user().id
     return jsonify(multi_profile_schema.dump(User.query.get(user_id).profiles))
+
+
+@bp.route("/get/<id>", methods=['GET'])
+def get_profile_by_id(id):
+    return jsonify(one_profile_schema.dump(Profile.query.get(id)))
 
 
 @bp.route("/update/<id>", methods=['PUT'])

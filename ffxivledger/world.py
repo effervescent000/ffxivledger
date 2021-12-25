@@ -44,3 +44,12 @@ def add_world_by_name():
         db.session.commit()
     return jsonify(one_world_schema.dump(world))
 
+
+@bp.route("/get/<id>", methods=['GET'])
+def get_world_by_id(id):
+    return jsonify(one_world_schema.dump(World.query.get(id)))
+
+
+@bp.route("/get/all", methods=['GET'])
+def get_worlds():
+    return jsonify(multi_world_schema.dump(World.query.all()))
