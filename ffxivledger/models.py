@@ -13,6 +13,7 @@ class User(db.Model):
     password = db.Column(db.Text, nullable=False)
     roles = db.Column(db.String(200))
     profiles = db.relationship("Profile", backref="user", lazy=True, cascade="all, delete-orphan")
+    # profile_list = db.relationship("ProfileList", backref="user", lazy=True, uselist=False, cascade="all, delete-orphan")
     is_active = db.Column(db.Boolean, default=True, server_default="true")
 
     def __repr__(self):
@@ -67,11 +68,16 @@ class User(db.Model):
     def is_valid(self):
         return self.is_active
 
+    def get_active_profile(self):
+        for x in self.profiles:
+            if x.is_active:
+                return x
 
 class Profile(db.Model):
     __tablename__ = "profiles"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    is_active = db.Column(db.Boolean, nullable=False)
     world_id = db.Column(db.Integer, db.ForeignKey("worlds.id"))
     alc_level = db.Column(db.Integer)
     arm_level = db.Column(db.Integer)

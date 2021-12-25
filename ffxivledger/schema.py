@@ -1,11 +1,6 @@
 from . import ma
 
 
-class UserSchema(ma.Schema):
-    class Meta:
-        fields = ("id", "username", "roles")
-
-
 class ProfileSchema(ma.Schema):
     class Meta:
         fields = (
@@ -23,26 +18,48 @@ class ProfileSchema(ma.Schema):
         )
 
 
+profiles_schema = ProfileSchema(many=True)
+
+
+# class ProfileListSchema(ma.Schema):
+#     class Meta:
+#         fields = ("id", "user_id", "profiles")
+
+#     profiles = ma.Nested(profiles_schema)
+
+
+class UserSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "username", "roles")
+
+
 class ComponentSchema(ma.Schema):
     class Meta:
         fields = ("id", "item_id", "item_quantity", "recipe_id")
 
+
 components_schema = ComponentSchema(many=True)
+
 
 class RecipeSchema(ma.Schema):
     class Meta:
         fields = ("id", "job", "level", "item_id", "components")
+
     components = ma.Nested(components_schema)
 
 
 multi_recipe_schema = RecipeSchema(many=True)
 
+
 class ItemSchema(ma.Schema):
     class Meta:
         fields = ("id", "name", "recipes")
+
     recipes = ma.Nested(multi_recipe_schema)
 
+
 one_item_schema = ItemSchema()
+
 
 class TransactionSchema(ma.Schema):
     class Meta:
@@ -52,5 +69,20 @@ class TransactionSchema(ma.Schema):
 class StockSchema(ma.Schema):
     class Meta:
         fields = ("item_id", "amount", "item")
+
     item = ma.Nested(one_item_schema)
 
+
+class WorldSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "name", "datacenter_id")
+
+
+multi_worlds_schema = WorldSchema(many=True)
+
+
+class DatacenterSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "name", "worlds")
+
+    worlds = ma.Nested(multi_worlds_schema)

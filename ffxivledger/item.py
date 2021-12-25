@@ -120,11 +120,12 @@ def process_item(data):
     else:
         # if no match is found, then return error
         return jsonify("No results found in XIVAPI search")
-    # GET request to xivapi again for the item id
-    item_data = req.get(f"https://xivapi.com/Item/{item_id}").json()
-    # populate item's data from the return JSON
+    
     item = Item.query.get(item_id)
     if item == None:
+        # GET request to xivapi again for the item id
+        item_data = req.get(f"https://xivapi.com/Item/{item_id}").json()
+        # populate item's data from the return JSON
         item = Item(name=item_data.get("Name"), id=item_id)
         db.session.add(item)
         db.session.commit()
