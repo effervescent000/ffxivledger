@@ -7,7 +7,7 @@ from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from flask_praetorian import Praetorian
 
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={"autoflush": False})
 login_manager = LoginManager()
 ma = Marshmallow()
 cors = CORS()

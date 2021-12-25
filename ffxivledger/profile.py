@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
-from flask_login import login_required, current_user
+import flask_praetorian as fp
 
 from . import db
-from .models import User, Profile
+from .models import User, Profile, World
 from .schema import UserSchema, ProfileSchema
 
 bp = Blueprint("profile", __name__, url_prefix="/profile")
@@ -12,17 +12,23 @@ multi_profile_schema = ProfileSchema(many=True)
 
 
 @bp.route("/add", methods=["POST"])
-# @login_required
+@fp.auth_required
 def add_profile():
-    user_id = 1
+    user_id = fp.current_user().id
     data = request.get_json()
     world = data.get("world")
     if world == None:
         return jsonify("Must include a world")
     # check if the current_user also has a profile on this world, if so reject
-    query = Profile.query.filter_by(user_id=user_id, world=world).first()
+    # query = ProfileList.query.filter_by(user_id=user_id).first()
+
+    # match world name to an id
+    world = World.query.filter_by(name=world).first()
+
+    query = Profile.query.filter_by(user_id=user_id, world_id=world.id).first()
     if query != None:
         return jsonify(f"Profile already exists on world {world}")
+    
     # check each job level, if any are not included then set them to 0 and add them to profile
     alc_level = data.get("alc_level")
     arm_level = data.get("arm_level")
@@ -33,6 +39,8 @@ def add_profile():
     ltw_level = data.get("ltw_level")
     wvr_level = data.get("wvr_level")
 
+    user = User.query.get(user_id)
+
     profile = Profile(user_id=user_id, world=world)
     profile.alc_level = alc_level if alc_level != None else 0
     profile.arm_level = arm_level if arm_level != None else 0
@@ -42,6 +50,8 @@ def add_profile():
     profile.gsm_level = gsm_level if gsm_level != None else 0
     profile.ltw_level = ltw_level if ltw_level != None else 0
     profile.wvr_level = wvr_level if wvr_level != None else 0
+    # if this is the only profile, then set it to active
+    profile.is_active = True if user.get_active_profile() == None else False
     db.session.add(profile)
     db.session.commit()
 
@@ -49,11 +59,10 @@ def add_profile():
 
 
 @bp.route("/get", methods=["GET"])
-# @login_required
-def get_by_user_id():
-    user_id = 1
-    profiles = Profile.query.filter_by(user_id=user_id).all()
-    return jsonify(multi_profile_schema.dump(profiles))
+@fp.auth_required
+def get_user_profiles():
+    user_id = fp.current_user().id
+    return jsonify(multi_profile_schema.dump(User.query.get(user_id).profiles))
 
 
 @bp.route("/update/<id>", methods=['PUT'])

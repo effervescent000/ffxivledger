@@ -6,7 +6,7 @@ class ProfileSchema(ma.Schema):
         fields = (
             "id",
             "user_id",
-            "world",
+            "world.id",
             "alc_level",
             "arm_level",
             "bsm_level",
