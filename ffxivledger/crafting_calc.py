@@ -2,20 +2,21 @@ from datetime import timedelta, datetime
 from math import floor
 from flask import Blueprint, flash, redirect, render_template, request, url_for, current_app, jsonify
 from flask_login import current_user
+import flask_praetorian as fp
 import requests as req
-from flask_cors import CORS
+# from flask_cors import CORS
 
 from . import db
-from .models import Item, Stock, Transaction, Recipe, Component, User, Profile
-from .utils import get_item, convert_string_to_datetime, convert_to_time_format, get_user_id
+from .models import Item, Stock, Recipe, Component, Profile
+from .utils import convert_string_to_datetime, convert_to_time_format
 
 bp = Blueprint("crafting", __name__, url_prefix="/craft")
-CORS(bp)
+# CORS(bp)
 
 @bp.route("/get_queue/<amount>", methods=["GET"])
 def get_queue(amount):
-    user_id = current_user.id
-    queue = Queue(amount)
+    user_id = fp.current_user().id
+    queue = Queue(amount, user_id)
     full_queue = queue.generate_queue()
     short_queue = []
     while len(short_queue) < int(amount):
@@ -38,9 +39,10 @@ def list_to_string(list_arg):
 
 
 class Queue:
-    def __init__(self, num):
+    def __init__(self, num, user_id):
         self.num = num
-        self.user_id = current_user.id
+        self.user_id = user_id
+        # right now this just grabs the first profile of a user
         self.profile = Profile.query.filter_by(user_id=self.user_id).first()
     
     # method to iterate over recipes in DB and find the highest gil/hour ones to craft

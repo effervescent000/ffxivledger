@@ -1,13 +1,11 @@
 from flask import Blueprint, flash, json, redirect, render_template, request, url_for, jsonify, current_app
-from flask_login import login_required, current_user
+import flask_praetorian as fp
 
 import requests as req
 
 from .models import Item, Transaction, Stock
 from .schema import ItemSchema, StockSchema, TransactionSchema
 from . import db
-from .utils import get_item, name_to_value, admin_required, rename_item
-from .forms import CreateItemForm
 
 bp = Blueprint("item", __name__, url_prefix="/item")
 one_item_schema = ItemSchema()
@@ -42,7 +40,7 @@ def get_item_purchases(value):
 
 @bp.route("/stock", methods=["GET"])
 def get_stock_list():
-    user_id = current_user.id
+    user_id = fp.current_user().id
     stock_list = Stock.query.filter(Stock.user_id == user_id, Stock.amount > 0).all()
     return jsonify(multi_stock_schema.dump(stock_list))
 
@@ -171,13 +169,6 @@ def edit_item_by_id(id):
     #     item.type = type
     db.session.commit()
     return jsonify(one_item_schema.dump(item))
-
-
-@bp.route("/manage")
-@login_required
-@admin_required
-def manage_items():
-    return render_template("ffxivledger/item_management.html", item_list=Item.query.all())
 
 
 @bp.route("/delete/<id>", methods=["DELETE"])

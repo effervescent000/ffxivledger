@@ -3,7 +3,7 @@ from . import ma
 
 class UserSchema(ma.Schema):
     class Meta:
-        fields = ("id", "username", "role")
+        fields = ("id", "username", "roles")
 
 
 class ProfileSchema(ma.Schema):
@@ -39,7 +39,7 @@ multi_recipe_schema = RecipeSchema(many=True)
 
 class ItemSchema(ma.Schema):
     class Meta:
-        fields = ("id", "name", "recipes", "stats_updated", "price", "sales_velocity")
+        fields = ("id", "name", "recipes")
     recipes = ma.Nested(multi_recipe_schema)
 
 one_item_schema = ItemSchema()

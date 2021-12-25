@@ -6,7 +6,7 @@ from flask_login import current_user
 
 from wtforms import ValidationError
 
-from .forms import DashboardForm
+# from .forms import DashboardForm
 from .utils import get_item, get_item_options, convert_to_time_format
 
 bp = Blueprint('dashboard', __name__)
@@ -14,7 +14,8 @@ bp = Blueprint('dashboard', __name__)
 
 @bp.route('/', methods=('GET', 'POST'))
 def index():
-    form = DashboardForm()
+    pass
+    # form = DashboardForm()
     # if form.validate_on_submit():
     #     # first collect info from form
     #     item_value = form.item.data
@@ -56,8 +57,8 @@ def index():
     #             return redirect(url_for('recipe.view_recipes', value=item_value))
     #         else:
     #             return "Somehow some other button was pressed on the dashboard ???"
-    form.item.choices = get_item_options()
-    return render_template('ffxivledger/index.html', form=form)
+    # form.item.choices = get_item_options()
+    # return render_template('ffxivledger/index.html', form=form)
 
 
 # route to append something to the error log so I'm not just passing that stupid list around in CraftingCalc forever
