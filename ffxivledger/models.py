@@ -142,6 +142,7 @@ class ItemStats(db.Model):
     world_id = db.Column(db.Integer, db.ForeignKey("worlds.id"))
 
     stats_updated = db.Column(db.String(200))
+    craft_cost = db.Column(db.Float)
     price = db.Column(db.Float)
     sales_velocity = db.Column(db.Float)
 
