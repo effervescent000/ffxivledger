@@ -62,6 +62,12 @@ def get_user_profiles():
     user_id = fp.current_user().id
     return jsonify(multi_profile_schema.dump(User.query.get(user_id).profiles))
 
+@bp.route("/get/active", methods=['GET'])
+@fp.auth_required
+def get_active_profile():
+    profile = fp.current_user().get_active_profile()
+    return jsonify(one_profile_schema.dump(profile))
+
 
 @bp.route("/get/<id>", methods=['GET'])
 def get_profile_by_id(id):
