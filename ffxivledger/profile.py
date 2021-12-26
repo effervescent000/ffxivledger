@@ -16,16 +16,14 @@ multi_profile_schema = ProfileSchema(many=True)
 def add_profile():
     user_id = fp.current_user().id
     data = request.get_json()
+    print(data)
     world = data.get("world")
     if world == None:
         return jsonify("Must include a world")
     # check if the current_user also has a profile on this world, if so reject
     # query = ProfileList.query.filter_by(user_id=user_id).first()
 
-    # match world name to an id
-    world = World.query.filter_by(name=world).first()
-
-    query = Profile.query.filter_by(user_id=user_id, world_id=world.id).first()
+    query = Profile.query.filter_by(user_id=user_id, world_id=world).first()
     if query != None:
         return jsonify(f"Profile already exists on world {world}")
     
@@ -41,7 +39,7 @@ def add_profile():
 
     user = User.query.get(user_id)
 
-    profile = Profile(user_id=user_id, world=world)
+    profile = Profile(user_id=user_id, world_id=world)
     profile.alc_level = alc_level if alc_level != None else 0
     profile.arm_level = arm_level if arm_level != None else 0
     profile.bsm_level = bsm_level if bsm_level != None else 0

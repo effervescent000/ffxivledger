@@ -173,7 +173,7 @@ class Transaction(db.Model):
     # the amount purchased/sold at this value
     amount = db.Column(db.Integer, nullable=False, default=1)
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"))
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    profile_id = db.Column(db.Integer, db.ForeignKey("profiles.id"))
 
     def __repr__(self):
         return "<Transaction #{}>".format(self.id)
