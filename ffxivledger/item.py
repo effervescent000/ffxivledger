@@ -15,7 +15,7 @@ multi_stock_schema = StockSchema(many=True)
 
 
 @bp.route("/get/<id>", methods=["GET"])
-def get_item_by_value(id):
+def get_item_by_id(id):
     item = Item.query.get(id)
     return jsonify(one_item_schema.dump(item))
 
@@ -39,37 +39,20 @@ def get_item_purchases(value):
 
 
 @bp.route("/stock", methods=["GET"])
+@fp.auth_required
 def get_stock_list():
-    user_id = fp.current_user().id
-    stock_list = Stock.query.filter(Stock.user_id == user_id, Stock.amount > 0).all()
-    return jsonify(multi_stock_schema.dump(stock_list))
+    profile = fp.current_user().get_active_profile()
+    stock_list = Stock.query.filter(Stock.profile_id == profile.id, Stock.amount > 0).all()
+    if stock_list != None:
+        return jsonify(multi_stock_schema.dump(stock_list))
+    else:
+        return jsonify([])
 
 
 @bp.route("/get/all", methods=["GET"])
 def get_all_items():
     return jsonify(multi_item_schema.dump(Item.query.all()))
 
-
-# @bp.route("/add", methods=["POST"])
-# @login_required
-# @admin_required
-# def create_item():
-#     data = request.get_json()
-#     name = data.get("name")
-#     value = None
-#     type = data.get("type")
-
-#     if name != None:
-#         value = name_to_value(name)
-#     else:
-#         return jsonify("Must return a name")
-#     if type == None:
-#         return jsonify("Must return a type")
-
-#     new_item = Item(name=name, value=value, type=type)
-#     db.session.add(new_item)
-#     db.session.commit()
-#     return jsonify(one_item_schema.dump(new_item))
 
 
 @bp.route("/add", methods=["POST"])
