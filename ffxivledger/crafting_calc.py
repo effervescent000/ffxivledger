@@ -25,20 +25,6 @@ def get_queue(amount):
     return jsonify(short_queue)
 
 
-def list_to_string(list_arg):
-    text = ""
-    if len(list_arg) > 0:
-        if isinstance(list_arg[0], tuple):
-            for x in list_arg:
-                new_string = "{} for {} {}\n".format(x[0], x[1], x[2])
-                text += new_string
-        else:
-            for x in list_arg:
-                new_string = "{}\n".format(x)
-                text += new_string
-    return text
-
-
 def get_item_stats(world_id, item_id):
         item_stats = ItemStats.query.filter_by(world_id=world_id, item_id=item_id).first()
         if item_stats == None:

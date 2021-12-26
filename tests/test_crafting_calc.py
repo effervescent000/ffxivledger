@@ -13,11 +13,3 @@ def test_generate_queue(client, app):
             assert craft_list is not None
             assert 0 < len(craft_list) < x + 1
             assert len(error_list) > 0
-
-
-def test_list_to_string(client):
-    with client:
-        from ffxivledger.crafting_calc import list_to_string
-        data = (('test_item', 1000, 'gph'), ('patricians_bottoms', 10000, 'gil'))
-        text = list_to_string(data)
-        assert 'test_item for 1000 gph' in text

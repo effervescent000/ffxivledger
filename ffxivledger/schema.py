@@ -70,7 +70,7 @@ class TransactionSchema(ma.Schema):
 
 class StockSchema(ma.Schema):
     class Meta:
-        fields = ("item_id", "amount", "item")
+        fields = ("id", "item_id", "amount", "item")
 
     item = ma.Nested(one_item_schema)
 
