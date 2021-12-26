@@ -1,17 +1,14 @@
 from datetime import timedelta, datetime
 from math import floor
-from flask import Blueprint, flash, redirect, render_template, request, url_for, current_app, jsonify
-from flask_login import current_user
+from flask import Blueprint, jsonify
 import flask_praetorian as fp
 import requests as req
-# from flask_cors import CORS
 
 from . import db
-from .models import Item, Stock, Recipe, Component, Profile, ItemStats, User
-from .utils import convert_string_to_datetime, convert_to_time_format, get_item
+from .models import Item, Stock, Recipe, Component, ItemStats, User
+from .utils import convert_string_to_datetime, convert_to_time_format
 
 bp = Blueprint("crafting", __name__, url_prefix="/craft")
-# CORS(bp)
 
 @bp.route("/get_queue/<amount>", methods=["GET"])
 @fp.auth_required
