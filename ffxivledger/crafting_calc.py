@@ -67,29 +67,61 @@ class Queue:
                 if Component.query.filter_by(item_id=recipe.item_id).first() == None:
                     if recipe.job == "ALC":
                         if self.profile.alc_level >= recipe.level:
-                            queue.append((recipe.item.name, self.get_gph(Item.query.get(recipe.item_id))))
+                            queue.append({
+                                "name": recipe.item.name,
+                                "id": recipe.item.id,
+                                "gph": self.get_gph(Item.query.get(recipe.item_id))
+                            })
                     elif recipe.job == "ARM":
                         if self.profile.arm_level >= recipe.level:
-                            queue.append((recipe.item.name, self.get_gph(Item.query.get(recipe.item_id))))
+                            queue.append({
+                                "name": recipe.item.name,
+                                "id": recipe.item.id,
+                                "gph": self.get_gph(Item.query.get(recipe.item_id))
+                            })
                     elif recipe.job == "BSM":
                         if self.profile.bsm_level >= recipe.level:
-                            queue.append((recipe.item.name, self.get_gph(Item.query.get(recipe.item_id))))
+                            queue.append({
+                                "name": recipe.item.name,
+                                "id": recipe.item.id,
+                                "gph": self.get_gph(Item.query.get(recipe.item_id))
+                            })
                     elif recipe.job == "CRP":
                         if self.profile.crp_level >= recipe.level:
-                            queue.append((recipe.item.name, self.get_gph(Item.query.get(recipe.item_id))))
+                            queue.append({
+                                "name": recipe.item.name,
+                                "id": recipe.item.id,
+                                "gph": self.get_gph(Item.query.get(recipe.item_id))
+                            })
                     elif recipe.job == "CUL":
                         if self.profile.cul_level >= recipe.level:
-                            queue.append((recipe.item.name, self.get_gph(Item.query.get(recipe.item_id))))
+                            queue.append({
+                                "name": recipe.item.name,
+                                "id": recipe.item.id,
+                                "gph": self.get_gph(Item.query.get(recipe.item_id))
+                            })
                     elif recipe.job == "GSM":
                         if self.profile.gsm_level >= recipe.level:
-                            queue.append((recipe.item.name, self.get_gph(Item.query.get(recipe.item_id))))
+                            queue.append({
+                                "name": recipe.item.name,
+                                "id": recipe.item.id,
+                                "gph": self.get_gph(Item.query.get(recipe.item_id))
+                            })
                     elif recipe.job == "LTW":
                         if self.profile.ltw_level >= recipe.level:
-                            queue.append((recipe.item.name, self.get_gph(Item.query.get(recipe.item_id))))
+                            queue.append({
+                                "name": recipe.item.name,
+                                "id": recipe.item.id,
+                                "gph": self.get_gph(Item.query.get(recipe.item_id))
+                            })
                     elif recipe.job == "WVR":
                         if self.profile.wvr_level >= recipe.level:
-                            queue.append((recipe.item.name, self.get_gph(Item.query.get(recipe.item_id))))
-        queue.sort(reverse=True, key=lambda x : x[1])
+                            queue.append({
+                                "name": recipe.item.name,
+                                "id": recipe.item.id,
+                                "gph": self.get_gph(Item.query.get(recipe.item_id))
+                            })
+        queue.sort(reverse=True, key=lambda x : x["gph"])
         return queue
 
     # method to calculate crafting cost recursively
