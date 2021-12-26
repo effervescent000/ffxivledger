@@ -112,22 +112,22 @@ class Item(db.Model):
     def __repr__(self):
         return "<Item {}>".format(self.name)
 
-    def process_transaction(self, gil_value, time, amount, user_id):
-        transaction = Transaction(gil_value=gil_value, time=time, amount=amount, item_id=self.id, user_id=user_id)
+    def process_transaction(self, gil_value, time, amount, profile_id):
+        transaction = Transaction(gil_value=gil_value, time=time, amount=amount, item_id=self.id, profile_id=profile_id)
         db.session.add(transaction)
         db.session.commit()
         # now adjust the amount stored in the stock table
-        self._adjust_stock(amount, user_id)
+        self._adjust_stock(amount, profile_id)
         return transaction
 
-    def _adjust_stock(self, num, user_id, overwrite=False):
+    def _adjust_stock(self, num, profile_id, overwrite=False):
         """Adjust the amount of a product in stock. If override is True, then overwrite the current stock value.
         If False, then +/- it"""
         num = int(num)
-        stock_row = Stock.query.filter_by(item_id=self.id, user_id=user_id).one_or_none()
+        stock_row = Stock.query.filter_by(item_id=self.id, profile_id=profile_id).first()
         if stock_row is None:
             # always overwrite if creating a new row
-            stock_row = Stock(amount=num, item_id=self.id, user_id=user_id)
+            stock_row = Stock(amount=num, item_id=self.id, profile_id=profile_id)
             db.session.add(stock_row)
         elif overwrite is True:
             stock_row.amount = num
