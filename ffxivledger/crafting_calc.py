@@ -7,13 +7,14 @@ import requests as req
 # from flask_cors import CORS
 
 from . import db
-from .models import Item, Stock, Recipe, Component, Profile
-from .utils import convert_string_to_datetime, convert_to_time_format
+from .models import Item, Stock, Recipe, Component, Profile, ItemStats
+from .utils import convert_string_to_datetime, convert_to_time_format, get_item
 
 bp = Blueprint("crafting", __name__, url_prefix="/craft")
 # CORS(bp)
 
 @bp.route("/get_queue/<amount>", methods=["GET"])
+@fp.auth_required
 def get_queue(amount):
     user_id = fp.current_user().id
     queue = Queue(amount, user_id)
@@ -38,6 +39,14 @@ def list_to_string(list_arg):
     return text
 
 
+def get_item_stats(world_id, item_id):
+        item_stats = ItemStats.query.filter_by(world_id=world_id, item_id=item_id).first()
+        if item_stats == None:
+            item_stats = ItemStats(world_id=world_id, item_id=item_id)
+            db.session.add(item_stats)
+            db.session.commit()
+        return item_stats
+
 class Queue:
     def __init__(self, num, user_id):
         self.num = num
@@ -51,7 +60,7 @@ class Queue:
         # for now just do all jobs but I would like to make it so you can pick one or a couple or w/e
         for recipe in Recipe.query.all():
             # exclude items that are in stock already
-            stock = Stock.query.filter_by(item_id=recipe.item_id, user_id=self.user_id).first()
+            stock = Stock.query.filter_by(item_id=recipe.item_id, profile_id=self.profile.id).first()
             if stock == None or stock.amount == 0:
                 # only include top-level craftables (nothing that's a component of something else)
                 # (this isn't perfect b/c it excludes certain pieces of gear but I'll figure that out later)
@@ -99,15 +108,17 @@ class Queue:
         else:
             # if no, query Universalis and get the going rate of the material, return this
             self.check_cached_data(item)
-            return item.price
+            item_stats = get_item_stats(self.profile.world_id, item.id)
+            return item_stats.price
 
     # method to check freshness of queried data and requery if necessary
     def check_cached_data(self, item):
         # first check when stats_updated was last updated, if > 12hrs ago, requery
         # grab stats_updated and convert to a date if it's valid
         now = datetime.now()
-        if item.stats_updated != None:
-            last_update = convert_string_to_datetime(item.stats_updated)
+        item_stats = get_item_stats(self.profile.world_id, item.id)
+        if item_stats.stats_updated != None:
+            last_update = convert_string_to_datetime(item_stats.stats_updated)
             # print(f"I think it's been {(now - last_update).total_seconds() / 3600} hours since last update for item {item.name}")
             # if it's been more than 6 hours:
             if (now - last_update).total_seconds() / 3600 > 6:
@@ -120,27 +131,23 @@ class Queue:
     # method to actually query universalis
     def update_cached_data(self, item):
         # first, get world data as normal
-        profile_world = self.profile.world
+        profile_world = self.profile.world_id
         data = req.get(f"https://universalis.app/api/{profile_world}/{item.id}").json()
         # if world data is below a certain # of listings, then grab datacenter data
-        if len(data.get("listings")) < 5:
-            # retrieve name of DC
-            search = req.get(f"https://xivapi.com/search?indexes=World&string={profile_world}").json()
-            world_id = search.get("Results")[0].get("ID")
-            world_search = req.get(f"https://xivapi.com/World/{world_id}").json()
-            dc_name = world_search.get("DataCenter").get("Name")
+        item_stats = get_item_stats(profile_world, item.id)
+        if len(data.get("listings")) <= 3:
             # overwrite data with dc data for given item
-            data = req.get(f"https://universalis.app/api/{dc_name}/{item.id}").json()
+            data = req.get(f"https://universalis.app/api/{self.profile.world.datacenter.name}/{item.id}").json()
             # now update item stats
-            item.stats_updated = convert_to_time_format(datetime.now())
-            item.price = data.get("averagePrice")
-            item.sales_velocity = data.get("regularSaleVelocity")
+            item_stats.stats_updated = convert_to_time_format(datetime.now())
+            item_stats.price = data.get("averagePrice")
+            item_stats.sales_velocity = data.get("regularSaleVelocity")
             db.session.commit()
         else:
             # instead of using averagePrice, use minPrice (only with world data, continue using averagePrice for DC data)
-            item.stats_updated = convert_to_time_format(datetime.now())
-            item.price = data.get("minPrice")
-            item.sales_velocity = data.get("regularSaleVelocity")
+            item_stats.stats_updated = convert_to_time_format(datetime.now())
+            item_stats.price = data.get("minPrice")
+            item_stats.sales_velocity = data.get("regularSaleVelocity")
             db.session.commit()
         # include checks for vanity items (does it require lvl 1 to use?), if so then do not pay attention to NQ vs HQ
         # if it's an actual gear item, then preferentially use HQ data sources when available
@@ -153,9 +160,10 @@ class Queue:
         print(f"{item.name} costs {crafting_cost} gil to make")
         # next, retrieve sale value of finished product
         self.check_cached_data(item)
-        profit = item.price - crafting_cost
+        item_stats = get_item_stats(self.profile.world_id, item.id)
+        profit = item_stats.price - crafting_cost
         # return: multiply profit by sale velocity HQ (which I believe is calculated per day)
-        return round((profit * item.sales_velocity) / 24)
+        return round((profit * item_stats.sales_velocity) / 24)
 
 # class Queue:
 #     def __init__(self, num, user_id):

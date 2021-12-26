@@ -105,10 +105,6 @@ class Item(db.Model):
     components = db.relationship("Component", backref="item", lazy=True, cascade="all, delete-orphan")
     recipes = db.relationship("Recipe", backref="item", lazy=True, cascade="all, delete-orphan")
 
-    stats_updated = db.Column(db.String(200))
-    price = db.Column(db.Float)
-    sales_velocity = db.Column(db.Float)
-
     def __repr__(self):
         return "<Item {}>".format(self.name)
 
@@ -144,6 +140,10 @@ class ItemStats(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"))
     world_id = db.Column(db.Integer, db.ForeignKey("worlds.id"))
+
+    stats_updated = db.Column(db.String(200))
+    price = db.Column(db.Float)
+    sales_velocity = db.Column(db.Float)
 
 
 class World(db.Model):
