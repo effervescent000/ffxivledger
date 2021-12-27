@@ -62,6 +62,10 @@ class ItemSchema(ma.Schema):
 
 one_item_schema = ItemSchema()
 
+class SkipSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "item_id", "profile_id", "time")
+
 
 class TransactionSchema(ma.Schema):
     class Meta:
