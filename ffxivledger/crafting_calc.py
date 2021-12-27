@@ -3,8 +3,10 @@ from flask import Blueprint, jsonify
 import flask_praetorian as fp
 import requests as req
 
+from ffxivledger.item import process_item
+
 from . import db
-from .models import Item, Stock, Recipe, Component, ItemStats, World
+from .models import Item, Stock, Recipe, Component, ItemStats, World, Skip
 from .utils import convert_string_to_datetime, convert_to_time_format
 
 bp = Blueprint("crafting", __name__, url_prefix="/craft")
@@ -22,7 +24,7 @@ def get_queue(amount):
     return jsonify(short_queue)
 
 
-@bp.route("/alerts/<world_id>-<item_id>", methods=['GET'])
+@bp.route("/alerts/<world_id>-<item_id>", methods=["GET"])
 def generate_warnings(world_id, item_id):
     warning_list = []
     # iterate over each item in queue
@@ -37,7 +39,6 @@ def generate_warnings(world_id, item_id):
                     if comp_stats.price <= comp_stats.craft_cost:
                         warning_list.append(f"{component.item.name} is cheaper to buy than craft")
     return jsonify(warning_list)
-            
 
 
 def get_item_stats(world_id, item_id):
@@ -49,12 +50,7 @@ def get_item_stats(world_id, item_id):
     return item_stats
 
 
-
-
-
-
-
-@bp.route("/stats/update/<world_id>", methods=['PUT'])
+@bp.route("/stats/update/<world_id>", methods=["PUT"])
 def force_update_stats(world):
     if type(world) is int:
         world = World.query.get(world)
@@ -117,48 +113,70 @@ class Queue:
         self.profile = profile
         self.update_counter = 0
         self.max_updates = 50
+        self.queue = []
 
     # method to iterate over recipes in DB and find the highest gil/hour ones to craft
     def generate_queue(self):
-        queue = []
         # for now just do all jobs but I would like to make it so you can pick one or a couple or w/e
         for recipe in Recipe.query.all():
-            # exclude items that are in stock already
-            stock = Stock.query.filter_by(item_id=recipe.item_id, profile_id=self.profile.id).first()
-            if stock == None or stock.amount == 0:
-                # only include top-level craftables (nothing that's a component of something else)
-                # (this isn't perfect b/c it excludes certain pieces of gear but I'll figure that out later)
-                if Component.query.filter_by(item_id=recipe.item_id).first() == None:
-                    if recipe.job == "ALC":
-                        if self.profile.alc_level >= recipe.level:
-                            queue.append(self.make_queue_item(recipe))
-                    elif recipe.job == "ARM":
-                        if self.profile.arm_level >= recipe.level:
-                            queue.append(self.make_queue_item(recipe))
-                    elif recipe.job == "BSM":
-                        if self.profile.bsm_level >= recipe.level:
-                            queue.append(self.make_queue_item(recipe))
-                    elif recipe.job == "CRP":
-                        if self.profile.crp_level >= recipe.level:
-                            queue.append(self.make_queue_item(recipe))
-                    elif recipe.job == "CUL":
-                        if self.profile.cul_level >= recipe.level:
-                            queue.append(self.make_queue_item(recipe))
-                    elif recipe.job == "GSM":
-                        if self.profile.gsm_level >= recipe.level:
-                            queue.append(self.make_queue_item(recipe))
-                    elif recipe.job == "LTW":
-                        if self.profile.ltw_level >= recipe.level:
-                            queue.append(self.make_queue_item(recipe))
-                    elif recipe.job == "WVR":
-                        if self.profile.wvr_level >= recipe.level:
-                            queue.append(self.make_queue_item(recipe))
-        queue.sort(reverse=True, key=lambda x: x["gph"])
-        return queue
+            # ensure the item is not set to be skipped by the user
+            if len(recipe.item.skips) > 0:
+                # if there are any skips, then query to see if there's one that matches the profile
+                skip_query = Skip.query.filter_by(item_id=recipe.item_id, profile_id=self.profile.id).first()
+                if skip_query == None:
+                    self.process_recipe(recipe)
+                # check to see if the skip has expired, if so, remove it from the db
+                else:
+                    skip_timestamp = convert_string_to_datetime(skip_query.time)
+                    # if it's been more than 24 hrs, remove the skip
+                    if (datetime.now() - skip_timestamp).total_seconds() / 3600 > 24:
+                        db.session.delete(skip_query)
+                        db.session.commit()
+            else:
+                self.process_recipe(recipe)
+        self.queue.sort(reverse=True, key=lambda x: x["gph"])
+        return self.queue
 
     def make_queue_item(self, recipe):
-        item_dict = {"name": recipe.item.name, "id": recipe.item.id, "gph": self.get_gph(Item.query.get(recipe.item_id))}
+        item_dict = {
+            "name": recipe.item.name,
+            "id": recipe.item.id,
+            "gph": self.get_gph(Item.query.get(recipe.item_id)),
+        }
         return item_dict
+
+    def process_recipe(self, recipe):
+        # exclude items that are in stock already
+        stock = Stock.query.filter_by(item_id=recipe.item_id, profile_id=self.profile.id).first()
+        if stock == None or stock.amount == 0:
+            # only include top-level craftables (nothing that's a component of something else)
+            # (this isn't perfect b/c it excludes certain pieces of gear but I'll figure that out later)
+            if Component.query.filter_by(item_id=recipe.item_id).first() == None:
+                if recipe.job == "ALC":
+                    if self.profile.alc_level >= recipe.level:
+                        self.queue.append(self.make_queue_item(recipe))
+                elif recipe.job == "ARM":
+                    if self.profile.arm_level >= recipe.level:
+                        self.queue.append(self.make_queue_item(recipe))
+                elif recipe.job == "BSM":
+                    if self.profile.bsm_level >= recipe.level:
+                        self.queue.append(self.make_queue_item(recipe))
+                elif recipe.job == "CRP":
+                    if self.profile.crp_level >= recipe.level:
+                        self.queue.append(self.make_queue_item(recipe))
+                elif recipe.job == "CUL":
+                    if self.profile.cul_level >= recipe.level:
+                        self.queue.append(self.make_queue_item(recipe))
+                elif recipe.job == "GSM":
+                    if self.profile.gsm_level >= recipe.level:
+                        self.queue.append(self.make_queue_item(recipe))
+                elif recipe.job == "LTW":
+                    if self.profile.ltw_level >= recipe.level:
+                        self.queue.append(self.make_queue_item(recipe))
+                elif recipe.job == "WVR":
+                    if self.profile.wvr_level >= recipe.level:
+                        self.queue.append(self.make_queue_item(recipe))
+
 
     # method to calculate crafting cost recursively
     def get_crafting_cost(self, item):
@@ -166,30 +184,28 @@ class Queue:
         crafting_cost = 0
         # next, check if the item can be crafted
         if len(item.recipes) > 0:
-            # if yes, iterate through recipes (this will result in items with more than 1 recipe having doubled up crafting costs)
             for recipe in item.recipes:
                 # iterate through the components of each recipe to get their individual crafting cost
                 for component in recipe.components:
                     crafting_cost += self.get_crafting_cost(component.item) * component.item_quantity
                 # this cuts off after the first recipe
                 return crafting_cost / recipe.item_quantity
+
         else:
             # if no, query Universalis and get the going rate of the material, return this
             self.check_cached_data(item)
             item_stats = get_item_stats(self.profile.world.id, item.id)
             return item_stats.price
 
-
     # method to check freshness of queried data and requery if necessary
     def check_cached_data(self, item):
         # first check when stats_updated was last updated, if > 12hrs ago, requery
         # grab stats_updated and convert to a date if it's valid
-        now = datetime.now()
         item_stats = get_item_stats(self.profile.world.id, item.id)
         if self.update_counter < self.max_updates and item_stats.stats_updated != None:
             last_update = convert_string_to_datetime(item_stats.stats_updated)
             # if it's been more than 6 hours:
-            if (now - last_update).total_seconds() / 3600 > 6:
+            if (datetime.now() - last_update).total_seconds() / 3600 > 6:
                 print(f"I think it's been more than 6 hrs, updating data for {item.name}")
                 self.update_counter += 1
                 update_cached_data(item, self.profile.world)
@@ -197,7 +213,6 @@ class Queue:
             print(f"No data for {item.name}, updating...")
             self.update_counter += 1
             update_cached_data(item, self.profile.world)
-
 
     # method to estimate profit/hour
     def get_gph(self, item):
