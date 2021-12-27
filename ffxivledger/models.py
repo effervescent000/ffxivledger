@@ -89,6 +89,7 @@ class Profile(db.Model):
     wvr_level = db.Column(db.Integer)
 
     stock_list = db.relationship("Stock", backref="profile", lazy=True, cascade="all, delete-orphan")
+    skips = db.relationship("Skip", backref="profile", lazy=True, cascade="all, delete-orphan")
 
 
 class Item(db.Model):
@@ -104,6 +105,8 @@ class Item(db.Model):
 
     components = db.relationship("Component", backref="item", lazy=True, cascade="all, delete-orphan")
     recipes = db.relationship("Recipe", backref="item", lazy=True, cascade="all, delete-orphan")
+
+    skips = db.relationship("Skip", backref="item", lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return "<Item {}>".format(self.name)
@@ -133,6 +136,14 @@ class Item(db.Model):
         if stock_row.amount < 0:
             stock_row.amount = 0
         db.session.commit()
+
+
+class Skip(db.Model):
+    __tablename__ = "skips"
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
+    profile_id = db.Column(db.Integer, db.ForeignKey("profiles.id"), nullable=False)
+    time = db.Column(db.String(200))
 
 
 class ItemStats(db.Model):
