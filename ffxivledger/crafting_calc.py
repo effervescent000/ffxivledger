@@ -146,7 +146,16 @@ class Queue:
                 self.update_cached_data(item)
         else:
             print(f"No data for {item.name}, updating...")
-            self.update_cached_data(item)
+
+@bp.route("/stats/update/<world_id>", methods=['PUT'])
+def force_update_stats(world):
+    if type(world) is int:
+        world = World.query.get(world)
+    item_stats = ItemStats.query.filter_by(world_id=world).all()
+    for x in item_stats:
+        update_cached_data(x, world)
+
+
 
     # method to actually query universalis
     def update_cached_data(self, item):
