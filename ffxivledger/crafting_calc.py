@@ -14,8 +14,8 @@ bp = Blueprint("crafting", __name__, url_prefix="/craft")
 @fp.auth_required
 def get_queue(amount):
     profile = fp.current_user().get_active_profile()
-    # queue = Queue(amount, user_id)
-    full_queue = generate_queue(profile)
+    queue = Queue(profile)
+    full_queue = queue.generate_queue()
     short_queue = []
     while len(short_queue) < int(amount):
         short_queue.append(full_queue.pop(0))
@@ -49,85 +49,9 @@ def get_item_stats(world_id, item_id):
     return item_stats
 
 
-# method to iterate over recipes in DB and find the highest gil/hour ones to craft
-def generate_queue(profile):
-    queue = []
-    # for now just do all jobs but I would like to make it so you can pick one or a couple or w/e
-    for recipe in Recipe.query.all():
-        # exclude items that are in stock already
-        stock = Stock.query.filter_by(item_id=recipe.item_id, profile_id=profile.id).first()
-        if stock == None or stock.amount == 0:
-            # only include top-level craftables (nothing that's a component of something else)
-            # (this isn't perfect b/c it excludes certain pieces of gear but I'll figure that out later)
-            if Component.query.filter_by(item_id=recipe.item_id).first() == None:
-                if recipe.job == "ALC":
-                    if profile.alc_level >= recipe.level:
-                        queue.append(make_queue_item(recipe, profile))
-                elif recipe.job == "ARM":
-                    if profile.arm_level >= recipe.level:
-                        queue.append(make_queue_item(recipe, profile))
-                elif recipe.job == "BSM":
-                    if profile.bsm_level >= recipe.level:
-                        queue.append(make_queue_item(recipe, profile))
-                elif recipe.job == "CRP":
-                    if profile.crp_level >= recipe.level:
-                        queue.append(make_queue_item(recipe, profile))
-                elif recipe.job == "CUL":
-                    if profile.cul_level >= recipe.level:
-                        queue.append(make_queue_item(recipe, profile))
-                elif recipe.job == "GSM":
-                    if profile.gsm_level >= recipe.level:
-                        queue.append(make_queue_item(recipe, profile))
-                elif recipe.job == "LTW":
-                    if profile.ltw_level >= recipe.level:
-                        queue.append(make_queue_item(recipe, profile))
-                elif recipe.job == "WVR":
-                    if profile.wvr_level >= recipe.level:
-                        queue.append(make_queue_item(recipe, profile))
-    queue.sort(reverse=True, key=lambda x: x["gph"])
-    return queue
 
 
-def make_queue_item(recipe, profile):
-    item_dict = {"name": recipe.item.name, "id": recipe.item.id, "gph": get_gph(Item.query.get(recipe.item_id), profile.world)}
-    return item_dict
 
-
-# method to calculate crafting cost recursively
-def get_crafting_cost(item, world):
-    # first, declare crafting cost variable
-    crafting_cost = 0
-    # next, check if the item can be crafted
-    if len(item.recipes) > 0:
-        # if yes, iterate through recipes (this will result in items with more than 1 recipe having doubled up crafting costs)
-        for recipe in item.recipes:
-            # iterate through the components of each recipe to get their individual crafting cost
-            for component in recipe.components:
-                crafting_cost += get_crafting_cost(component.item, world) * component.item_quantity
-            # this cuts off after the first recipe
-            return crafting_cost / recipe.item_quantity
-    else:
-        # if no, query Universalis and get the going rate of the material, return this
-        check_cached_data(item, world)
-        item_stats = get_item_stats(world.id, item.id)
-        return item_stats.price
-
-
-# method to check freshness of queried data and requery if necessary
-def check_cached_data(item, world):
-    # first check when stats_updated was last updated, if > 12hrs ago, requery
-    # grab stats_updated and convert to a date if it's valid
-    now = datetime.now()
-    item_stats = get_item_stats(world.id, item.id)
-    if item_stats.stats_updated != None:
-        last_update = convert_string_to_datetime(item_stats.stats_updated)
-        # if it's been more than 6 hours:
-        if (now - last_update).total_seconds() / 3600 > 6:
-            print(f"I think it's been more than 6 hrs, updating data for {item.name}")
-            update_cached_data(item, world)
-    else:
-        print(f"No data for {item.name}, updating...")
-        update_cached_data(item, world)
 
 
 @bp.route("/stats/update/<world_id>", methods=['PUT'])
@@ -137,8 +61,6 @@ def force_update_stats(world):
     item_stats = ItemStats.query.filter_by(world_id=world).all()
     for x in item_stats:
         update_cached_data(x, world)
-
-
 
 
 # method to actually query universalis
@@ -190,14 +112,97 @@ def update_cached_data(item, world):
         db.session.commit()
 
 
-# method to estimate profit/hour
-def get_gph(item, world):
-    # first, get crafting cost
-    crafting_cost = get_crafting_cost(item, world)
-    print(f"{item.name} costs {crafting_cost} gil to make")
-    # next, retrieve sale value of finished product
-    check_cached_data(item, world)
-    item_stats = get_item_stats(world.id, item.id)
-    profit = item_stats.price - crafting_cost
-    # return: multiply profit by sale velocity HQ (which I believe is calculated per day)
-    return round((profit * item_stats.sales_velocity) / 24)
+class Queue:
+    def __init__(self, profile):
+        self.profile = profile
+
+    # method to iterate over recipes in DB and find the highest gil/hour ones to craft
+    def generate_queue(self):
+        queue = []
+        # for now just do all jobs but I would like to make it so you can pick one or a couple or w/e
+        for recipe in Recipe.query.all():
+            # exclude items that are in stock already
+            stock = Stock.query.filter_by(item_id=recipe.item_id, profile_id=self.profile.id).first()
+            if stock == None or stock.amount == 0:
+                # only include top-level craftables (nothing that's a component of something else)
+                # (this isn't perfect b/c it excludes certain pieces of gear but I'll figure that out later)
+                if Component.query.filter_by(item_id=recipe.item_id).first() == None:
+                    if recipe.job == "ALC":
+                        if self.profile.alc_level >= recipe.level:
+                            queue.append(self.make_queue_item(recipe, self.profile))
+                    elif recipe.job == "ARM":
+                        if self.profile.arm_level >= recipe.level:
+                            queue.append(self.make_queue_item(recipe, self.profile))
+                    elif recipe.job == "BSM":
+                        if self.profile.bsm_level >= recipe.level:
+                            queue.append(self.make_queue_item(recipe, self.profile))
+                    elif recipe.job == "CRP":
+                        if self.profile.crp_level >= recipe.level:
+                            queue.append(self.make_queue_item(recipe, self.profile))
+                    elif recipe.job == "CUL":
+                        if self.profile.cul_level >= recipe.level:
+                            queue.append(self.make_queue_item(recipe, self.profile))
+                    elif recipe.job == "GSM":
+                        if self.profile.gsm_level >= recipe.level:
+                            queue.append(self.make_queue_item(recipe, self.profile))
+                    elif recipe.job == "LTW":
+                        if self.profile.ltw_level >= recipe.level:
+                            queue.append(self.make_queue_item(recipe, self.profile))
+                    elif recipe.job == "WVR":
+                        if self.profile.wvr_level >= recipe.level:
+                            queue.append(self.make_queue_item(recipe, self.profile))
+        queue.sort(reverse=True, key=lambda x: x["gph"])
+        return queue
+
+    def make_queue_item(self, recipe):
+        item_dict = {"name": recipe.item.name, "id": recipe.item.id, "gph": self.get_gph(Item.query.get(recipe.item_id), self.profile.world)}
+        return item_dict
+
+    # method to calculate crafting cost recursively
+    def get_crafting_cost(self, item):
+        # first, declare crafting cost variable
+        crafting_cost = 0
+        # next, check if the item can be crafted
+        if len(item.recipes) > 0:
+            # if yes, iterate through recipes (this will result in items with more than 1 recipe having doubled up crafting costs)
+            for recipe in item.recipes:
+                # iterate through the components of each recipe to get their individual crafting cost
+                for component in recipe.components:
+                    crafting_cost += self.get_crafting_cost(component.item, self.profile.world) * component.item_quantity
+                # this cuts off after the first recipe
+                return crafting_cost / recipe.item_quantity
+        else:
+            # if no, query Universalis and get the going rate of the material, return this
+            self.check_cached_data(item, self.profile.world)
+            item_stats = get_item_stats(self.profile.world.id, item.id)
+            return item_stats.price
+
+
+    # method to check freshness of queried data and requery if necessary
+    def check_cached_data(self, item, world):
+        # first check when stats_updated was last updated, if > 12hrs ago, requery
+        # grab stats_updated and convert to a date if it's valid
+        now = datetime.now()
+        item_stats = get_item_stats(world.id, item.id)
+        if item_stats.stats_updated != None:
+            last_update = convert_string_to_datetime(item_stats.stats_updated)
+            # if it's been more than 6 hours:
+            if (now - last_update).total_seconds() / 3600 > 6:
+                print(f"I think it's been more than 6 hrs, updating data for {item.name}")
+                update_cached_data(item, world)
+        else:
+            print(f"No data for {item.name}, updating...")
+            update_cached_data(item, world)
+
+
+    # method to estimate profit/hour
+    def get_gph(self, item, world):
+        # first, get crafting cost
+        crafting_cost = self.get_crafting_cost(item, world)
+        print(f"{item.name} costs {crafting_cost} gil to make")
+        # next, retrieve sale value of finished product
+        self.check_cached_data(item, world)
+        item_stats = get_item_stats(world.id, item.id)
+        profit = item_stats.price - crafting_cost
+        # return: multiply profit by sale velocity HQ (which I believe is calculated per day)
+        return round((profit * item_stats.sales_velocity) / 24)
