@@ -1,10 +1,13 @@
-from flask import Blueprint, flash, json, redirect, render_template, request, url_for, jsonify, current_app
+from datetime import datetime
+from flask import Blueprint, request, jsonify, current_app
 import flask_praetorian as fp
 
 import requests as req
 
-from .models import Item, Transaction, Stock
-from .schema import ItemSchema, StockSchema, TransactionSchema
+from ffxivledger.utils import convert_to_time_format
+
+from .models import Item, Transaction, Stock, Skip
+from .schema import ItemSchema, StockSchema, TransactionSchema, SkipSchema
 from . import db
 
 bp = Blueprint("item", __name__, url_prefix="/item")
@@ -12,6 +15,8 @@ one_item_schema = ItemSchema()
 multi_item_schema = ItemSchema(many=True)
 multi_transaction_schema = TransactionSchema(many=True)
 multi_stock_schema = StockSchema(many=True)
+one_skip_schema = SkipSchema()
+multi_skip_schema = SkipSchema(many=True)
 
 
 @bp.route("/get/<id>", methods=["GET"])
@@ -121,24 +126,6 @@ def process_item(data):
     return item
 
 
-# @bp.route('/edit/new', methods=('GET', 'POST'))
-# @login_required
-# @admin_required
-# def create_item():
-#     form = CreateItemForm()
-#     if request.method == 'POST':
-#         # TODO make this prevent duplicate item entry
-#         new_item = Item(
-#             name=form.item_name.data,
-#             value=name_to_value(form.item_name.data),
-#             type=form.item_type.data
-#         )
-#         db.session.add(new_item)
-#         db.session.commit()
-#         return redirect(url_for('item.manage_items'))
-#     return render_template('ffxivledger/item_edit.html', form=form)
-
-
 @bp.route("/edit/<id>", methods=["PUT"])
 def edit_item_by_id(id):
     item = Item.query.get(id)
@@ -173,3 +160,22 @@ def delete_item_by_name(name):
         db.session.commit()
         return jsonify("Item deleted successfully")
     return jsonify("Item not found")
+
+
+@bp.route("/skip", methods=['POST'])
+@fp.auth_required
+def skip_item_by_id():
+    data = request.get_json()
+    item_id = data.get("id")
+    profile = fp.current_user().get_active_profile()
+    # item = Item.query.get(id)
+
+    skip = Skip(item_id=item_id,profile_id=profile.id, time=convert_to_time_format(datetime.now()))
+    db.session.add(skip)
+    db.session.commit()
+    return jsonify(one_skip_schema.dump(skip))
+
+
+@bp.route("/skips/get", methods=['GET'])
+def get_all_skips():
+    return jsonify(multi_skip_schema.dump(Skip.query.all()))
