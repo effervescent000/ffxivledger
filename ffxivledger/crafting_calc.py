@@ -193,16 +193,16 @@ class Queue:
 
         else:
             # if no, query Universalis and get the going rate of the material, return this
-            self.check_cached_data(item)
             item_stats = get_item_stats(self.profile.world.id, item.id)
+            if self.update_counter < self.max_updates:
+                self.check_cached_data(item, item_stats)
             return item_stats.price
 
     # method to check freshness of queried data and requery if necessary
-    def check_cached_data(self, item):
+    def check_cached_data(self, item, item_stats):
         # first check when stats_updated was last updated, if > 12hrs ago, requery
         # grab stats_updated and convert to a date if it's valid
-        item_stats = get_item_stats(self.profile.world.id, item.id)
-        if self.update_counter < self.max_updates and item_stats.stats_updated != None:
+        if item_stats.stats_updated != None:
             last_update = convert_string_to_datetime(item_stats.stats_updated)
             # if it's been more than 6 hours:
             if (datetime.now() - last_update).total_seconds() / 3600 > 6:
@@ -220,8 +220,9 @@ class Queue:
         crafting_cost = self.get_crafting_cost(item)
         print(f"{item.name} costs {crafting_cost} gil to make")
         # next, retrieve sale value of finished product
-        self.check_cached_data(item)
         item_stats = get_item_stats(self.profile.world.id, item.id)
+        if self.update_counter < self.max_updates:
+            self.check_cached_data(item, item_stats)
         profit = item_stats.price - crafting_cost
         # return: multiply profit by sale velocity HQ (which I believe is calculated per day)
         return round((profit * item_stats.sales_velocity) / 24)
