@@ -4,10 +4,14 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_marshmallow import Marshmallow
+from flask_cors import CORS
+from flask_praetorian import Praetorian
 
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={"autoflush": False})
 login_manager = LoginManager()
 ma = Marshmallow()
+cors = CORS()
+guard = Praetorian()
 
 
 def create_app(test_config=None):
@@ -23,14 +27,17 @@ def create_app(test_config=None):
     except OSError:
         pass
 
+    cors.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
     ma.init_app(app)
+    
 
     with app.app_context():
 
-        from .models import User, Profile, Item, Transaction, Stock, Recipe, Component
+        from .models import User, Profile, Item, Transaction, Stock, Recipe, Component, World, Datacenter, ItemStats
         db.create_all()
+        guard.init_app(app, User)
 
         from . import auth
         app.register_blueprint(auth.bp)
@@ -53,5 +60,8 @@ def create_app(test_config=None):
 
         from . import profile
         app.register_blueprint(profile.bp)
+
+        from . import world
+        app.register_blueprint(world.bp)
 
         return app

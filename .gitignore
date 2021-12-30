@@ -148,3 +148,5 @@ ffxivledger/static/*.css.map
 ffxivledger/static/variables.css
 ffxivledger/static/mixins.css
 .vscode/launch.json
+alembic.ini
+alembic/

@@ -1,9 +1,13 @@
+from ffxivledger.models import World
 from . import ma
 
 
-class UserSchema(ma.Schema):
+class WorldSchema(ma.Schema):
     class Meta:
-        fields = ("id", "username", "role")
+        fields = ("id", "name", "datacenter_id")
+
+one_world_schema = WorldSchema()
+multi_worlds_schema = WorldSchema(many=True)
 
 
 class ProfileSchema(ma.Schema):
@@ -21,28 +25,47 @@ class ProfileSchema(ma.Schema):
             "ltw_level",
             "wvr_level",
         )
+    world = ma.Nested(one_world_schema)
+
+
+profiles_schema = ProfileSchema(many=True)
+
+class UserSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "username", "roles")
 
 
 class ComponentSchema(ma.Schema):
     class Meta:
         fields = ("id", "item_id", "item_quantity", "recipe_id")
 
+
 components_schema = ComponentSchema(many=True)
+
 
 class RecipeSchema(ma.Schema):
     class Meta:
         fields = ("id", "job", "level", "item_id", "components")
+
     components = ma.Nested(components_schema)
 
 
 multi_recipe_schema = RecipeSchema(many=True)
 
+
 class ItemSchema(ma.Schema):
     class Meta:
         fields = ("id", "name", "recipes")
+
     recipes = ma.Nested(multi_recipe_schema)
 
+
 one_item_schema = ItemSchema()
+
+class SkipSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "item_id", "profile_id", "time")
+
 
 class TransactionSchema(ma.Schema):
     class Meta:
@@ -51,6 +74,13 @@ class TransactionSchema(ma.Schema):
 
 class StockSchema(ma.Schema):
     class Meta:
-        fields = ("item_id", "amount", "item")
+        fields = ("id", "item_id", "amount", "item")
+
     item = ma.Nested(one_item_schema)
 
+
+class DatacenterSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "name", "worlds")
+
+    worlds = ma.Nested(multi_worlds_schema)
