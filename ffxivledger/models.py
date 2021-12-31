@@ -90,6 +90,14 @@ class Profile(db.Model):
 
     stock_list = db.relationship("Stock", backref="profile", lazy=True, cascade="all, delete-orphan")
     skips = db.relationship("Skip", backref="profile", lazy=True, cascade="all, delete-orphan")
+    retainers = db.relationship("Retainer", backref="profile", lazy=True, cascade="all, delete-orphan")
+
+
+class Retainer(db.Model):
+    __tablename__ = "retainers"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    profile_id = db.Column(db.Integer, db.ForeignKey("profiles.id"))
+    name = db.Column(db.String(20), nullable=False)
 
 
 class Item(db.Model):
