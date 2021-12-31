@@ -196,6 +196,9 @@ class Queue:
             item_stats = get_item_stats(self.profile.world.id, item.id)
             if self.update_counter < self.max_updates:
                 self.check_cached_data(item, item_stats)
+            # always update if there's no data at all
+            if item_stats.price == None:
+                update_cached_data(item, self.profile.world)
             return item_stats.price
 
     # method to check freshness of queried data and requery if necessary
@@ -223,6 +226,9 @@ class Queue:
         item_stats = get_item_stats(self.profile.world.id, item.id)
         if self.update_counter < self.max_updates:
             self.check_cached_data(item, item_stats)
+        if item_stats.price == None:
+            # always update if there's no data for this item
+            update_cached_data(item, self.profile.world)
         profit = item_stats.price - crafting_cost
         # return: multiply profit by sale velocity HQ (which I believe is calculated per day)
         return round((profit * item_stats.sales_velocity) / 24)
