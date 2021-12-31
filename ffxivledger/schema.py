@@ -10,6 +10,14 @@ one_world_schema = WorldSchema()
 multi_worlds_schema = WorldSchema(many=True)
 
 
+class RetainerSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "profile_id", "name")
+
+
+multi_retainer_schema = RetainerSchema(many=True)
+
+
 class ProfileSchema(ma.Schema):
     class Meta:
         fields = (
@@ -24,8 +32,10 @@ class ProfileSchema(ma.Schema):
             "gsm_level",
             "ltw_level",
             "wvr_level",
+            "retainers"
         )
     world = ma.Nested(one_world_schema)
+    retainers = ma.Nested(multi_retainer_schema)
 
 
 profiles_schema = ProfileSchema(many=True)
