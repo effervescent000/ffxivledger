@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 import flask_praetorian as fp
 
 from . import db
-from .models import User, Profile, World
+from .models import User, Profile, World, Retainer
 from .schema import UserSchema, ProfileSchema
 
 bp = Blueprint("profile", __name__, url_prefix="/profile")
@@ -104,3 +104,17 @@ def modify_profile_by_id(id):
     db.session.commit()
 
     return jsonify(one_profile_schema.dump(profile))
+
+
+@bp.route("/retainers/add", method=['POST'])
+@fp.auth_required
+def add_retainer_to_profile():
+    data = request.get_json()
+    name = data.get("name")
+    if name == None:
+        return jsonify("Error: No retainer name specified")
+    profile = fp.current_user().get_active_profile()
+    new_retainer = Retainer(profile_id=profile.id, name=name)
+    db.session.add(new_retainer)
+    db.session.commit()
+
