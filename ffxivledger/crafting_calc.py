@@ -37,7 +37,13 @@ def generate_warnings(world_id, item_id):
                 comp_stats = get_item_stats(world_id, component.item_id)
                 if comp_stats.craft_cost != None:
                     if comp_stats.price <= comp_stats.craft_cost:
-                        warning_list.append(f"{component.item.name} is cheaper to buy than craft")
+                        warning_list.append(
+                            {
+                                "name": component.item.name,
+                                "crafting_cost": comp_stats.craft_cost,
+                                "price": comp_stats.price,
+                            }
+                        )
     return jsonify(warning_list)
 
 
@@ -138,10 +144,12 @@ class Queue:
         return self.queue
 
     def make_queue_item(self, recipe):
+        item_stats = get_item_stats(self.profile.world.id, recipe.item.id)
         item_dict = {
             "name": recipe.item.name,
             "id": recipe.item.id,
-            "gph": self.get_gph(Item.query.get(recipe.item_id)),
+            "gph": self.get_gph(Item.query.get(recipe.item_id), item_stats),
+            "craft_cost": item_stats.craft_cost
         }
         return item_dict
 
@@ -176,7 +184,6 @@ class Queue:
                 elif recipe.job == "WVR":
                     if self.profile.wvr_level >= recipe.level:
                         self.queue.append(self.make_queue_item(recipe))
-
 
     # method to calculate crafting cost recursively
     def get_crafting_cost(self, item):
@@ -218,12 +225,13 @@ class Queue:
             update_cached_data(item, self.profile.world)
 
     # method to estimate profit/hour
-    def get_gph(self, item):
+    def get_gph(self, item, item_stats = None):
         # first, get crafting cost
         crafting_cost = self.get_crafting_cost(item)
         print(f"{item.name} costs {crafting_cost} gil to make")
         # next, retrieve sale value of finished product
-        item_stats = get_item_stats(self.profile.world.id, item.id)
+        if item_stats == None:
+            item_stats = get_item_stats(self.profile.world.id, item.id)
         if self.update_counter < self.max_updates:
             self.check_cached_data(item, item_stats)
         if item_stats.price == None:
