@@ -1,1 +1,1 @@
-web: gunicorn --chdir ffxivledger init:app
+web: gunicorn --chdir ffxivledger __init__:app
