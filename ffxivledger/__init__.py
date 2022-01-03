@@ -35,9 +35,9 @@ def create_app(test_config=None):
 
     with app.app_context():
 
-        # from .models import User, Profile, Retainer, Item, Transaction, Stock, Recipe, Component, World, Datacenter, ItemStats
-        # db.create_all()
-        from .models import User
+        from .models import User, Profile, Retainer, Item, Transaction, Stock, Recipe, Component, World, Datacenter, ItemStats
+        db.create_all()
+        # from .models import User
         guard.init_app(app, User)
 
         from . import auth
