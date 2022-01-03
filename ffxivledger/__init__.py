@@ -1,18 +1,18 @@
 import os
-
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from flask_praetorian import Praetorian
+from dotenv import load_dotenv
 
 db = SQLAlchemy(session_options={"autoflush": False})
 login_manager = LoginManager()
 ma = Marshmallow()
 cors = CORS()
 guard = Praetorian()
-
+load_dotenv()
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
