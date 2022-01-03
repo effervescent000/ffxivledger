@@ -142,7 +142,7 @@ cython_debug/
 test_database.sql
 ffxivledger/test_database.sqlite
 ffxivledger/ffxivledger.sqlite
-config.py
+# config.py
 .vscode/settings.json
 ffxivledger/static/*.css.map
 ffxivledger/static/variables.css
