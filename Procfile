@@ -1,1 +1,1 @@
-web:gunicorn ffxivledger/init:app
+web:gunicorn ffxivledger.init:app
