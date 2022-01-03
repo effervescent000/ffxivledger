@@ -107,7 +107,7 @@ def process_item(data):
     item = Item.query.get(item_id)
     if item == None:
         # GET request to xivapi again for the item id
-        item_data = req.get(f"https://xivapi.com/Item/{item_id}").json()
+        item_data = req.get(f"https://xivapi.com/Item/{item_id}&private_key={os.environ['XIVAPI_KEY']}").json()
         # populate item's data from the return JSON
         item = Item(name=item_data.get("Name"), id=item_id)
         db.session.add(item)

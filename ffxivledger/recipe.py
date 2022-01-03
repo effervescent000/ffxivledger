@@ -19,7 +19,7 @@ def add_recipe_from_api():
     print(data)
     recipe_id = data.get("id")
     # query xivapi for recipe id
-    query = req.get(f"https://xivapi.com/Recipe/{recipe_id}").json()
+    query = req.get(f"https://xivapi.com/Recipe/{recipe_id}&private_key={os.environ['XIVAPI_KEY']}").json()
     # make sure a result was returned
     if query.get("ID") == None:
         print(f"No recipe found with that ID ({recipe_id})")
