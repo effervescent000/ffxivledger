@@ -115,6 +115,7 @@ class Item(db.Model):
     recipes = db.relationship("Recipe", backref="item", lazy=True, cascade="all, delete-orphan")
 
     skips = db.relationship("Skip", backref="item", lazy=True, cascade="all, delete-orphan")
+    item_stats = db.relationship("ItemStats", backref="item", lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return "<Item {}>".format(self.name)
