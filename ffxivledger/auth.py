@@ -1,14 +1,15 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for, jsonify
+from flask import Blueprint, request, jsonify
 
 from .models import User
 from .schema import UserSchema
 
 # from .forms import SignUpForm, LoginForm, ManageUserForm
-from . import db, login_manager, guard
+from . import db, guard
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 one_user_schema = UserSchema()
 multi_user_schema = UserSchema(many=True)
+
 
 @bp.route("/signup", methods=["POST"])
 def signup():
@@ -34,7 +35,6 @@ def login():
     return jsonify({"access_token": guard.encode_jwt_token(user)}, 200)
 
 
-
 @bp.route("/refresh", methods=["POST"])
 def refresh_token():
     data = request.get_json().get("loggedInUser")
@@ -46,14 +46,14 @@ def get_all_users():
     return jsonify(multi_user_schema.dump(User.query.all()))
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    if user_id is not None:
-        return User.query.get(user_id)
-    return None
+# @login_manager.user_loader
+# def load_user(user_id):
+#     if user_id is not None:
+#         return User.query.get(user_id)
+#     return None
 
 
-@login_manager.unauthorized_handler
-def unauthorized():
-    flash("You must be logged in to view that page")
-    return redirect(url_for("auth.login"))
+# @login_manager.unauthorized_handler
+# def unauthorized():
+#     flash("You must be logged in to view that page")
+#     return redirect(url_for("auth.login"))

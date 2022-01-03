@@ -1,8 +1,8 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
 import flask_praetorian as fp
-
 import requests as req
+import os
 
 from ffxivledger.utils import convert_to_time_format
 
@@ -59,7 +59,6 @@ def get_all_items():
     return jsonify(multi_item_schema.dump(Item.query.all()))
 
 
-
 @bp.route("/add", methods=["POST"])
 def create_item():
     return jsonify(one_item_schema.dump(process_item(request.get_json())))
@@ -74,14 +73,12 @@ def create_multiple_items_from_dump():
     return jsonify(multi_item_schema.dump(items_list))
 
 
-@bp.route("/add/search", methods=['POST'])
+@bp.route("/add/search", methods=["POST"])
 def create_multiple_items_from_search():
     data = request.get_json()
     items_list = []
     name = data.get("name")
-    search = req.get(
-        f'https://xivapi.com/search?indexes=Item&string={name}&private_key={current_app.config.get("XIVAPI_KEY")}'
-    ).json()
+    search = req.get(f"https://xivapi.com/search?indexes=Item&string={name}&private_key={os.environ['XIVAPI_KEY']}").json()
     results = search.get("Results")
     for result in results:
         result_name = result.get("Name")
@@ -93,9 +90,7 @@ def create_multiple_items_from_search():
 def process_item(data):
     name = data.get("name")
     # GET request to xivapi to search for the item
-    search = req.get(
-        f'https://xivapi.com/search?indexes=Item&string={name}&private_key={current_app.config.get("XIVAPI_KEY")}'
-    ).json()
+    search = req.get(f"https://xivapi.com/search?indexes=Item&string={name}&private_key={os.environ['XIVAPI_KEY']}").json()
     # iterate through results (ideally only 1 result) for an exact name much (with .lower() run)
     results = search.get("Results")
     item_id = None
@@ -108,7 +103,7 @@ def process_item(data):
     else:
         # if no match is found, then return error
         return jsonify("No results found in XIVAPI search")
-    
+
     item = Item.query.get(item_id)
     if item == None:
         # GET request to xivapi again for the item id
@@ -162,7 +157,7 @@ def delete_item_by_name(name):
     return jsonify("Item not found")
 
 
-@bp.route("/skip", methods=['POST'])
+@bp.route("/skip", methods=["POST"])
 @fp.auth_required
 def skip_item_by_id():
     data = request.get_json()
@@ -170,12 +165,12 @@ def skip_item_by_id():
     profile = fp.current_user().get_active_profile()
     # item = Item.query.get(id)
 
-    skip = Skip(item_id=item_id,profile_id=profile.id, time=convert_to_time_format(datetime.now()))
+    skip = Skip(item_id=item_id, profile_id=profile.id, time=convert_to_time_format(datetime.now()))
     db.session.add(skip)
     db.session.commit()
     return jsonify(one_skip_schema.dump(skip))
 
 
-@bp.route("/skips/get", methods=['GET'])
+@bp.route("/skips/get", methods=["GET"])
 def get_all_skips():
     return jsonify(multi_skip_schema.dump(Skip.query.all()))
