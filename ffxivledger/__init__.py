@@ -67,5 +67,5 @@ def create_app(test_config=None):
 
         return app
 
-from . import create_app
+from ffxivledger import create_app
 app = create_app()
