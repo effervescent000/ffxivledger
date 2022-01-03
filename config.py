@@ -1,6 +1,5 @@
 """Flask configuration variables."""
 import os
-from boto.s3.connection import S3Connection
 
 
 class Config:
@@ -12,7 +11,8 @@ class Config:
     
 
     # Database
-    SQLALCHEMY_DATABASE_URI = "sqlite:///ffxivledger.sqlite"
+    # SQLALCHEMY_DATABASE_URI = "sqlite:///ffxivledger.sqlite"
+    SQLALCHEMY_DATABASE_URI = "postgresql://orjrxltdmizsdq:d716f0c782db410f2ef6a29a5f9969b13cf56bceac6b442081aa37fcad33ba43@ec2-54-90-211-192.compute-1.amazonaws.com:5432/deq71c168lhqov"
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
