@@ -66,3 +66,6 @@ def create_app(test_config=None):
         app.register_blueprint(world.bp)
 
         return app
+
+from . import create_app
+app = create_app()
