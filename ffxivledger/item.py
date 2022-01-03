@@ -117,7 +117,7 @@ def process_item(data):
         if recipes != None and len(recipes) > 0:
             for recipe in recipes:
                 data = {"id": recipe.get("ID")}
-                req.post("http://127.0.0.1:5000/recipe/add", json=data)
+                req.post(f"{os.environ['BASE_URL']}/recipe/add", json=data)
     return item
 
 
