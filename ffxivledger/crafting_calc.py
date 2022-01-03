@@ -37,7 +37,13 @@ def generate_warnings(world_id, item_id):
                 comp_stats = get_item_stats(world_id, component.item_id)
                 if comp_stats.craft_cost != None:
                     if comp_stats.price <= comp_stats.craft_cost:
-                        warning_list.append(f"{component.item.name} is cheaper to buy than craft")
+                        warning_list.append(
+                            {
+                                "name": component.item.name,
+                                "crafting_cost": comp_stats.craft_cost,
+                                "price": comp_stats.price,
+                            }
+                        )
     return jsonify(warning_list)
 
 
@@ -64,6 +70,7 @@ def update_cached_data(item, world):
     # first, get world data as normal
     data = req.get(f"https://universalis.app/api/{world.id}/{item.id}").json()
     # if world data is below a certain # of listings, then grab datacenter data
+    print(f"Updating item {item.name}")
     item_stats = get_item_stats(world.id, item.id)
     if len(data.get("listings")) <= 3:
         # overwrite data with dc data for given item
@@ -112,11 +119,16 @@ class Queue:
     def __init__(self, profile):
         self.profile = profile
         self.update_counter = 0
-        self.max_updates = 50
+        self.max_updates = 75
         self.queue = []
+        # how many hours old data can be while still being fresh
+        self.freshness_threshold = 6
 
     # method to iterate over recipes in DB and find the highest gil/hour ones to craft
     def generate_queue(self):
+        # pull up the itemstats and pass them to the update method
+        item_stats_list = ItemStats.query.filter_by(world_id=self.profile.world.id).all()
+        self.update_data(item_stats_list)
         # for now just do all jobs but I would like to make it so you can pick one or a couple or w/e
         for recipe in Recipe.query.all():
             # ensure the item is not set to be skipped by the user
@@ -138,10 +150,12 @@ class Queue:
         return self.queue
 
     def make_queue_item(self, recipe):
+        item_stats = get_item_stats(self.profile.world.id, recipe.item.id)
         item_dict = {
             "name": recipe.item.name,
             "id": recipe.item.id,
-            "gph": self.get_gph(Item.query.get(recipe.item_id)),
+            "gph": self.get_gph(Item.query.get(recipe.item_id), item_stats),
+            "craft_cost": item_stats.craft_cost
         }
         return item_dict
 
@@ -177,7 +191,6 @@ class Queue:
                     if self.profile.wvr_level >= recipe.level:
                         self.queue.append(self.make_queue_item(recipe))
 
-
     # method to calculate crafting cost recursively
     def get_crafting_cost(self, item):
         # first, declare crafting cost variable
@@ -194,8 +207,8 @@ class Queue:
         else:
             # if no, query Universalis and get the going rate of the material, return this
             item_stats = get_item_stats(self.profile.world.id, item.id)
-            if self.update_counter < self.max_updates:
-                self.check_cached_data(item, item_stats)
+            # if self.update_counter < self.max_updates:
+            #     self.check_cached_data(item, item_stats)
             # always update if there's no data at all
             if item_stats.price == None:
                 update_cached_data(item, self.profile.world)
@@ -208,24 +221,42 @@ class Queue:
         if item_stats.stats_updated != None:
             last_update = convert_string_to_datetime(item_stats.stats_updated)
             # if it's been more than 6 hours:
-            if (datetime.now() - last_update).total_seconds() / 3600 > 6:
-                print(f"I think it's been more than 6 hrs, updating data for {item.name}")
+            if (datetime.now() - last_update).total_seconds() / 3600 > self.freshness_threshold:
+                # print(f"I think it's been more than {self.freshness_threshold} hrs, updating data for {item.name}")
                 self.update_counter += 1
                 update_cached_data(item, self.profile.world)
         else:
-            print(f"No data for {item.name}, updating...")
+            # print(f"No data for {item.name}, updating...")
             self.update_counter += 1
             update_cached_data(item, self.profile.world)
 
+    def update_data(self, item_stats_list):
+        # sort item_stats_list, oldest data first
+        # iterate through item_stats_list and update each element, until either:
+        # 1) the oldest item is still "fresh", or
+        # 2) the update counter maxes out
+        item_stats_list.sort(key=lambda x : convert_string_to_datetime(x.stats_updated))
+        # print(item_stats_list[0].stats_updated)
+        while self.update_counter < self.max_updates:
+            last_update = convert_string_to_datetime(item_stats_list[0].stats_updated)
+            print(f"Last update for {item_stats_list[0].item.name} was at {last_update}")
+            if (datetime.now() - last_update).total_seconds() / 3600 < self.freshness_threshold:
+                break
+            else:
+                update_cached_data(item_stats_list[0].item, self.profile.world)
+                item_stats_list.pop(0)
+                self.update_counter += 1
+
     # method to estimate profit/hour
-    def get_gph(self, item):
+    def get_gph(self, item, item_stats = None):
         # first, get crafting cost
         crafting_cost = self.get_crafting_cost(item)
-        print(f"{item.name} costs {crafting_cost} gil to make")
+        # print(f"{item.name} costs {crafting_cost} gil to make")
         # next, retrieve sale value of finished product
-        item_stats = get_item_stats(self.profile.world.id, item.id)
-        if self.update_counter < self.max_updates:
-            self.check_cached_data(item, item_stats)
+        if item_stats == None:
+            item_stats = get_item_stats(self.profile.world.id, item.id)
+        # if self.update_counter < self.max_updates:
+        #     self.check_cached_data(item, item_stats)
         if item_stats.price == None:
             # always update if there's no data for this item
             update_cached_data(item, self.profile.world)
