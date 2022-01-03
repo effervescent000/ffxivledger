@@ -7,8 +7,8 @@ class Config:
     """Set Flask configuration from .env file."""
 
     # General Config
-    SECRET_KEY = S3Connection(os.environ('SECRET_KEY'))
-    XIVAPI_KEY = S3Connection(os.environ('XIVAPI_KEY'))
+    SECRET_KEY = S3Connection(os.environ['SECRET_KEY'])
+    XIVAPI_KEY = S3Connection(os.environ['XIVAPI_KEY'])
     
 
     # Database
