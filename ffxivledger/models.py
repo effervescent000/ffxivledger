@@ -231,14 +231,3 @@ class Component(db.Model):
 
     def __repr__(self):
         return f"Recipe {self.id} for recipe {self.recipe_id}"
-
-
-# class Product(db.Model):
-#     __tablename__ = 'products'
-#     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-#     item_value = db.Column(db.String(name_length), db.ForeignKey('items.value'))
-#     item_quantity = db.Column(db.Integer, nullable=False, default=1)
-#     recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'))
-
-#     def __repr__(self):
-#         return '<Product {} of recipe {}>'.format(self.item_value, int(self.recipe_id))
