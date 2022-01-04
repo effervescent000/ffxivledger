@@ -150,3 +150,4 @@ ffxivledger/static/mixins.css
 .vscode/launch.json
 alembic.ini
 alembic/
+main.py
