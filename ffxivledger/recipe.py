@@ -16,7 +16,7 @@ multi_recipe_schema = RecipeSchema(many=True)
 @bp.route("/add", methods=["POST"])
 def add_recipe_from_api():
     data = request.get_json()
-    print(data)
+    # print(data)
     recipe_id = data.get("id")
     # query xivapi for recipe id
     query = req.get(f"https://xivapi.com/Recipe/{recipe_id}?private_key={os.environ['XIVAPI_KEY']}").json()
@@ -45,7 +45,9 @@ def add_recipe_from_api():
                 post_data = {"name": query.get(f"ItemIngredient{i}").get("Name")}
                 req.post(f"{os.environ['BASE_URL']}/item/add", json=post_data)
             # now generate the component
-            comp = Component(item_id=comp_id, item_quantity=query.get(f"AmountIngredient{i}"), recipe_id=recipe.id)
+            print(f"Attempting to add a component to recipe {recipe_id}")
+            comp = Component(item_id=comp_id, item_quantity=query.get(f"AmountIngredient{i}"), recipe_id=recipe_id)
+            print(comp)
             db.session.add(comp)
             db.session.commit()
     return jsonify(one_recipe_schema.dump(recipe))
