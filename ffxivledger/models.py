@@ -230,4 +230,4 @@ class Component(db.Model):
     recipe_id = db.Column(db.Integer, db.ForeignKey("recipes.id"))
 
     def __repr__(self):
-        return f"Recipe {self.id} for recipe {self.recipe_id}"
+        return f"<Component {self.id} for recipe {self.recipe_id}>"
