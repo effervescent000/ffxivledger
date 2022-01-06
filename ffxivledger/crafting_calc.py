@@ -3,8 +3,6 @@ from flask import Blueprint, jsonify
 import flask_praetorian as fp
 import requests as req
 
-from ffxivledger.item import process_item
-
 from . import db
 from .models import Item, Stock, Recipe, Component, ItemStats, World, Skip
 from .utils import convert_string_to_datetime, convert_to_time_format
