@@ -151,3 +151,4 @@ ffxivledger/static/mixins.css
 alembic.ini
 alembic/
 main.py
+*.backup
