@@ -7,7 +7,7 @@ from flask_cors import CORS
 from flask_praetorian import Praetorian
 from dotenv import load_dotenv
 
-db = SQLAlchemy(session_options={"autoflush": False})
+db = SQLAlchemy()
 login_manager = LoginManager()
 ma = Marshmallow()
 cors = CORS()

@@ -216,7 +216,7 @@ class Recipe(db.Model):
     level = db.Column(db.Integer, nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=False)
     item_quantity = db.Column(db.Integer, nullable=False)
-    components = db.relationship("Component", backref="recipe", cascade="all, delete-orphan")
+    components = db.relationship("Component", backref="recipe", lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return "<Recipe {} for {}>".format(int(self.id), self.item_id)
@@ -230,4 +230,4 @@ class Component(db.Model):
     recipe_id = db.Column(db.Integer, db.ForeignKey("recipes.id"))
 
     def __repr__(self):
-        return f"Recipe {self.id} for recipe {self.recipe_id}"
+        return f"<Component {self.id} for recipe {self.recipe_id}>"

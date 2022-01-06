@@ -6,8 +6,8 @@ import os
 
 from ffxivledger.utils import convert_to_time_format
 
-from .models import Item, Transaction, Stock, Skip
-from .schema import ItemSchema, StockSchema, TransactionSchema, SkipSchema
+from .models import Item, Transaction, Stock, Skip, Recipe, Component
+from .schema import ItemSchema, StockSchema, TransactionSchema, SkipSchema, RecipeSchema
 from . import db
 
 bp = Blueprint("item", __name__, url_prefix="/item")
@@ -17,7 +17,8 @@ multi_transaction_schema = TransactionSchema(many=True)
 multi_stock_schema = StockSchema(many=True)
 one_skip_schema = SkipSchema()
 multi_skip_schema = SkipSchema(many=True)
-
+one_recipe_schema = RecipeSchema()
+multi_recipe_schema = RecipeSchema(many=True)
 
 @bp.route("/get/<id>", methods=["GET"])
 def get_item_by_id(id):
@@ -119,8 +120,49 @@ def process_item(data):
         if recipes != None and len(recipes) > 0:
             for recipe in recipes:
                 data = {"id": recipe.get("ID")}
-                req.post(f"{os.environ['BASE_URL']}/recipe/add", json=data)
+                # req.post(f"{os.environ['BASE_URL']}/recipe/add", json=data)
+                process_recipe(data)
     return item
+
+
+def process_recipe(data):
+    # data = request.get_json()
+    # print(data)
+    recipe_id = data["id"]
+    # query xivapi for recipe id
+    query = req.get(f"https://xivapi.com/Recipe/{recipe_id}?private_key={os.environ['XIVAPI_KEY']}").json()
+    # make sure a result was returned
+    if query.get("ID") == None:
+        print(f"No recipe found with that ID ({recipe_id})")
+        return jsonify("No recipe found with that ID")
+    # create the recipe
+    recipe = Recipe(
+        id=query.get("ID"),
+        job=query.get("ClassJob").get("Abbreviation"),
+        level=query.get("RecipeLevelTable").get("ClassJobLevel"),
+        item_id=query.get("ItemResult").get("ID"),
+        item_quantity=query.get("AmountResult"),
+    )
+    db.session.add(recipe)
+    db.session.commit()
+    # iterate through each ItemIngredient, see if it exists in the db already. if not, pass it back to item/add to create a new one
+    for i in range(10):
+        # print(query.get(f"AmountIngredient{i}"))
+        if query.get(f"AmountIngredient{i}") != 0:
+            # print(f"I am adding component number {i}")
+            # see if the item exists in the database, if not add it
+            comp_id = query.get(f"ItemIngredient{i}").get("ID")
+            if Item.query.get(comp_id) == None:
+                post_data = {"name": query.get(f"ItemIngredient{i}").get("Name")}
+                # req.post(f"{os.environ['BASE_URL']}/item/add", json=post_data)
+                process_item(post_data)
+            # now generate the component
+            # print(f"Attempting to add a component to recipe {recipe_id}")
+            comp = Component(item_id=comp_id, item_quantity=query.get(f"AmountIngredient{i}"), recipe_id=recipe_id)
+            # print(comp)
+            db.session.add(comp)
+            db.session.commit()
+    return jsonify(one_recipe_schema.dump(recipe))
 
 
 @bp.route("/edit/<id>", methods=["PUT"])
