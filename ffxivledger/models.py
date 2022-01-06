@@ -1,5 +1,3 @@
-from werkzeug.security import generate_password_hash, check_password_hash
-
 from . import db, guard
 
 name_length = 200
@@ -165,6 +163,9 @@ class ItemStats(db.Model):
     craft_cost = db.Column(db.Float)
     price = db.Column(db.Float)
     sales_velocity = db.Column(db.Float)
+
+    def __repr__(self):
+        return f"<ItemStats {self.item.name} on {self.world.name}>"
 
 
 class World(db.Model):

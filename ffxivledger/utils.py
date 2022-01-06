@@ -6,7 +6,7 @@ from datetime import datetime
 
 from . import db
 
-from .models import Item, User, Transaction, Component, Stock, time_format
+from .models import Item, Transaction, Component, Stock, time_format
 
 
 def get_item(id):
@@ -76,6 +76,8 @@ def convert_to_time_format(time):
     return time.strftime(time_format)
 
 def convert_string_to_datetime(time):
+    if time == None:
+        return datetime.min
     return datetime.strptime(time, time_format)
 
 def get_user_id():

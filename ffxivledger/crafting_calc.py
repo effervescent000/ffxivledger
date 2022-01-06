@@ -122,10 +122,25 @@ class Queue:
         # how many hours old data can be while still being fresh
         self.freshness_threshold = 6
 
+    def build_item_stats_list(self, item_list):
+        item_stats_list = ItemStats.query.filter_by(world_id=self.profile.world.id).all()
+        if len(item_stats_list) < len(item_list):
+            for item in item_list:
+                if ItemStats.query.filter_by(world_id=self.profile.world.id, item_id=item.id).first() == None:
+                    item_stats = ItemStats(item_id=item.id, world_id=self.profile.world.id)
+                    db.session.add(item_stats)
+                    db.session.commit()
+                    update_cached_data(item, self.profile.world)
+        item_stats_list = ItemStats.query.filter_by(world_id=self.profile.world.id).all()
+        # print(item_stats_list)
+        return item_stats_list
+            
+
+
     # method to iterate over recipes in DB and find the highest gil/hour ones to craft
     def generate_queue(self):
         # pull up the itemstats and pass them to the update method
-        item_stats_list = ItemStats.query.filter_by(world_id=self.profile.world.id).all()
+        item_stats_list = self.build_item_stats_list(Item.query.all())
         self.update_data(item_stats_list)
         # for now just do all jobs but I would like to make it so you can pick one or a couple or w/e
         for recipe in Recipe.query.all():
@@ -236,14 +251,19 @@ class Queue:
         item_stats_list.sort(key=lambda x : convert_string_to_datetime(x.stats_updated))
         # print(item_stats_list[0].stats_updated)
         while self.update_counter < self.max_updates:
-            last_update = convert_string_to_datetime(item_stats_list[0].stats_updated)
-            print(f"Last update for {item_stats_list[0].item.name} was at {last_update}")
-            if (datetime.now() - last_update).total_seconds() / 3600 < self.freshness_threshold:
-                break
+            if item_stats_list[0].stats_updated != None:
+                last_update = convert_string_to_datetime(item_stats_list[0].stats_updated)
+                print(f"Last update for {item_stats_list[0].item.name} was at {last_update}")
+                if (datetime.now() - last_update).total_seconds() / 3600 < self.freshness_threshold:
+                    break
+                else:
+                    update_cached_data(item_stats_list[0].item, self.profile.world)
+                    item_stats_list.pop(0)
+                    self.update_counter += 1
             else:
                 update_cached_data(item_stats_list[0].item, self.profile.world)
                 item_stats_list.pop(0)
-                self.update_counter += 1
+            
 
     # method to estimate profit/hour
     def get_gph(self, item, item_stats = None):
