@@ -1,14 +1,14 @@
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
+# from flask_login import LoginManager
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from flask_praetorian import Praetorian
 from dotenv import load_dotenv
 
 db = SQLAlchemy()
-login_manager = LoginManager()
+# login_manager = LoginManager()
 ma = Marshmallow()
 cors = CORS()
 guard = Praetorian()
@@ -29,23 +29,23 @@ def create_app(test_config=None):
 
     cors.init_app(app)
     db.init_app(app)
-    login_manager.init_app(app)
+    # login_manager.init_app(app)
     ma.init_app(app)
     
 
     with app.app_context():
 
-        # from .models import User, Profile, Retainer, Item, Transaction, Stock, Recipe, Component, World, Datacenter, ItemStats
-        # db.create_all()
-        from .models import User
+        from .models import User, Profile, Retainer, Item, Transaction, Stock, Recipe, Component, World, Datacenter, ItemStats
+        db.create_all()
+        # from .models import User
         guard.init_app(app, User)
 
         from . import auth
         app.register_blueprint(auth.bp)
 
-        from . import dashboard
-        app.register_blueprint(dashboard.bp)
-        app.add_url_rule('/', endpoint='index')
+        # from . import dashboard
+        # app.register_blueprint(dashboard.bp)
+        # app.add_url_rule('/', endpoint='index')
 
         from . import item
         app.register_blueprint(item.bp)

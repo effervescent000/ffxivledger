@@ -1,4 +1,3 @@
-from ffxivledger.models import World
 from . import ma
 
 
@@ -71,6 +70,13 @@ class ItemSchema(ma.Schema):
 
 
 one_item_schema = ItemSchema()
+
+
+class ItemStatsSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "item_id", "world_id", "item", "stats_updated", "craft_cost", "price", "sales_velocity")
+    item = ma.Nested(one_item_schema)
+
 
 class SkipSchema(ma.Schema):
     class Meta:

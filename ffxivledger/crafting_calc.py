@@ -1,13 +1,93 @@
+import os
 from datetime import timedelta, datetime
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 import flask_praetorian as fp
 import requests as req
 
 from . import db
 from .models import Item, Stock, Recipe, Component, ItemStats, World, Skip
+from .schema import ItemStatsSchema
 from .utils import convert_string_to_datetime, convert_to_time_format
 
 bp = Blueprint("crafting", __name__, url_prefix="/craft")
+
+one_itemstats_schema = ItemStatsSchema()
+multi_itemstats_schema = ItemStatsSchema(many=True)
+
+# how many hours old data can be while still being considered fresh
+freshness_threshold = 6
+max_updates = int(os.environ['MAX_UPDATES'])
+
+
+@bp.route("/get", methods=['GET'])
+@fp.auth_required
+def get_crafts():
+    profile = fp.current_user().get_active_profile()
+    # get all recipes
+    master_query = Recipe.query.all()
+    recipes = [x for x in master_query]
+    # iterate over recipes
+    for recipe in master_query:
+        # check if the recipe is used in another recipe, if so remove it so we are only crafting top-level stuff (maybe add this as an option at some point)
+        if Component.query.filter_by(item_id=recipe.item_id).first() != None:
+            # print(f"Removing {recipe.item.name} for from recipe list")
+            recipes.remove(recipe)
+            continue
+        # check if the recipe is set to be skipped, if so remove it from the list
+        if len(recipe.item.skips) > 0:
+            skip_query = Skip.query.filter_by(item_id=recipe.item_id, profile_id=profile.id).first()
+            if skip_query != None:
+                # check to see if the skip has expired
+                skip_timestamp = convert_string_to_datetime(skip_query.time)
+                # if it's been more than 24 hrs, remove the skip. if not, remove the recipe from the list
+                if (datetime.now() - skip_timestamp).total_seconds() / 3600 > 24:
+                    db.session.delete(skip_query)
+                    db.session.commit()
+                else:
+                    recipes.remove(recipe)
+                    continue
+        # check if the active profile can even craft it
+        if recipe.job == "ALC":
+            if profile.alc_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == "ARM":
+            if profile.arm_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == "BSM":
+            if profile.bsm_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == "CRP":
+            if profile.crp_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == "CUL":
+            if profile.cul_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == 'GSM':
+            if profile.gsm_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == "LTW":
+            if profile.ltw_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == 'WVR':
+            if profile.wvr_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        # check if the item is already in stock
+        stock = Stock.query.filter_by(item_id=recipe.item_id, profile_id=profile.id).first()
+        if stock != None and stock.amount > 0:
+            recipes.remove(recipe)
+            continue
+    # i think that's all the conditions i want to check for here
+    # once we're done removing stuff from the list, create a new list with the itemstats and return that
+    item_stats_list = [ItemStats.query.filter_by(item_id=x.item_id, world_id=profile.world.id).first() for x in recipes]
+    return jsonify(multi_itemstats_schema.dump(item_stats_list))
 
 
 @bp.route("/get_queue/<amount>", methods=["GET"])
@@ -54,16 +134,56 @@ def get_item_stats(world_id, item_id):
     return item_stats
 
 
-@bp.route("/stats/update/<world_id>", methods=["PUT"])
-def force_update_stats(world):
-    if type(world) is int:
-        world = World.query.get(world)
-    item_stats = ItemStats.query.filter_by(world_id=world).all()
-    for x in item_stats:
-        update_cached_data(x, world)
+# @bp.route("/stats/update/<world_id>", methods=["PUT"])
+# def force_update_stats(world):
+#     if type(world) is int:
+#         world = World.query.get(world)
+#     item_stats = ItemStats.query.filter_by(world_id=world).all()
+#     for x in item_stats:
+#         update_cached_data(x, world)
 
 
-# method to actually query universalis
+@bp.route("/stats/update", methods=["PUT"])
+def update_world_data():
+    # all this expects to take in is a world ID so like {"id": 62} for Diabolos
+    data = request.get_json()
+    world = World.query.get(data.get("id"))
+    item_stats_list = ItemStats.query.filter_by(world_id=world.id).all()
+    item_list = Item.query.all()
+    if len(item_stats_list) < len(item_list):
+        for item in item_list:
+            if ItemStats.query.filter_by(world_id=world.id, item_id=item.id).first() == None:
+                item_stats = ItemStats(item_id=item.id, world_id=world.id)
+                db.session.add(item_stats)
+                db.session.commit()
+                update_cached_data(item, world)
+        item_stats_list = ItemStats.query.filter_by(world_id=world.id).all()
+    item_stats_list.sort(key=lambda x: convert_string_to_datetime(x.stats_updated))
+    update_counter = 0
+    updated_items_stats = []
+    while update_counter < max_updates:
+        item = item_stats_list[0]
+        if item.stats_updated != None:
+            last_update = convert_string_to_datetime(item.stats_updated)
+            if (datetime.now() - last_update).total_seconds() / 3600 < freshness_threshold:
+                # data no longer needs to be refreshed if this condition is triggered so break out of the while loop
+                # print('Breaking out of the update while loop')
+                break
+            else:
+                update_cached_data(item.item, world)
+                updated_items_stats.append(item_stats_list.pop(0))
+                # print(updated_items_stats)
+                update_counter += 1
+        else:
+            # if the data has never been updated, update w/o counting it against the total updates
+            update_cached_data(item.item, world)
+            updated_items_stats.append(item_stats_list.pop(0))
+            # print(updated_items_stats)
+
+    return jsonify(multi_itemstats_schema.dump(updated_items_stats))
+
+
+# function to actually query universalis
 def update_cached_data(item, world):
     # first, get world data as normal
     data = req.get(f"https://universalis.app/api/{world.id}/{item.id}").json()
@@ -134,14 +254,12 @@ class Queue:
         item_stats_list = ItemStats.query.filter_by(world_id=self.profile.world.id).all()
         # print(item_stats_list)
         return item_stats_list
-            
-
 
     # method to iterate over recipes in DB and find the highest gil/hour ones to craft
     def generate_queue(self):
         # pull up the itemstats and pass them to the update method
-        item_stats_list = self.build_item_stats_list(Item.query.all())
-        self.update_data(item_stats_list)
+        # item_stats_list = self.build_item_stats_list(Item.query.all())
+        # self.update_data(item_stats_list)
         # for now just do all jobs but I would like to make it so you can pick one or a couple or w/e
         for recipe in Recipe.query.all():
             # ensure the item is not set to be skipped by the user
@@ -168,7 +286,7 @@ class Queue:
             "name": recipe.item.name,
             "id": recipe.item.id,
             "gph": self.get_gph(Item.query.get(recipe.item_id), item_stats),
-            "craft_cost": item_stats.craft_cost
+            "craft_cost": item_stats.craft_cost,
         }
         return item_dict
 
@@ -228,27 +346,27 @@ class Queue:
             return item_stats.price
 
     # method to check freshness of queried data and requery if necessary
-    def check_cached_data(self, item, item_stats):
-        # first check when stats_updated was last updated, if > 12hrs ago, requery
-        # grab stats_updated and convert to a date if it's valid
-        if item_stats.stats_updated != None:
-            last_update = convert_string_to_datetime(item_stats.stats_updated)
-            # if it's been more than 6 hours:
-            if (datetime.now() - last_update).total_seconds() / 3600 > self.freshness_threshold:
-                # print(f"I think it's been more than {self.freshness_threshold} hrs, updating data for {item.name}")
-                self.update_counter += 1
-                update_cached_data(item, self.profile.world)
-        else:
-            # print(f"No data for {item.name}, updating...")
-            self.update_counter += 1
-            update_cached_data(item, self.profile.world)
+    # def check_cached_data(self, item, item_stats):
+    #     # first check when stats_updated was last updated, if > 12hrs ago, requery
+    #     # grab stats_updated and convert to a date if it's valid
+    #     if item_stats.stats_updated != None:
+    #         last_update = convert_string_to_datetime(item_stats.stats_updated)
+    #         # if it's been more than 6 hours:
+    #         if (datetime.now() - last_update).total_seconds() / 3600 > self.freshness_threshold:
+    #             # print(f"I think it's been more than {self.freshness_threshold} hrs, updating data for {item.name}")
+    #             self.update_counter += 1
+    #             update_cached_data(item, self.profile.world)
+    #     else:
+    #         # print(f"No data for {item.name}, updating...")
+    #         self.update_counter += 1
+    #         update_cached_data(item, self.profile.world)
 
     def update_data(self, item_stats_list):
         # sort item_stats_list, oldest data first
         # iterate through item_stats_list and update each element, until either:
         # 1) the oldest item is still "fresh", or
         # 2) the update counter maxes out
-        item_stats_list.sort(key=lambda x : convert_string_to_datetime(x.stats_updated))
+        item_stats_list.sort(key=lambda x: convert_string_to_datetime(x.stats_updated))
         # print(item_stats_list[0].stats_updated)
         while self.update_counter < self.max_updates:
             if item_stats_list[0].stats_updated != None:
@@ -263,10 +381,9 @@ class Queue:
             else:
                 update_cached_data(item_stats_list[0].item, self.profile.world)
                 item_stats_list.pop(0)
-            
 
     # method to estimate profit/hour
-    def get_gph(self, item, item_stats = None):
+    def get_gph(self, item, item_stats=None):
         # first, get crafting cost
         crafting_cost = self.get_crafting_cost(item)
         # print(f"{item.name} costs {crafting_cost} gil to make")
