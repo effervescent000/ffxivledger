@@ -162,7 +162,7 @@ def process_recipe(data):
             # see if the item exists in the database, if not add it
             comp_id = query.get(f"ItemIngredient{i}").get("ID")
             if Item.query.get(comp_id) == None:
-                post_data = {"name": query.get(f"ItemIngredient{i}").get("Name")}
+                post_data = {"ID": comp_id}
                 # req.post(f"{os.environ['BASE_URL']}/item/add", json=post_data)
                 process_item(post_data)
             # now generate the component
