@@ -88,22 +88,31 @@ def create_multiple_items_from_search():
     return jsonify(multi_item_schema.dump(items_list))
 
 
-def process_item(data):
-    name = data.get("name")
-    # GET request to xivapi to search for the item
-    search = req.get(f"https://xivapi.com/search?indexes=Item&string={name}&private_key={os.environ['XIVAPI_KEY']}").json()
-    # iterate through results (ideally only 1 result) for an exact name much (with .lower() run)
-    results = search.get("Results")
-    item_id = None
+def get_item_id_from_search(results, search_term=None):
     if len(results) > 1:
         for result in results:
-            if name.lower() == result.get("Name").lower():
-                item_id = result.get("ID")
+            if search_term != None:
+                if search_term.lower() == result.get("Name").lower():
+                    return result.get("ID")
+            else:
+                return results[0].get("ID")        
     elif len(results) == 1:
-        item_id = results[0].get("ID")
+        return results[0].get("ID")
     else:
         # if no match is found, then return error
         return jsonify("No results found in XIVAPI search")
+
+
+def process_item(data):
+    # determine what type of data we're getting, a straight string or XIVAPI search results from front-end
+    item_id = data.get("ID")
+    # results = data.get("Results")
+    if item_id == None:
+        name = data.get("name")
+        # GET request to xivapi to search for the item
+        data = req.get(f"https://xivapi.com/search?indexes=Item&string={name}&private_key={os.environ['XIVAPI_KEY']}").json()
+        # iterate through results (ideally only 1 result) for an exact name much (with .lower() run)
+        item_id = get_item_id_from_search(data.get("Results"))
 
     item = Item.query.get(item_id)
     if item == None:
