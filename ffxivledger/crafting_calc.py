@@ -17,6 +17,7 @@ multi_itemstats_schema = ItemStatsSchema(many=True)
 freshness_threshold = 6
 max_updates = 75
 
+
 @bp.route("/get_queue/<amount>", methods=["GET"])
 @fp.auth_required
 def get_queue(amount):
@@ -70,7 +71,7 @@ def get_item_stats(world_id, item_id):
 #         update_cached_data(x, world)
 
 
-@bp.route("/stats/update", methods=['PUT'])
+@bp.route("/stats/update", methods=["PUT"])
 def update_world_data():
     # all this expects to take in is a world ID so like {"id": 62} for Diabolos
     data = request.get_json()
@@ -85,7 +86,7 @@ def update_world_data():
                 db.session.commit()
                 update_cached_data(item, world)
         item_stats_list = ItemStats.query.filter_by(world_id=world.id).all()
-    item_stats_list.sort(key=lambda x : convert_string_to_datetime(x.stats_updated))
+    item_stats_list.sort(key=lambda x: convert_string_to_datetime(x.stats_updated))
     update_counter = 0
     updated_items_stats = []
     while update_counter < max_updates:
@@ -103,31 +104,8 @@ def update_world_data():
             # if the data has never been updated, update w/o counting it against the total updates
             update_cached_data(item.item, world)
             updated_items_stats.append(item_stats_list.pop(0))
-    
+
     return jsonify(multi_itemstats_schema.dump(updated_items_stats))
-    
-
-
-    # def update_data(self, item_stats_list):
-    #     # sort item_stats_list, oldest data first
-    #     # iterate through item_stats_list and update each element, until either:
-    #     # 1) the oldest item is still "fresh", or
-    #     # 2) the update counter maxes out
-    #     item_stats_list.sort(key=lambda x : convert_string_to_datetime(x.stats_updated))
-    #     # print(item_stats_list[0].stats_updated)
-    #     while self.update_counter < self.max_updates:
-    #         if item_stats_list[0].stats_updated != None:
-    #             last_update = convert_string_to_datetime(item_stats_list[0].stats_updated)
-    #             print(f"Last update for {item_stats_list[0].item.name} was at {last_update}")
-    #             if (datetime.now() - last_update).total_seconds() / 3600 < self.freshness_threshold:
-    #                 break
-    #             else:
-    #                 update_cached_data(item_stats_list[0].item, self.profile.world)
-    #                 item_stats_list.pop(0)
-    #                 self.update_counter += 1
-    #         else:
-    #             update_cached_data(item_stats_list[0].item, self.profile.world)
-    #             item_stats_list.pop(0)
 
 
 # function to actually query universalis
@@ -201,14 +179,12 @@ class Queue:
         item_stats_list = ItemStats.query.filter_by(world_id=self.profile.world.id).all()
         # print(item_stats_list)
         return item_stats_list
-            
-
 
     # method to iterate over recipes in DB and find the highest gil/hour ones to craft
     def generate_queue(self):
         # pull up the itemstats and pass them to the update method
-        item_stats_list = self.build_item_stats_list(Item.query.all())
-        self.update_data(item_stats_list)
+        # item_stats_list = self.build_item_stats_list(Item.query.all())
+        # self.update_data(item_stats_list)
         # for now just do all jobs but I would like to make it so you can pick one or a couple or w/e
         for recipe in Recipe.query.all():
             # ensure the item is not set to be skipped by the user
@@ -235,7 +211,7 @@ class Queue:
             "name": recipe.item.name,
             "id": recipe.item.id,
             "gph": self.get_gph(Item.query.get(recipe.item_id), item_stats),
-            "craft_cost": item_stats.craft_cost
+            "craft_cost": item_stats.craft_cost,
         }
         return item_dict
 
@@ -315,7 +291,7 @@ class Queue:
         # iterate through item_stats_list and update each element, until either:
         # 1) the oldest item is still "fresh", or
         # 2) the update counter maxes out
-        item_stats_list.sort(key=lambda x : convert_string_to_datetime(x.stats_updated))
+        item_stats_list.sort(key=lambda x: convert_string_to_datetime(x.stats_updated))
         # print(item_stats_list[0].stats_updated)
         while self.update_counter < self.max_updates:
             if item_stats_list[0].stats_updated != None:
@@ -330,10 +306,9 @@ class Queue:
             else:
                 update_cached_data(item_stats_list[0].item, self.profile.world)
                 item_stats_list.pop(0)
-            
 
     # method to estimate profit/hour
-    def get_gph(self, item, item_stats = None):
+    def get_gph(self, item, item_stats=None):
         # first, get crafting cost
         crafting_cost = self.get_crafting_cost(item)
         # print(f"{item.name} costs {crafting_cost} gil to make")
