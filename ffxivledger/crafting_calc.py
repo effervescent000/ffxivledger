@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta, datetime
 from flask import Blueprint, jsonify, request
 import flask_praetorian as fp
@@ -15,7 +16,7 @@ multi_itemstats_schema = ItemStatsSchema(many=True)
 
 # how many hours old data can be while still being considered fresh
 freshness_threshold = 6
-max_updates = 25
+max_updates = int(os.environ['MAX_UPDATES'])
 
 
 @bp.route("/get", methods=['GET'])
