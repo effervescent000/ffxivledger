@@ -46,6 +46,19 @@ def get_all_users():
     return jsonify(multi_user_schema.dump(User.query.all()))
 
 
+@bp.route("/update", methods=['PUT'])
+def update_user():
+    data = request.get_json()
+    username = data.get("username")
+    role = data.get("role")
+    # right now I can only update roles
+    user = User.query.filter_by(username=username).first()
+    if user != None:
+        user.roles = role
+        db.session.commit()
+    return jsonify(one_user_schema.dump(user))
+
+
 # @login_manager.user_loader
 # def load_user(user_id):
 #     if user_id is not None:
