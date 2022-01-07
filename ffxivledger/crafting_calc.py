@@ -15,7 +15,78 @@ multi_itemstats_schema = ItemStatsSchema(many=True)
 
 # how many hours old data can be while still being considered fresh
 freshness_threshold = 6
-max_updates = 75
+max_updates = 25
+
+
+@bp.route("/get", methods=['GET'])
+@fp.auth_required
+def get_crafts():
+    profile = fp.current_user().get_active_profile()
+    # get all recipes
+    master_query = Recipe.query.all()
+    recipes = [x for x in master_query]
+    # iterate over recipes
+    for recipe in master_query:
+        # check if the recipe is used in another recipe, if so remove it so we are only crafting top-level stuff (maybe add this as an option at some point)
+        if Component.query.filter_by(item_id=recipe.item_id).first() != None:
+            # print(f"Removing {recipe.item.name} for from recipe list")
+            recipes.remove(recipe)
+            continue
+        # check if the recipe is set to be skipped, if so remove it from the list
+        if len(recipe.item.skips) > 0:
+            skip_query = Skip.query.filter_by(item_id=recipe.item_id, profile_id=profile.id).first()
+            if skip_query != None:
+                # check to see if the skip has expired
+                skip_timestamp = convert_string_to_datetime(skip_query.time)
+                # if it's been more than 24 hrs, remove the skip. if not, remove the recipe from the list
+                if (datetime.now() - skip_timestamp).total_seconds() / 3600 > 24:
+                    db.session.delete(skip_query)
+                    db.session.commit()
+                else:
+                    recipes.remove(recipe)
+                    continue
+        # check if the active profile can even craft it
+        if recipe.job == "ALC":
+            if profile.alc_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == "ARM":
+            if profile.arm_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == "BSM":
+            if profile.bsm_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == "CRP":
+            if profile.crp_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == "CUL":
+            if profile.cul_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == 'GSM':
+            if profile.gsm_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == "LTW":
+            if profile.ltw_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        elif recipe.job == 'WVR':
+            if profile.wvr_level < recipe.level:
+                recipes.remove(recipe)
+                continue
+        # check if the item is already in stock
+        stock = Stock.query.filter_by(item_id=recipe.item_id, profile_id=profile.id).first()
+        if stock != None and stock.amount > 0:
+            recipes.remove(recipe)
+            continue
+    # i think that's all the conditions i want to check for here
+    # once we're done removing stuff from the list, create a new list with the itemstats and return that
+    item_stats_list = [ItemStats.query.filter_by(item_id=x.item_id, world_id=profile.world.id).first() for x in recipes]
+    return jsonify(multi_itemstats_schema.dump(item_stats_list))
 
 
 @bp.route("/get_queue/<amount>", methods=["GET"])
@@ -95,15 +166,18 @@ def update_world_data():
             last_update = convert_string_to_datetime(item.stats_updated)
             if (datetime.now() - last_update).total_seconds() / 3600 < freshness_threshold:
                 # data no longer needs to be refreshed if this condition is triggered so break out of the while loop
+                # print('Breaking out of the update while loop')
                 break
             else:
                 update_cached_data(item.item, world)
                 updated_items_stats.append(item_stats_list.pop(0))
+                # print(updated_items_stats)
                 update_counter += 1
         else:
             # if the data has never been updated, update w/o counting it against the total updates
             update_cached_data(item.item, world)
             updated_items_stats.append(item_stats_list.pop(0))
+            # print(updated_items_stats)
 
     return jsonify(multi_itemstats_schema.dump(updated_items_stats))
 
