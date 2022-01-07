@@ -152,3 +152,4 @@ alembic.ini
 alembic/
 main.py
 *.backup
+.flaskenv
