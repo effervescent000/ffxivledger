@@ -1,14 +1,21 @@
 from datetime import timedelta, datetime
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 import flask_praetorian as fp
 import requests as req
 
 from . import db
 from .models import Item, Stock, Recipe, Component, ItemStats, World, Skip
+from .schema import ItemStatsSchema
 from .utils import convert_string_to_datetime, convert_to_time_format
 
 bp = Blueprint("crafting", __name__, url_prefix="/craft")
 
+one_itemstats_schema = ItemStatsSchema()
+multi_itemstats_schema = ItemStatsSchema(many=True)
+
+# how many hours old data can be while still being considered fresh
+freshness_threshold = 6
+max_updates = 75
 
 @bp.route("/get_queue/<amount>", methods=["GET"])
 @fp.auth_required
@@ -54,16 +61,76 @@ def get_item_stats(world_id, item_id):
     return item_stats
 
 
-@bp.route("/stats/update/<world_id>", methods=["PUT"])
-def force_update_stats(world):
-    if type(world) is int:
-        world = World.query.get(world)
-    item_stats = ItemStats.query.filter_by(world_id=world).all()
-    for x in item_stats:
-        update_cached_data(x, world)
+# @bp.route("/stats/update/<world_id>", methods=["PUT"])
+# def force_update_stats(world):
+#     if type(world) is int:
+#         world = World.query.get(world)
+#     item_stats = ItemStats.query.filter_by(world_id=world).all()
+#     for x in item_stats:
+#         update_cached_data(x, world)
 
 
-# method to actually query universalis
+@bp.route("/stats/update", methods=['PUT'])
+def update_world_data():
+    # all this expects to take in is a world ID so like {"id": 62} for Diabolos
+    data = request.get_json()
+    world = World.query.get(data.get("id"))
+    item_stats_list = ItemStats.query.filter_by(world_id=world.id).all()
+    item_list = Item.query.all()
+    if len(item_stats_list) < len(item_list):
+        for item in item_list:
+            if ItemStats.query.filter_by(world_id=world.id, item_id=item.id).first() == None:
+                item_stats = ItemStats(item_id=item.id, world_id=world.id)
+                db.session.add(item_stats)
+                db.session.commit()
+                update_cached_data(item, world)
+        item_stats_list = ItemStats.query.filter_by(world_id=world.id).all()
+    item_stats_list.sort(key=lambda x : convert_string_to_datetime(x.stats_updated))
+    update_counter = 0
+    updated_items_stats = []
+    while update_counter < max_updates:
+        item = item_stats_list[0]
+        if item.stats_updated != None:
+            last_update = convert_string_to_datetime(item.stats_updated)
+            if (datetime.now() - last_update).total_seconds() / 3600 < freshness_threshold:
+                # data no longer needs to be refreshed if this condition is triggered so break out of the while loop
+                break
+            else:
+                update_cached_data(item.item, world)
+                updated_items_stats.append(item_stats_list.pop(0))
+                update_counter += 1
+        else:
+            # if the data has never been updated, update w/o counting it against the total updates
+            update_cached_data(item.item, world)
+            updated_items_stats.append(item_stats_list.pop(0))
+    
+    return jsonify(multi_itemstats_schema.dump(updated_items_stats))
+    
+
+
+    # def update_data(self, item_stats_list):
+    #     # sort item_stats_list, oldest data first
+    #     # iterate through item_stats_list and update each element, until either:
+    #     # 1) the oldest item is still "fresh", or
+    #     # 2) the update counter maxes out
+    #     item_stats_list.sort(key=lambda x : convert_string_to_datetime(x.stats_updated))
+    #     # print(item_stats_list[0].stats_updated)
+    #     while self.update_counter < self.max_updates:
+    #         if item_stats_list[0].stats_updated != None:
+    #             last_update = convert_string_to_datetime(item_stats_list[0].stats_updated)
+    #             print(f"Last update for {item_stats_list[0].item.name} was at {last_update}")
+    #             if (datetime.now() - last_update).total_seconds() / 3600 < self.freshness_threshold:
+    #                 break
+    #             else:
+    #                 update_cached_data(item_stats_list[0].item, self.profile.world)
+    #                 item_stats_list.pop(0)
+    #                 self.update_counter += 1
+    #         else:
+    #             update_cached_data(item_stats_list[0].item, self.profile.world)
+    #             item_stats_list.pop(0)
+
+
+# function to actually query universalis
 def update_cached_data(item, world):
     # first, get world data as normal
     data = req.get(f"https://universalis.app/api/{world.id}/{item.id}").json()
@@ -228,20 +295,20 @@ class Queue:
             return item_stats.price
 
     # method to check freshness of queried data and requery if necessary
-    def check_cached_data(self, item, item_stats):
-        # first check when stats_updated was last updated, if > 12hrs ago, requery
-        # grab stats_updated and convert to a date if it's valid
-        if item_stats.stats_updated != None:
-            last_update = convert_string_to_datetime(item_stats.stats_updated)
-            # if it's been more than 6 hours:
-            if (datetime.now() - last_update).total_seconds() / 3600 > self.freshness_threshold:
-                # print(f"I think it's been more than {self.freshness_threshold} hrs, updating data for {item.name}")
-                self.update_counter += 1
-                update_cached_data(item, self.profile.world)
-        else:
-            # print(f"No data for {item.name}, updating...")
-            self.update_counter += 1
-            update_cached_data(item, self.profile.world)
+    # def check_cached_data(self, item, item_stats):
+    #     # first check when stats_updated was last updated, if > 12hrs ago, requery
+    #     # grab stats_updated and convert to a date if it's valid
+    #     if item_stats.stats_updated != None:
+    #         last_update = convert_string_to_datetime(item_stats.stats_updated)
+    #         # if it's been more than 6 hours:
+    #         if (datetime.now() - last_update).total_seconds() / 3600 > self.freshness_threshold:
+    #             # print(f"I think it's been more than {self.freshness_threshold} hrs, updating data for {item.name}")
+    #             self.update_counter += 1
+    #             update_cached_data(item, self.profile.world)
+    #     else:
+    #         # print(f"No data for {item.name}, updating...")
+    #         self.update_counter += 1
+    #         update_cached_data(item, self.profile.world)
 
     def update_data(self, item_stats_list):
         # sort item_stats_list, oldest data first
