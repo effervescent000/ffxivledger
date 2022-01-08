@@ -15,7 +15,7 @@ one_itemstats_schema = ItemStatsSchema()
 multi_itemstats_schema = ItemStatsSchema(many=True)
 
 # how many hours old data can be while still being considered fresh
-freshness_threshold = 6
+freshness_threshold = int(os.environ['FRESHNESS_THRESHOLD'])
 max_updates = int(os.environ['MAX_UPDATES'])
 
 
