@@ -89,19 +89,6 @@ def get_crafts():
     item_stats_list = [ItemStats.query.filter_by(item_id=x.item_id, world_id=profile.world.id).first() for x in recipes]
     return jsonify(multi_itemstats_schema.dump(item_stats_list))
 
-
-@bp.route("/get_queue/<amount>", methods=["GET"])
-@fp.auth_required
-def get_queue(amount):
-    profile = fp.current_user().get_active_profile()
-    queue = Queue(profile)
-    full_queue = queue.generate_queue()
-    short_queue = []
-    while len(short_queue) < int(amount):
-        short_queue.append(full_queue.pop(0))
-    return jsonify(short_queue)
-
-
 @bp.route("/card/<world_id>-<item_id>", methods=["GET"])
 def generate_card(world_id, item_id):
     warning_list = []
