@@ -102,8 +102,8 @@ def get_queue(amount):
     return jsonify(short_queue)
 
 
-@bp.route("/alerts/<world_id>-<item_id>", methods=["GET"])
-def generate_warnings(world_id, item_id):
+@bp.route("/card/<world_id>-<item_id>", methods=["GET"])
+def generate_card(world_id, item_id):
     warning_list = []
     # iterate over each item in queue
     item = Item.query.get(item_id)
@@ -113,15 +113,13 @@ def generate_warnings(world_id, item_id):
         for recipe in item.recipes:
             for component in recipe.components:
                 comp_stats = get_item_stats(world_id, component.item_id)
-                if comp_stats.craft_cost != None:
-                    if comp_stats.price <= comp_stats.craft_cost:
-                        warning_list.append(
-                            {
-                                "name": component.item.name,
-                                "crafting_cost": comp_stats.craft_cost,
-                                "price": comp_stats.price,
-                            }
-                        )
+                warning_list.append(
+                    {
+                        "name": component.item.name,
+                        "crafting_cost": comp_stats.craft_cost,
+                        "price": comp_stats.price,
+                    }
+                )
     return jsonify(warning_list)
 
 
