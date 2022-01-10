@@ -194,7 +194,10 @@ def update_bulk_data(item_stats_list, world):
         else:
             items_to_requery.append(item)
     # after the above iteration, repeat the process with items_to_requery
-    if len(items_to_requery) > 0:
+    if len(items_to_requery) == 1:
+        item = req.get(f"https://universalis.app/api/{world.datacenter.name}/{item_id_list}").json()
+        updated_items.append(process_item_data(item, world.id))
+    elif len(items_to_requery) > 1:
         item_id_list = ",".join([str(x.get("itemID")) for x in items_to_requery])
         item_data = req.get(f"https://universalis.app/api/{world.datacenter.name}/{item_id_list}").json().get("items")
         for item in item_data:
