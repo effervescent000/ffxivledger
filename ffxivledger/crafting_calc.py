@@ -224,7 +224,7 @@ def get_crafting_cost(item, world_id):
                         if component_stats.price <= component_stats.craft_cost
                         else component_stats.craft_cost
                     )
-    return crafting_cost
+    return crafting_cost if crafting_cost > 0 else None
 
 
 # function to actually query universalis
