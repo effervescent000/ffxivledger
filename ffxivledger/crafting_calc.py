@@ -195,7 +195,36 @@ def process_item_data(item_json, world_id):
     item_stats.price = item_json.get("minPrice") if item_json.get("worldID") != None else item_json.get("averagePrice")
     item_stats.sales_velocity = item_json.get("regularSaleVelocity")
     db.session.commit()
+
+    # now update crafting cost
+    item_stats.craft_cost = get_crafting_cost(item_stats.item, world_id)
+    db.session.commit()
+
     return item_stats
+
+
+def get_crafting_cost(item, world_id):
+    crafting_cost = 0
+
+    if len(item.recipes) > 0:
+        # if it does, then get its crafting cost
+        # doing it in a for loop like this will cause the crafting cost of certain items to be doubled (or tripled or w/e)
+        for recipe in item.recipes:
+            for component in recipe.components:
+                component_stats = get_item_stats(world_id, component.item.id)
+                # don't drill all the way down, just go 1 level
+                # use whichever is cheaper, the cost to craft or buy the components
+                if component_stats.price == None:
+                    update_cached_data(component.item, World.query.get(world_id))
+                if component_stats.craft_cost == None:
+                    crafting_cost += component_stats.price * component.item_quantity
+                else:
+                    crafting_cost += (
+                        component_stats.price
+                        if component_stats.price <= component_stats.craft_cost
+                        else component_stats.craft_cost
+                    )
+    return crafting_cost
 
 
 # function to actually query universalis
