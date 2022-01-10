@@ -15,8 +15,8 @@ one_itemstats_schema = ItemStatsSchema()
 multi_itemstats_schema = ItemStatsSchema(many=True)
 
 # how many hours old data can be while still being considered fresh
-freshness_threshold = int(os.environ['FRESHNESS_THRESHOLD'])
-max_updates = int(os.environ['MAX_UPDATES'])
+# freshness_threshold = int(os.environ['FRESHNESS_THRESHOLD'])
+# max_updates = int(os.environ['MAX_UPDATES'])
 
 
 @bp.route("/get", methods=['GET'])
@@ -144,6 +144,7 @@ def get_item_stats(world_id, item_id):
 
 
 @bp.route("/stats/update", methods=["PUT"])
+# prob rename this to like... prep_world_data or something?
 def update_world_data():
     # all this expects to take in is a world ID so like {"id": 62} for Diabolos
     data = request.get_json()
@@ -159,28 +160,54 @@ def update_world_data():
                 update_cached_data(item, world)
         item_stats_list = ItemStats.query.filter_by(world_id=world.id).all()
     item_stats_list.sort(key=lambda x: convert_string_to_datetime(x.stats_updated))
-    update_counter = 0
-    updated_items_stats = []
-    while update_counter < max_updates:
-        item = item_stats_list[0]
-        if item.stats_updated != None:
-            last_update = convert_string_to_datetime(item.stats_updated)
-            if (datetime.now() - last_update).total_seconds() / 3600 < freshness_threshold:
-                # data no longer needs to be refreshed if this condition is triggered so break out of the while loop
-                # print('Breaking out of the update while loop')
-                break
-            else:
-                update_cached_data(item.item, world)
-                updated_items_stats.append(item_stats_list.pop(0))
-                # print(updated_items_stats)
-                update_counter += 1
-        else:
-            # if the data has never been updated, update w/o counting it against the total updates
-            update_cached_data(item.item, world)
-            updated_items_stats.append(item_stats_list.pop(0))
-            # print(updated_items_stats)
+    # now we prep the list for the bulk update function
+    # start by slicing the list from the start until the end OR until max_updates, whichever is lower
+    max_updates = int(os.environ['MAX_UPDATES'])
+    if len(item_stats_list) > max_updates:
+        item_stats_list = item_stats_list[:max_updates]
+    # check the last item in the list, if it's within the freshness threshold, 
+    # then create a new list which only includes items outside the freshness threshold (list comprehension?)
+    freshness_threshold = int(os.environ['FRESHNESS_THRESHOLD'])
+    if (datetime.now() - convert_string_to_datetime(item_stats_list[-1].stats_updated)).total_seconds() / 3600 < freshness_threshold:
+        item_stats_list = [x for x in item_stats_list if (datetime.now() - convert_string_to_datetime(x.stats_updated)).total_seconds() / 3600 < freshness_threshold]
+    # once all this is done, pass the list to the update function
+    # update_bulk_data(item_stats_list, world)
+    return jsonify(multi_itemstats_schema.dump(update_bulk_data(item_stats_list, world)))
 
-    return jsonify(multi_itemstats_schema.dump(updated_items_stats))
+
+def update_bulk_data(item_stats_list, world):
+    """Takes in a list of items stats and queries universalis, then updates each of the provided items"""
+    item_id_list = ",".join([str(x.item_id) for x in item_stats_list])
+    item_data = req.get(f"https://universalis.app/api/{world.id}/{item_id_list}").json().get("items")
+    # iterate over the items in the data
+    # for now just copy the methodology ive been using of get the DC data instead if there aren't enough listings
+    # create a list to add items to that dont have enough world info
+    # at the end we'll send another query to universalis for the DC data of the items in this list
+    items_to_requery = []
+    # go down the items in the item_data results
+    updated_items = []
+    for item in item_data:
+        # if it has enough listings, then pass that data to process_item_data, along with the world id
+        if len(item.get("listings")) >= 3:
+            updated_items.append(process_item_data(item, world.id))
+        # if not, add it to items_to_requery
+        else:
+            items_to_requery.append(item)
+    # after the above iteration, repeat the process with items_to_requery
+    if len(items_to_requery) > 0:
+        item_id_list = ",".join([str(x.get("itemID")) for x in items_to_requery])
+        item_data = req.get(f"https://universalis.app/api/{world.datacenter.name}/{item_id_list}").json().get("items")
+        for item in item_data:
+            updated_items.append(process_item_data(item, world.id))
+    return updated_items
+
+def process_item_data(item_json, world_id):
+    item_stats = ItemStats.query.filter_by(item_id=item_json.get("itemID"), world_id=world_id).first()
+    item_stats.stats_updated = convert_to_time_format(datetime.now())
+    item_stats.price = item_json.get("minPrice") if item_json.get("worldID") != None else item_json.get("averagePrice")
+    item_stats.sales_velocity = item_json.get("regularSaleVelocity")
+    db.session.commit()
+    return item_stats
 
 
 # function to actually query universalis
