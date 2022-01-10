@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify
 import flask_praetorian as fp
 import requests as req
 import os
