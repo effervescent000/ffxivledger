@@ -1,7 +1,6 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify
-# import flask_praetorian as fp
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_jwt_extended import get_jwt_identity, jwt_required, current_user
 import requests as req
 import os
 
@@ -48,7 +47,7 @@ def get_item_purchases(value):
 @bp.route("/stock", methods=["GET"])
 @jwt_required()
 def get_stock_list():
-    profile = User.query.filter_by(username=get_jwt_identity()).first().get_active_profile()
+    profile = current_user.get_active_profile()
     stock_list = Stock.query.filter(Stock.profile_id == profile.id, Stock.amount > 0).all()
     if stock_list != None:
         return jsonify(multi_stock_schema.dump(stock_list))
@@ -216,7 +215,7 @@ def delete_item_by_name(name):
 def skip_item_by_id():
     data = request.get_json()
     item_id = data.get("id")
-    profile = User.query.filter_by(username=get_jwt_identity()).first().get_active_profile()
+    profile = current_user.get_active_profile()
     # item = Item.query.get(id)
 
     skip = Skip(item_id=item_id, profile_id=profile.id, time=convert_to_time_format(datetime.now()))

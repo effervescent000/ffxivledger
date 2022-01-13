@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_jwt_extended import get_jwt_identity, jwt_required, current_user
 
 from . import db
 from .models import User, Profile, World, Retainer
@@ -14,13 +14,12 @@ multi_profile_schema = ProfileSchema(many=True)
 @bp.route("/add", methods=["POST"])
 @jwt_required()
 def add_profile():
-    user = User.query.filter_by(username=get_jwt_identity()).first()
     data = request.get_json()
     world = data.get("world")
     if world == None:
         return jsonify("Must include a world")
 
-    query = Profile.query.filter_by(user_id=user.id, world_id=world).first()
+    query = Profile.query.filter_by(user_id=current_user.id, world_id=world).first()
     if query != None:
         return jsonify(f"Profile already exists on world {world}")
 
@@ -34,7 +33,7 @@ def add_profile():
     ltw_level = data.get("ltw_level")
     wvr_level = data.get("wvr_level")
 
-    profile = Profile(user_id=user.id, world_id=world)
+    profile = Profile(user_id=current_user.id, world_id=world)
     profile.alc_level = alc_level if alc_level != None else 0
     profile.arm_level = arm_level if arm_level != None else 0
     profile.bsm_level = bsm_level if bsm_level != None else 0
@@ -44,7 +43,7 @@ def add_profile():
     profile.ltw_level = ltw_level if ltw_level != None else 0
     profile.wvr_level = wvr_level if wvr_level != None else 0
     # if this is the only profile, then set it to active
-    profile.is_active = True if user.get_active_profile() == None else False
+    profile.is_active = True if current_user.get_active_profile() == None else False
     db.session.add(profile)
     db.session.commit()
 
@@ -54,8 +53,7 @@ def add_profile():
 @bp.route("/get/all", methods=["GET"])
 @jwt_required()
 def get_user_profiles():
-    user = User.query.filter_by(username=get_jwt_identity()).first()
-    return jsonify(multi_profile_schema.dump(user.profiles))
+    return jsonify(multi_profile_schema.dump(current_user.profiles))
 
 
 @bp.route("/get/active", methods=["GET"])
