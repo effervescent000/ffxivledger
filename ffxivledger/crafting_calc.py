@@ -1,7 +1,9 @@
 import os
 from datetime import timedelta, datetime
 from flask import Blueprint, jsonify, request
-import flask_praetorian as fp
+
+# import flask_praetorian as fp
+from flask_jwt_extended import jwt_required, current_user
 import requests as req
 
 from . import db
@@ -19,10 +21,10 @@ multi_itemstats_schema = ItemStatsSchema(many=True)
 # max_updates = int(os.environ['MAX_UPDATES'])
 
 
-@bp.route("/get", methods=['GET'])
-@fp.auth_required
+@bp.route("/get", methods=["GET"])
+@jwt_required()
 def get_crafts():
-    profile = fp.current_user().get_active_profile()
+    profile = current_user.get_active_profile()
     # get all recipes
     master_query = Recipe.query.all()
     recipes = [x for x in master_query]
@@ -67,7 +69,7 @@ def get_crafts():
             if profile.cul_level < recipe.level:
                 recipes.remove(recipe)
                 continue
-        elif recipe.job == 'GSM':
+        elif recipe.job == "GSM":
             if profile.gsm_level < recipe.level:
                 recipes.remove(recipe)
                 continue
@@ -75,7 +77,7 @@ def get_crafts():
             if profile.ltw_level < recipe.level:
                 recipes.remove(recipe)
                 continue
-        elif recipe.job == 'WVR':
+        elif recipe.job == "WVR":
             if profile.wvr_level < recipe.level:
                 recipes.remove(recipe)
                 continue
@@ -86,8 +88,11 @@ def get_crafts():
             continue
     # i think that's all the conditions i want to check for here
     # once we're done removing stuff from the list, create a new list with the itemstats and return that
-    item_stats_list = [ItemStats.query.filter_by(item_id=x.item_id, world_id=profile.world.id).first() for x in recipes]
+    item_stats_list = [
+        ItemStats.query.filter_by(item_id=x.item_id, world_id=profile.world.id).first() for x in recipes
+    ]
     return jsonify(multi_itemstats_schema.dump(item_stats_list))
+
 
 @bp.route("/card/<world_id>-<item_id>", methods=["GET"])
 def generate_card(world_id, item_id):
@@ -147,14 +152,21 @@ def update_world_data():
     item_stats_list.sort(key=lambda x: convert_string_to_datetime(x.stats_updated))
     # now we prep the list for the bulk update function
     # start by slicing the list from the start until the end OR until max_updates, whichever is lower
-    max_updates = int(os.environ['MAX_UPDATES'])
+    max_updates = int(os.environ["MAX_UPDATES"])
     if len(item_stats_list) > max_updates:
         item_stats_list = item_stats_list[:max_updates]
-    # check the last item in the list, if it's within the freshness threshold, 
+    # check the last item in the list, if it's within the freshness threshold,
     # then create a new list which only includes items outside the freshness threshold (list comprehension?)
-    freshness_threshold = int(os.environ['FRESHNESS_THRESHOLD'])
-    if (datetime.now() - convert_string_to_datetime(item_stats_list[-1].stats_updated)).total_seconds() / 3600 < freshness_threshold:
-        item_stats_list = [x for x in item_stats_list if (datetime.now() - convert_string_to_datetime(x.stats_updated)).total_seconds() / 3600 < freshness_threshold]
+    freshness_threshold = int(os.environ["FRESHNESS_THRESHOLD"])
+    if (
+        datetime.now() - convert_string_to_datetime(item_stats_list[-1].stats_updated)
+    ).total_seconds() / 3600 < freshness_threshold:
+        item_stats_list = [
+            x
+            for x in item_stats_list
+            if (datetime.now() - convert_string_to_datetime(x.stats_updated)).total_seconds() / 3600
+            < freshness_threshold
+        ]
     # once all this is done, pass the list to the update function
     # update_bulk_data(item_stats_list, world)
     return jsonify(multi_itemstats_schema.dump(update_bulk_data(item_stats_list, world)))
@@ -188,6 +200,7 @@ def update_bulk_data(item_stats_list, world):
         for item in item_data:
             updated_items.append(process_item_data(item, world.id))
     return updated_items
+
 
 def process_item_data(item_json, world_id):
     item_stats = ItemStats.query.filter_by(item_id=item_json.get("itemID"), world_id=world_id).first()
@@ -275,4 +288,3 @@ def update_cached_data(item, world):
         # don't generate any warnings or anything here, just assign it to the itemstats model
         item_stats.craft_cost = crafting_cost
         db.session.commit()
-
