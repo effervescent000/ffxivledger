@@ -1,6 +1,14 @@
 from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime, timedelta, timezone
-from flask_jwt_extended import create_access_token, get_jwt_identity, set_access_cookies, get_jwt, unset_jwt_cookies, jwt_required
+from flask_jwt_extended import (
+    create_access_token,
+    get_jwt_identity,
+    set_access_cookies,
+    get_jwt,
+    unset_jwt_cookies,
+    jwt_required,
+    current_user
+)
 
 from .models import User
 from .schema import UserSchema
@@ -13,6 +21,7 @@ multi_user_schema = UserSchema(many=True)
 
 # POST endpoints
 
+
 @bp.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json()
@@ -22,7 +31,7 @@ def signup():
         new_user = User(username=username, password=User.hash_password(password))
         db.session.add(new_user)
         db.session.commit()
-        response = jsonify({"msg": "signup successful"})
+        response = jsonify(new_user)
         access_token = create_access_token(identity=username)
         set_access_cookies(response, access_token)
         return response
@@ -39,17 +48,18 @@ def login():
         return jsonify("Invalid username/password"), 401
     if not user_query.check_password(password):
         return jsonify("Invalid username/password"), 401
-    response = jsonify({"msg": "login successful"})
+    response = jsonify(one_user_schema.dump(user_query))
     access_token = create_access_token(identity=username)
     set_access_cookies(response, access_token)
     return response
 
 
-@bp.route("/logout", methods=['POST'])
+@bp.route("/logout", methods=["POST"])
+@jwt_required()
 def logout():
     response = jsonify({"msg": "logout successful"})
     unset_jwt_cookies(response)
-    return response
+    return response, 200
 
 
 # GET endpoints
@@ -60,21 +70,16 @@ def get_all_users():
     return jsonify(multi_user_schema.dump(User.query.all()))
 
 
-
-@bp.route("/check", methods=['GET'])
+@bp.route("/check", methods=["GET"])
 @jwt_required(optional=True)
 def check_for_logged_in_user():
-    identity = get_jwt_identity()
-    if identity != None:
-        user = User.query.filter_by(username=identity).first()
-        if user != None:
-            return jsonify(one_user_schema.dump(user))
-        return jsonify({})
+    if current_user != None:
+        return jsonify(one_user_schema.dump(current_user))
     return jsonify({})
 
 
-
 # PUT endpoints
+
 
 @bp.route("/update", methods=["PUT"])
 def update_user():
@@ -90,6 +95,7 @@ def update_user():
 
 
 # utils
+
 
 @current_app.after_request
 def refresh_expiring_jwts(response):

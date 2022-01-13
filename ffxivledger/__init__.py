@@ -1,19 +1,15 @@
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-# from flask_login import LoginManager
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
-# from flask_praetorian import Praetorian
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
 
 db = SQLAlchemy()
-# login_manager = LoginManager()
 ma = Marshmallow()
 cors = CORS()
 jwt = JWTManager()
-# guard = Praetorian()
 
 load_dotenv()
 
