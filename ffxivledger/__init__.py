@@ -4,14 +4,17 @@ from flask_sqlalchemy import SQLAlchemy
 # from flask_login import LoginManager
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
-from flask_praetorian import Praetorian
+# from flask_praetorian import Praetorian
+from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
 
 db = SQLAlchemy()
 # login_manager = LoginManager()
 ma = Marshmallow()
 cors = CORS()
-guard = Praetorian()
+jwt = JWTManager()
+# guard = Praetorian()
+
 load_dotenv()
 
 def create_app(test_config=None):
@@ -27,10 +30,11 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    cors.init_app(app)
+    cors.init_app(app, supports_credentials=True)
     db.init_app(app)
     # login_manager.init_app(app)
     ma.init_app(app)
+    jwt.init_app(app)
     
 
     with app.app_context():
@@ -38,7 +42,7 @@ def create_app(test_config=None):
         from .models import User, Profile, Retainer, Item, Transaction, Stock, Recipe, Component, World, Datacenter, ItemStats
         db.create_all()
         # from .models import User
-        guard.init_app(app, User)
+        # guard.init_app(app, User)
 
         from . import auth
         app.register_blueprint(auth.bp)

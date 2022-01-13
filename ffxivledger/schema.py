@@ -31,17 +31,19 @@ class ProfileSchema(ma.Schema):
             "gsm_level",
             "ltw_level",
             "wvr_level",
-            "retainers"
+            "retainers",
+            "is_active"
         )
     world = ma.Nested(one_world_schema)
     retainers = ma.Nested(multi_retainer_schema)
 
 
-profiles_schema = ProfileSchema(many=True)
+multi_profiles_schema = ProfileSchema(many=True)
 
 class UserSchema(ma.Schema):
     class Meta:
-        fields = ("id", "username", "roles")
+        fields = ("id", "username", "roles", "profiles")
+    profiles = ma.Nested(multi_profiles_schema)
 
 
 class ComponentSchema(ma.Schema):

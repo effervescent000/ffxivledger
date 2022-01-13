@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-import flask_praetorian as fp
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from . import db
 from .models import User, Profile, World, Retainer
@@ -12,18 +12,15 @@ multi_profile_schema = ProfileSchema(many=True)
 
 
 @bp.route("/add", methods=["POST"])
-@fp.auth_required
+@jwt_required()
 def add_profile():
-    user_id = fp.current_user().id
+    user = User.query.filter_by(username=get_jwt_identity()).first()
     data = request.get_json()
-    print(data)
     world = data.get("world")
     if world == None:
         return jsonify("Must include a world")
-    # check if the current_user also has a profile on this world, if so reject
-    # query = ProfileList.query.filter_by(user_id=user_id).first()
 
-    query = Profile.query.filter_by(user_id=user_id, world_id=world).first()
+    query = Profile.query.filter_by(user_id=user.id, world_id=world).first()
     if query != None:
         return jsonify(f"Profile already exists on world {world}")
 
@@ -37,9 +34,7 @@ def add_profile():
     ltw_level = data.get("ltw_level")
     wvr_level = data.get("wvr_level")
 
-    user = User.query.get(user_id)
-
-    profile = Profile(user_id=user_id, world_id=world)
+    profile = Profile(user_id=user.id, world_id=world)
     profile.alc_level = alc_level if alc_level != None else 0
     profile.arm_level = arm_level if arm_level != None else 0
     profile.bsm_level = bsm_level if bsm_level != None else 0
@@ -57,16 +52,17 @@ def add_profile():
 
 
 @bp.route("/get/all", methods=["GET"])
-@fp.auth_required
+@jwt_required()
 def get_user_profiles():
-    user_id = fp.current_user().id
-    return jsonify(multi_profile_schema.dump(User.query.get(user_id).profiles))
+    user = User.query.filter_by(username=get_jwt_identity()).first()
+    return jsonify(multi_profile_schema.dump(user.profiles))
 
 
 @bp.route("/get/active", methods=["GET"])
-@fp.auth_required
+@jwt_required()
 def get_active_profile():
-    profile = fp.current_user().get_active_profile()
+    user = User.query.filter_by(username=get_jwt_identity()).first()
+    profile = user.get_active_profile()
     return jsonify(one_profile_schema.dump(profile))
 
 
@@ -76,7 +72,7 @@ def get_profile_by_id(id):
 
 
 @bp.route("/update/<id>", methods=["PUT"])
-@fp.auth_required
+@jwt_required()
 def modify_profile_by_id(id):
     # add a check to ensure that the profile ID in question belongs to the logged-in user
     data = request.get_json()
