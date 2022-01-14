@@ -22,5 +22,5 @@ class Config:
     JWT_COOKIE_SECURE = True
     JWT_ACCESS_COOKIE_NAME = "access_token_cookie"
     JWT_SESSION_COOKIE = False
-    JWT_COOKIE_DOMAIN = os.environ["JWT_COOKIE_DOMAIN"]
+    # JWT_COOKIE_DOMAIN = os.environ["JWT_COOKIE_DOMAIN"]
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=6)
