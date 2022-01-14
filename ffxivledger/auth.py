@@ -10,6 +10,8 @@ from flask_jwt_extended import (
     current_user
 )
 
+from ffxivledger.utils import admin_required
+
 from .models import User
 from .schema import UserSchema
 from . import db, jwt
@@ -31,7 +33,7 @@ def signup():
         new_user = User(username=username, password=User.hash_password(password))
         db.session.add(new_user)
         db.session.commit()
-        response = jsonify(new_user)
+        response = jsonify(one_user_schema.dump(new_user))
         access_token = create_access_token(identity=username)
         set_access_cookies(response, access_token)
         return response
@@ -66,6 +68,8 @@ def logout():
 
 
 @bp.route("/get/all", methods=["GET"])
+@jwt_required()
+@admin_required
 def get_all_users():
     return jsonify(multi_user_schema.dump(User.query.all()))
 
@@ -82,7 +86,9 @@ def check_for_logged_in_user():
 
 
 @bp.route("/update", methods=["PUT"])
-def update_user():
+@jwt_required()
+@admin_required
+def admin_update_user():
     data = request.get_json()
     username = data.get("username")
     role = data.get("role")

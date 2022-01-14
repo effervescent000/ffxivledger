@@ -28,7 +28,7 @@ def admin_required(func):
     @functools.wraps(func)
     def decorated_view(*args, **kwargs):
         if not current_app.config.get("TESTING"):
-            if not current_user.roles.contains("admin"):
+            if current_user.roles != "admin":
                 abort(401)
             return func(*args, **kwargs)
         else:

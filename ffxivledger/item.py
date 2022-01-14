@@ -4,7 +4,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required, current_user
 import requests as req
 import os
 
-from ffxivledger.utils import convert_to_time_format
+from ffxivledger.utils import admin_required, convert_to_time_format
 
 from .models import Item, Transaction, Stock, Skip, Recipe, Component, User
 from .schema import ItemSchema, StockSchema, TransactionSchema, SkipSchema, RecipeSchema
@@ -61,31 +61,26 @@ def get_all_items():
 
 
 @bp.route("/add", methods=["POST"])
+@jwt_required()
+@admin_required
 def create_item():
     return jsonify(one_item_schema.dump(process_item(request.get_json())))
 
 
-@bp.route("/add/many", methods=["POST"])
-def create_multiple_items_from_dump():
-    items_list = []
-    data = request.get_json()
-    for item in data:
-        items_list.append(process_item(item))
-    return jsonify(multi_item_schema.dump(items_list))
-
-
-@bp.route("/add/search", methods=["POST"])
-def create_multiple_items_from_search():
-    data = request.get_json()
-    items_list = []
-    name = data.get("name")
-    search = req.get(f"https://xivapi.com/search?indexes=Item&string={name}&private_key={os.environ['XIVAPI_KEY']}").json()
-    results = search.get("Results")
-    for result in results:
-        result_name = result.get("Name")
-        if result_name.startswith(name):
-            items_list.append(process_item({"name": result_name}))
-    return jsonify(multi_item_schema.dump(items_list))
+# @bp.route("/add/search", methods=["POST"])
+# @jwt_required()
+# @admin_required
+# def create_multiple_items_from_search():
+#     data = request.get_json()
+#     items_list = []
+#     name = data.get("name")
+#     search = req.get(f"https://xivapi.com/search?indexes=Item&string={name}&private_key={os.environ['XIVAPI_KEY']}").json()
+#     results = search.get("Results")
+#     for result in results:
+#         result_name = result.get("Name")
+#         if result_name.startswith(name):
+#             items_list.append(process_item({"name": result_name}))
+#     return jsonify(multi_item_schema.dump(items_list))
 
 
 def get_item_id_from_search(results, search_term=None):
