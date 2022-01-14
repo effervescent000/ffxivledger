@@ -6,7 +6,7 @@ import os
 
 from ffxivledger.utils import admin_required, convert_to_time_format
 
-from .models import Item, Transaction, Stock, Skip, Recipe, Component, User
+from .models import Item, Transaction, Stock, Skip, Recipe, Component, ItemStats
 from .schema import ItemSchema, StockSchema, TransactionSchema, SkipSchema, RecipeSchema
 from . import db
 
@@ -19,6 +19,10 @@ one_skip_schema = SkipSchema()
 multi_skip_schema = SkipSchema(many=True)
 one_recipe_schema = RecipeSchema()
 multi_recipe_schema = RecipeSchema(many=True)
+
+
+# GET endpoints
+
 
 @bp.route("/get/<id>", methods=["GET"])
 def get_item_by_id(id):
@@ -60,6 +64,30 @@ def get_all_items():
     return jsonify(multi_item_schema.dump(Item.query.all()))
 
 
+@bp.route("/skips/get", methods=["GET"])
+def get_all_skips():
+    return jsonify(multi_skip_schema.dump(Skip.query.all()))
+
+
+@bp.route("/get_invalid", methods=["GET"])
+def get_problems():
+    problem_list = []
+    # I think this is too complex for a list comprehension so I'm going to initialize a new list and iterate over a DB query, adding things to the list as we go
+    for item in Item.query.all():
+        # things to check for:
+        # items with no recipes and no components
+        # recipes with no item_stats on any world (no world included in query)
+        if len(item.recipes) == 0 and len(item.components) == 0:
+            problem_list.append(item)
+            continue
+        if len(ItemStats.query.filter_by(item_id=item.id).all()) == 0:
+            problem_list.append(item)
+    return jsonify(multi_item_schema.dump(problem_list))
+
+
+# POST endpoints
+
+
 @bp.route("/add", methods=["POST"])
 @jwt_required()
 @admin_required
@@ -67,20 +95,67 @@ def create_item():
     return jsonify(one_item_schema.dump(process_item(request.get_json())))
 
 
-# @bp.route("/add/search", methods=["POST"])
-# @jwt_required()
-# @admin_required
-# def create_multiple_items_from_search():
-#     data = request.get_json()
-#     items_list = []
-#     name = data.get("name")
-#     search = req.get(f"https://xivapi.com/search?indexes=Item&string={name}&private_key={os.environ['XIVAPI_KEY']}").json()
-#     results = search.get("Results")
-#     for result in results:
-#         result_name = result.get("Name")
-#         if result_name.startswith(name):
-#             items_list.append(process_item({"name": result_name}))
-#     return jsonify(multi_item_schema.dump(items_list))
+@bp.route("/skip", methods=["POST"])
+@jwt_required()
+def skip_item_by_id():
+    data = request.get_json()
+    item_id = data.get("id")
+    profile = current_user.get_active_profile()
+    # item = Item.query.get(id)
+
+    skip = Skip(item_id=item_id, profile_id=profile.id, time=convert_to_time_format(datetime.now()))
+    db.session.add(skip)
+    db.session.commit()
+    return jsonify(one_skip_schema.dump(skip))
+
+
+# PUT endpoints
+
+
+@bp.route("/edit/<id>", methods=["PUT"])
+def edit_item_by_id(id):
+    item = Item.query.get(id)
+    data = request.get_json()
+    name = data.get("name")
+    # value = None
+    # type = data.get("type")
+
+    if name != None:
+        item.name = name
+    # if type != None:
+    #     item.type = type
+    db.session.commit()
+    return jsonify(one_item_schema.dump(item))
+
+
+# DELETE endpoints
+
+
+@bp.route("/delete/<id>", methods=["DELETE"])
+@jwt_required()
+@admin_required
+def delete_item_by_id(id):
+    item = Item.query.get(int(id))
+    if item != None:
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify("Item deleted successfully")
+    return jsonify("Item not found")
+
+
+@bp.route("/delete_name/<name>", methods=["DELETE"])
+@jwt_required()
+@admin_required
+def delete_item_by_name(name):
+    item = Item.query.filter_by(name=name).first()
+    if item != None:
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify("Item deleted successfully")
+    return jsonify("Item not found")
+
+
+# utils
 
 
 def get_item_id_from_search(results, search_term=None):
@@ -90,7 +165,7 @@ def get_item_id_from_search(results, search_term=None):
                 if search_term.lower() == result.get("Name").lower():
                     return result.get("ID")
             else:
-                return results[0].get("ID")        
+                return results[0].get("ID")
     elif len(results) == 1:
         return results[0].get("ID")
     else:
@@ -105,7 +180,9 @@ def process_item(data):
     if item_id == None:
         name = data.get("name")
         # GET request to xivapi to search for the item
-        data = req.get(f"https://xivapi.com/search?indexes=Item&string={name}&private_key={os.environ['XIVAPI_KEY']}").json()
+        data = req.get(
+            f"https://xivapi.com/search?indexes=Item&string={name}&private_key={os.environ['XIVAPI_KEY']}"
+        ).json()
         # iterate through results (ideally only 1 result) for an exact name much (with .lower() run)
         item_id = get_item_id_from_search(data.get("Results"))
 
@@ -167,58 +244,3 @@ def process_recipe(data):
             db.session.add(comp)
             db.session.commit()
     return jsonify(one_recipe_schema.dump(recipe))
-
-
-@bp.route("/edit/<id>", methods=["PUT"])
-def edit_item_by_id(id):
-    item = Item.query.get(id)
-    data = request.get_json()
-    name = data.get("name")
-    # value = None
-    # type = data.get("type")
-
-    if name != None:
-        item.name = name
-    # if type != None:
-    #     item.type = type
-    db.session.commit()
-    return jsonify(one_item_schema.dump(item))
-
-
-@bp.route("/delete/<id>", methods=["DELETE"])
-def delete_item_by_id(id):
-    item = Item.query.get(id)
-    if item != None:
-        db.session.delete(item)
-        db.session.commit()
-        return jsonify("Item deleted successfully")
-    return jsonify("Item not found")
-
-
-@bp.route("/delete_name/<name>", methods=["DELETE"])
-def delete_item_by_name(name):
-    item = Item.query.filter_by(name=name).first()
-    if item != None:
-        db.session.delete(item)
-        db.session.commit()
-        return jsonify("Item deleted successfully")
-    return jsonify("Item not found")
-
-
-@bp.route("/skip", methods=["POST"])
-@jwt_required()
-def skip_item_by_id():
-    data = request.get_json()
-    item_id = data.get("id")
-    profile = current_user.get_active_profile()
-    # item = Item.query.get(id)
-
-    skip = Skip(item_id=item_id, profile_id=profile.id, time=convert_to_time_format(datetime.now()))
-    db.session.add(skip)
-    db.session.commit()
-    return jsonify(one_skip_schema.dump(skip))
-
-
-@bp.route("/skips/get", methods=["GET"])
-def get_all_skips():
-    return jsonify(multi_skip_schema.dump(Skip.query.all()))
