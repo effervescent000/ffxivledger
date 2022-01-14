@@ -118,6 +118,21 @@ def modify_profile_by_id(id):
 # DELETE endpoints
 
 
+@bp.route("/delete/<id>", methods=["DELETE"])
+@jwt_required()
+def delete_profile(id):
+    # ensure that an admin can delete any profile, but a user can only delete their own
+    # first, check if the user sending the request is the owner of the profile
+    profile = Profile.query.get(id)
+    if profile.user_id != current_user.id:
+        # if not, check if they are admin
+        if current_user.roles != "admin":
+            return jsonify("Error: Not authorized"), 401
+    db.session.delete(profile)
+    db.session.commit()
+    return jsonify("Profile deleted"), 200
+
+
 # utils
 
 
