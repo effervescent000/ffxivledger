@@ -22,5 +22,5 @@ class Config:
     JWT_COOKIE_SECURE = True
     JWT_ACCESS_COOKIE_NAME = "access_token_cookie"
     JWT_SESSION_COOKIE = False
-    JWT_COOKIE_DOMAIN = "127.0.0.1:3000"
+    # JWT_COOKIE_DOMAIN = "127.0.0.1:3000"
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=6)
