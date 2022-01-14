@@ -6,7 +6,7 @@ import os
 
 from ffxivledger.utils import admin_required, convert_to_time_format
 
-from .models import Item, Transaction, Stock, Skip, Recipe, Component, User
+from .models import Item, Transaction, Stock, Skip, Recipe, Component, ItemStats
 from .schema import ItemSchema, StockSchema, TransactionSchema, SkipSchema, RecipeSchema
 from . import db
 
@@ -69,6 +69,22 @@ def get_all_skips():
     return jsonify(multi_skip_schema.dump(Skip.query.all()))
 
 
+@bp.route("/get_invalid", methods=["GET"])
+def get_problems():
+    problem_list = []
+    # I think this is too complex for a list comprehension so I'm going to initialize a new list and iterate over a DB query, adding things to the list as we go
+    for item in Item.query.all():
+        # things to check for:
+        # items with no recipes and no components
+        # recipes with no item_stats on any world (no world included in query)
+        if len(item.recipes) == 0 and len(item.components) == 0:
+            problem_list.append(item)
+            continue
+        if len(ItemStats.query.filter_by(item_id=item.id).all()) == 0:
+            problem_list.append(item)
+    return jsonify(multi_item_schema.dump(problem_list))
+
+
 # POST endpoints
 
 
@@ -116,8 +132,10 @@ def edit_item_by_id(id):
 
 
 @bp.route("/delete/<id>", methods=["DELETE"])
+@jwt_required()
+@admin_required
 def delete_item_by_id(id):
-    item = Item.query.get(id)
+    item = Item.query.get(int(id))
     if item != None:
         db.session.delete(item)
         db.session.commit()
@@ -126,6 +144,8 @@ def delete_item_by_id(id):
 
 
 @bp.route("/delete_name/<name>", methods=["DELETE"])
+@jwt_required()
+@admin_required
 def delete_item_by_name(name):
     item = Item.query.filter_by(name=name).first()
     if item != None:
