@@ -7,7 +7,7 @@ from flask_jwt_extended import (
     get_jwt,
     unset_jwt_cookies,
     jwt_required,
-    current_user
+    current_user,
 )
 
 from ffxivledger.utils import admin_required
@@ -98,6 +98,27 @@ def admin_update_user():
         user.roles = role
         db.session.commit()
     return jsonify(one_user_schema.dump(user))
+
+
+# DELETE endpoints
+
+
+@bp.route("/delete/<id>", methods=["DELETE"])
+@jwt_required()
+@admin_required
+def admin_delete_user(id):
+    user = User.query.get(int(id))
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify(multi_user_schema.dump(User.query.all()))
+
+
+@bp.route("/delete", methods=["DELETE"])
+@jwt_required()
+def user_delete_self():
+    db.session.delete(current_user)
+    db.session.commit()
+    return jsonify("User deleted successfully")
 
 
 # utils
