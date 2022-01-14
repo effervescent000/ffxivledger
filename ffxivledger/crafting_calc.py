@@ -1,8 +1,7 @@
 import os
-from datetime import timedelta, datetime
+from datetime import datetime
 from flask import Blueprint, jsonify, request
 
-# import flask_praetorian as fp
 from flask_jwt_extended import jwt_required, current_user
 import requests as req
 
