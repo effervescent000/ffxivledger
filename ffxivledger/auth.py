@@ -87,15 +87,23 @@ def check_for_logged_in_user():
 
 @bp.route("/update", methods=["PUT"])
 @jwt_required()
-@admin_required
-def admin_update_user():
+def update_user():
+    # first, check if the current user is the one to be edited
+    # if not, check for admin status
+    # if not admin, reject
+
     data = request.get_json()
+    id = data.get("id")
+
+    if current_user.id != id:
+        if current_user.roles != "admin":
+            return jsonify("Error: Not authorized"), 401
     username = data.get("username")
     role = data.get("role")
-    # right now I can only update roles
-    user = User.query.filter_by(username=username).first()
+    user = User.query.get(id)
     if user != None:
-        user.roles = role
+        user.username = username if username != None else user.username
+        user.roles = role if role != None else user.roles
         db.session.commit()
     return jsonify(one_user_schema.dump(user))
 
