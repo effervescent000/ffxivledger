@@ -1,11 +1,8 @@
 from datetime import datetime
-from flask import Blueprint, redirect, render_template, request, url_for, jsonify
-from flask_login import login_required, current_user
-import flask_praetorian as fp
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import get_jwt_identity, jwt_required, current_user
 
 from .models import Transaction, Item
-from . import db
-# from .forms import TransactionForm
 from .utils import convert_to_time_format
 from .schema import TransactionSchema
 
@@ -21,20 +18,19 @@ def get_transaction_by_id(id):
 
 
 @bp.route("/get/item/<item_value>", methods=["GET"])
-@fp.auth_required
+@jwt_required()
 def get_transactions_by_item(item_value):
-    user_id = fp.current_user().id
     return jsonify(
-        multi_transaction_schema.dump(Transaction.query.filter_by(item_value=item_value, user_id=user_id).all())
+        multi_transaction_schema.dump(Transaction.query.filter_by(item_value=item_value, user_id=current_user.id).all())
     )
 
 
 @bp.route("/add", methods=["POST"])
-@fp.auth_required
+@jwt_required()
 def add_transaction():
     data = request.get_json()
     item_id = int(data.get("item_id"))
-    profile = fp.current_user().get_active_profile()
+    profile = current_user.get_active_profile()
     amount = data.get("amount")
     gil_value = data.get("gil_value")
     time = data.get("time")
