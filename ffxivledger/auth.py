@@ -21,6 +21,32 @@ one_user_schema = UserSchema()
 multi_user_schema = UserSchema(many=True)
 
 
+# GET endpoints
+
+
+@bp.route("/get", methods=["GET"])
+@jwt_required()
+@admin_required
+def get_all_users():
+    return jsonify(multi_user_schema.dump(User.query.all()))
+
+
+@bp.route("/check", methods=["GET"])
+@jwt_required(optional=True)
+def check_for_logged_in_user():
+    if current_user != None:
+        return jsonify(one_user_schema.dump(current_user))
+    return jsonify({})
+
+
+@bp.route("/username/<username>", methods=["GET"])
+def is_username_available(username):
+    user = User.query.filter_by(username=username).first()
+    if user != None:
+        return jsonify(False)
+    return jsonify(True)
+
+
 # POST endpoints
 
 
@@ -62,24 +88,6 @@ def logout():
     response = jsonify({"msg": "logout successful"})
     unset_jwt_cookies(response)
     return response, 200
-
-
-# GET endpoints
-
-
-@bp.route("/get/all", methods=["GET"])
-@jwt_required()
-@admin_required
-def get_all_users():
-    return jsonify(multi_user_schema.dump(User.query.all()))
-
-
-@bp.route("/check", methods=["GET"])
-@jwt_required(optional=True)
-def check_for_logged_in_user():
-    if current_user != None:
-        return jsonify(one_user_schema.dump(current_user))
-    return jsonify({})
 
 
 # PUT endpoints
