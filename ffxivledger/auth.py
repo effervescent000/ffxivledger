@@ -115,7 +115,7 @@ def update_user():
 @jwt_required()
 @admin_required
 def admin_delete_user(id):
-    user = User.query.get(int(id))
+    user = User.query.get(id)
     db.session.delete(user)
     db.session.commit()
     return jsonify(multi_user_schema.dump(User.query.all()))
