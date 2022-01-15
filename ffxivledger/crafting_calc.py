@@ -67,6 +67,7 @@ def get_crafts():
 
 @bp.route("/card/<world_id>-<item_id>", methods=["GET"])
 def generate_card(world_id, item_id):
+    world_id = int(world_id)
     warning_list = []
     # iterate over each item in queue
     item = Item.query.get(item_id)
@@ -87,12 +88,16 @@ def generate_card(world_id, item_id):
 
 
 def get_item_stats(world_id, item_id):
-    item_stats = ItemStats.query.filter_by(world_id=world_id, item_id=item_id).first()
-    if item_stats == None:
-        item_stats = ItemStats(world_id=world_id, item_id=item_id)
-        db.session.add(item_stats)
-        db.session.commit()
-    return item_stats
+    if type(world_id) == int and type(item_id) == int:
+        item_stats = ItemStats.query.filter_by(world_id=world_id, item_id=item_id).first()
+        if item_stats == None:
+            item_stats = ItemStats(world_id=world_id, item_id=item_id)
+            db.session.add(item_stats)
+            db.session.commit()
+        return item_stats
+    print("world_id", world_id, type(world_id))
+    print("item_id", item_id, type(item_id))
+    raise TypeError(f"Invalid arguments and passed to get_item_stats")
 
 
 # @bp.route("/stats/update/<world_id>", methods=["PUT"])
