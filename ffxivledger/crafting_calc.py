@@ -24,14 +24,24 @@ multi_itemstats_schema = ItemStatsSchema(many=True)
 @jwt_required()
 def get_crafts():
     profile = current_user.get_active_profile()
-    # get all recipes
-    master_query = Recipe.query.all()
+
+    alc_recipes = Recipe.query.filter(Recipe.job == "ALC", Recipe.level <= profile.alc_level).all()
+    arm_recipes = Recipe.query.filter(Recipe.job == "ARM", Recipe.level <= profile.arm_level).all()
+    bsm_recipes = Recipe.query.filter(Recipe.job == "BSM", Recipe.level <= profile.bsm_level).all()
+    crp_recipes = Recipe.query.filter(Recipe.job == "CRP", Recipe.level <= profile.crp_level).all()
+    cul_recipes = Recipe.query.filter(Recipe.job == "CUL", Recipe.level <= profile.cul_level).all()
+    gsm_recipes = Recipe.query.filter(Recipe.job == "GSM", Recipe.level <= profile.gsm_level).all()
+    ltw_recipes = Recipe.query.filter(Recipe.job == "LTW", Recipe.level <= profile.ltw_level).all()
+    wvr_recipes = Recipe.query.filter(Recipe.job == "WVR", Recipe.level <= profile.wvr_level).all()
+
+    master_query = (
+        alc_recipes + arm_recipes + bsm_recipes + crp_recipes + cul_recipes + gsm_recipes + ltw_recipes + wvr_recipes
+    )
+
     recipes = [x for x in master_query]
-    # iterate over recipes
     for recipe in master_query:
         # check if the recipe is used in another recipe, if so remove it so we are only crafting top-level stuff (maybe add this as an option at some point)
         if Component.query.filter_by(item_id=recipe.item_id).first() != None:
-            # print(f"Removing {recipe.item.name} for from recipe list")
             recipes.remove(recipe)
             continue
         # check if the recipe is set to be skipped, if so remove it from the list
@@ -47,45 +57,11 @@ def get_crafts():
                 else:
                     recipes.remove(recipe)
                     continue
-        # check if the active profile can even craft it
-        if recipe.job == "ALC":
-            if profile.alc_level < recipe.level:
-                recipes.remove(recipe)
-                continue
-        elif recipe.job == "ARM":
-            if profile.arm_level < recipe.level:
-                recipes.remove(recipe)
-                continue
-        elif recipe.job == "BSM":
-            if profile.bsm_level < recipe.level:
-                recipes.remove(recipe)
-                continue
-        elif recipe.job == "CRP":
-            if profile.crp_level < recipe.level:
-                recipes.remove(recipe)
-                continue
-        elif recipe.job == "CUL":
-            if profile.cul_level < recipe.level:
-                recipes.remove(recipe)
-                continue
-        elif recipe.job == "GSM":
-            if profile.gsm_level < recipe.level:
-                recipes.remove(recipe)
-                continue
-        elif recipe.job == "LTW":
-            if profile.ltw_level < recipe.level:
-                recipes.remove(recipe)
-                continue
-        elif recipe.job == "WVR":
-            if profile.wvr_level < recipe.level:
-                recipes.remove(recipe)
-                continue
         # check if the item is already in stock
         stock = Stock.query.filter_by(item_id=recipe.item_id, profile_id=profile.id).first()
         if stock != None and stock.amount > 0:
             recipes.remove(recipe)
             continue
-    # i think that's all the conditions i want to check for here
     # once we're done removing stuff from the list, create a new list with the itemstats and return that
     item_stats_list = [
         ItemStats.query.filter_by(item_id=x.item_id, world_id=profile.world.id).first() for x in recipes
