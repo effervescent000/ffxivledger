@@ -132,9 +132,11 @@ def admin_delete_user(id):
 @bp.route("/delete", methods=["DELETE"])
 @jwt_required()
 def user_delete_self():
+    response = jsonify("User deleted successfully")
+    unset_jwt_cookies(response)
     db.session.delete(current_user)
     db.session.commit()
-    return jsonify("User deleted successfully")
+    return response
 
 
 # utils
