@@ -118,12 +118,11 @@ def update_world_data():
     item_stats_list = ItemStats.query.filter_by(world_id=world.id).all()
     item_list = Item.query.all()
     if len(item_stats_list) < len(item_list):
+        items_to_add = []
         for item in item_list:
             if ItemStats.query.filter_by(world_id=world.id, item_id=item.id).first() == None:
-                item_stats = ItemStats(item_id=item.id, world_id=world.id)
-                db.session.add(item_stats)
-                db.session.commit()
-                update_cached_data(item, world)
+                items_to_add.append(item.id)
+        update_bulk_data(items_to_add, world)
         item_stats_list = ItemStats.query.filter_by(world_id=world.id).all()
     item_stats_list.sort(key=lambda x: convert_string_to_datetime(x.stats_updated))
     # now we prep the list for the bulk update function
@@ -134,9 +133,8 @@ def update_world_data():
     # check the last item in the list, if it's within the freshness threshold,
     # then create a new list which only includes items outside the freshness threshold (list comprehension?)
     freshness_threshold = int(os.environ["FRESHNESS_THRESHOLD"])
-    if (
-        datetime.now() - convert_string_to_datetime(item_stats_list[-1].stats_updated)
-    ).total_seconds() / 3600 < freshness_threshold:
+    last_updated = convert_string_to_datetime(item_stats_list[-1].stats_updated)
+    if (datetime.now() - last_updated).total_seconds() / 3600 < freshness_threshold:
         item_stats_list = [
             x
             for x in item_stats_list
@@ -145,49 +143,51 @@ def update_world_data():
         ]
     # once all this is done, pass the list to the update function
     # update_bulk_data(item_stats_list, world)
-    return jsonify(multi_itemstats_schema.dump(update_bulk_data(item_stats_list, world)))
-
-
-def update_bulk_data(item_stats_list, world):
-    """Takes in a list of items stats and queries universalis, then updates each of the provided items"""
     item_id_list = ",".join([str(x.item_id) for x in item_stats_list])
+    updated_items_stats = update_bulk_data(item_id_list, world)
+    for item_stats in updated_items_stats:
+        if item_stats.craft_cost == None:
+            item_stats.craft_cost = get_crafting_cost(item_stats.item, world.id)
+            db.session.commit()
+
+    return jsonify(multi_itemstats_schema.dump(updated_items_stats))
+
+
+def update_bulk_data(item_id_list, world):
+    """Takes in a list of items stats and queries universalis, then updates each of the provided items"""
     item_data = req.get(f"https://universalis.app/api/{world.id}/{item_id_list}").json().get("items")
-    # iterate over the items in the data
-    # for now just copy the methodology ive been using of get the DC data instead if there aren't enough listings
-    # create a list to add items to that dont have enough world info
-    # at the end we'll send another query to universalis for the DC data of the items in this list
     items_to_requery = []
-    # go down the items in the item_data results
-    updated_items = []
+    updated_items_stats = []
     for item in item_data:
         # if it has enough listings, then pass that data to process_item_data, along with the world id
         if len(item.get("listings")) >= 3:
-            updated_items.append(process_item_data(item, world.id))
+            updated_items_stats.append(process_item_data(item, world.id))
         # if not, add it to items_to_requery
         else:
             items_to_requery.append(item)
     # after the above iteration, repeat the process with items_to_requery
     if len(items_to_requery) == 1:
         item = req.get(f"https://universalis.app/api/{world.datacenter.name}/{item_id_list}").json()
-        updated_items.append(process_item_data(item, world.id))
+        updated_items_stats.append(process_item_data(item, world.id))
     elif len(items_to_requery) > 1:
         item_id_list = ",".join([str(x.get("itemID")) for x in items_to_requery])
         item_data = req.get(f"https://universalis.app/api/{world.datacenter.name}/{item_id_list}").json().get("items")
         for item in item_data:
-            updated_items.append(process_item_data(item, world.id))
-    return updated_items
+            updated_items_stats.append(process_item_data(item, world.id))
+    return updated_items_stats
 
 
 def process_item_data(item_json, world_id):
-    item_stats = ItemStats.query.filter_by(item_id=item_json.get("itemID"), world_id=world_id).first()
+    item_id = item_json.get("itemID")
+    item_stats = get_item_stats(world_id, item_id)
     item_stats.stats_updated = convert_to_time_format(datetime.now())
     item_stats.price = item_json.get("minPrice") if item_json.get("worldID") != None else item_json.get("averagePrice")
     item_stats.sales_velocity = item_json.get("regularSaleVelocity")
     db.session.commit()
 
     # now update crafting cost
-    item_stats.craft_cost = get_crafting_cost(item_stats.item, world_id)
-    db.session.commit()
+    # item_stats.craft_cost = get_crafting_cost(item_stats.item, world_id)
+    # db.session.commit()
 
     return item_stats
 
@@ -204,7 +204,7 @@ def get_crafting_cost(item, world_id):
                 # don't drill all the way down, just go 1 level
                 # use whichever is cheaper, the cost to craft or buy the components
                 if component_stats.price == None:
-                    update_cached_data(component.item, World.query.get(world_id))
+                    return None
                 if component_stats.craft_cost == None:
                     crafting_cost += component_stats.price * component.item_quantity
                 else:
