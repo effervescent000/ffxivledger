@@ -15,10 +15,6 @@ bp = Blueprint("crafting", __name__, url_prefix="/craft")
 one_itemstats_schema = ItemStatsSchema()
 multi_itemstats_schema = ItemStatsSchema(many=True)
 
-# how many hours old data can be while still being considered fresh
-# freshness_threshold = int(os.environ['FRESHNESS_THRESHOLD'])
-# max_updates = int(os.environ['MAX_UPDATES'])
-
 
 @bp.route("/get", methods=["GET"])
 @jwt_required()

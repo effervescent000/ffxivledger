@@ -14,7 +14,7 @@ multi_profile_schema = ProfileSchema(many=True)
 # GET endpoints
 
 
-@bp.route("/get/all", methods=["GET"])
+@bp.route("/get", methods=["GET"])
 @jwt_required()
 def get_user_profiles():
     return jsonify(multi_profile_schema.dump(current_user.profiles))
@@ -78,12 +78,13 @@ def add_profile():
 # PUT endpoints
 
 
-@bp.route("/update/<id>", methods=["PUT"])
+@bp.route("/update", methods=["PUT"])
 @jwt_required()
-def modify_profile_by_id(id):
+def modify_profile_by_id():
     # add a check to ensure that the profile ID in question belongs to the logged-in user
     data = request.get_json()
     # check if the current_user also has a profile on this world, if so reject
+    id = data.get("id")
     profile = Profile.query.get(id)
     if profile == None:
         return jsonify("No profile found")
@@ -113,6 +114,26 @@ def modify_profile_by_id(id):
             process_retainer(profile, retainer)
 
     return jsonify(one_profile_schema.dump(profile))
+
+
+@bp.route("/activate", methods=["PUT"])
+@jwt_required()
+def set_active_profile():
+    id = request.get_json().get("id")
+    # first, ensure that the profile in question is owned by the sender of the request
+    target_profile = Profile.query.get(id)
+    if target_profile.user_id != current_user.id:
+        return jsonify("Error: Not authorized"), 401
+    # then, find all other profiles of that person and make sure they're set to inactive
+    profile_list = Profile.query.filter_by(user_id=current_user.id).all()
+    for profile in profile_list:
+        profile.is_active = False
+        db.session.commit()
+    # finally, set the target profile to active
+    target_profile.is_active = True
+    db.session.commit()
+    # return the active profile
+    return jsonify(one_profile_schema.dump(target_profile))
 
 
 # DELETE endpoints
