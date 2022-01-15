@@ -11,6 +11,31 @@ one_profile_schema = ProfileSchema()
 multi_profile_schema = ProfileSchema(many=True)
 
 
+# GET endpoints
+
+
+@bp.route("/get/all", methods=["GET"])
+@jwt_required()
+def get_user_profiles():
+    return jsonify(multi_profile_schema.dump(current_user.profiles))
+
+
+@bp.route("/get/active", methods=["GET"])
+@jwt_required()
+def get_active_profile():
+    user = User.query.filter_by(username=get_jwt_identity()).first()
+    profile = user.get_active_profile()
+    return jsonify(one_profile_schema.dump(profile))
+
+
+@bp.route("/get/<id>", methods=["GET"])
+def get_profile_by_id(id):
+    return jsonify(one_profile_schema.dump(Profile.query.get(id)))
+
+
+# POST endpoints
+
+
 @bp.route("/add", methods=["POST"])
 @jwt_required()
 def add_profile():
@@ -50,23 +75,7 @@ def add_profile():
     return jsonify(one_profile_schema.dump(profile))
 
 
-@bp.route("/get/all", methods=["GET"])
-@jwt_required()
-def get_user_profiles():
-    return jsonify(multi_profile_schema.dump(current_user.profiles))
-
-
-@bp.route("/get/active", methods=["GET"])
-@jwt_required()
-def get_active_profile():
-    user = User.query.filter_by(username=get_jwt_identity()).first()
-    profile = user.get_active_profile()
-    return jsonify(one_profile_schema.dump(profile))
-
-
-@bp.route("/get/<id>", methods=["GET"])
-def get_profile_by_id(id):
-    return jsonify(one_profile_schema.dump(Profile.query.get(id)))
+# PUT endpoints
 
 
 @bp.route("/update/<id>", methods=["PUT"])
@@ -106,17 +115,25 @@ def modify_profile_by_id(id):
     return jsonify(one_profile_schema.dump(profile))
 
 
-# @bp.route("/retainers/add", methods=["POST"])
-# @fp.auth_required
-# def add_retainer_to_profile():
-#     data = request.get_json()
-#     name = data.get("name")
-#     if name == None:
-#         return jsonify("Error: No retainer name specified")
-#     profile = fp.current_user().get_active_profile()
-#     new_retainer = Retainer(profile_id=profile.id, name=name)
-#     db.session.add(new_retainer)
-#     db.session.commit()
+# DELETE endpoints
+
+
+@bp.route("/delete/<id>", methods=["DELETE"])
+@jwt_required()
+def delete_profile(id):
+    # ensure that an admin can delete any profile, but a user can only delete their own
+    # first, check if the user sending the request is the owner of the profile
+    profile = Profile.query.get(id)
+    if profile.user_id != current_user.id:
+        # if not, check if they are admin
+        if current_user.roles != "admin":
+            return jsonify("Error: Not authorized"), 401
+    db.session.delete(profile)
+    db.session.commit()
+    return jsonify("Profile deleted"), 200
+
+
+# utils
 
 
 def process_retainer(profile, retainer):
