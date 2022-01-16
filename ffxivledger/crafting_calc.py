@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 from flask import Blueprint, jsonify, request
-
 from flask_jwt_extended import jwt_required, current_user
 import requests as req
 
@@ -98,15 +97,6 @@ def get_item_stats(world_id, item_id):
     print("world_id", world_id, type(world_id))
     print("item_id", item_id, type(item_id))
     raise TypeError(f"Invalid arguments and passed to get_item_stats")
-
-
-# @bp.route("/stats/update/<world_id>", methods=["PUT"])
-# def force_update_stats(world):
-#     if type(world) is int:
-#         world = World.query.get(world)
-#     item_stats = ItemStats.query.filter_by(world_id=world).all()
-#     for x in item_stats:
-#         update_cached_data(x, world)
 
 
 @bp.route("/stats/update", methods=["PUT"])
@@ -214,53 +204,3 @@ def get_crafting_cost(item, world_id):
                         else component_stats.craft_cost
                     )
     return crafting_cost if crafting_cost > 0 else None
-
-
-# function to actually query universalis
-def update_cached_data(item, world):
-    # first, get world data as normal
-    data = req.get(f"https://universalis.app/api/{world.id}/{item.id}").json()
-    # if world data is below a certain # of listings, then grab datacenter data
-    print(f"Updating item {item.name}")
-    item_stats = get_item_stats(world.id, item.id)
-    if len(data.get("listings")) <= 3:
-        # overwrite data with dc data for given item
-        data = req.get(f"https://universalis.app/api/{world.datacenter.name}/{item.id}").json()
-        # now update item stats
-        item_stats.stats_updated = convert_to_time_format(datetime.now())
-        item_stats.price = data.get("averagePrice")
-        item_stats.sales_velocity = data.get("regularSaleVelocity")
-        db.session.commit()
-    else:
-        # instead of using averagePrice, use minPrice (only with world data, continue using averagePrice for DC data)
-        item_stats.stats_updated = convert_to_time_format(datetime.now())
-        item_stats.price = data.get("minPrice")
-        item_stats.sales_velocity = data.get("regularSaleVelocity")
-        db.session.commit()
-    # include checks for vanity items (does it require lvl 1 to use?), if so then do not pay attention to NQ vs HQ
-    # if it's an actual gear item, then preferentially use HQ data sources when available
-
-    # now update crafting cost
-    crafting_cost = 0
-    # first, check if an item has any recipes (items that can't be crafted will have None crafting cost)
-    if len(item.recipes) > 0:
-        # if it does, then get its crafting cost
-        # doing it in a for loop like this will cause the crafting cost of certain items to be doubled (or tripled or w/e)
-        for recipe in item.recipes:
-            for component in recipe.components:
-                component_stats = get_item_stats(world.id, component.item.id)
-                # don't drill all the way down, just go 1 level
-                # use whichever is cheaper, the cost to craft or buy the components
-                if component_stats.price == None:
-                    update_cached_data(component.item, world)
-                if component_stats.craft_cost == None:
-                    crafting_cost += component_stats.price * component.item_quantity
-                else:
-                    crafting_cost += (
-                        component_stats.price
-                        if component_stats.price <= component_stats.craft_cost
-                        else component_stats.craft_cost
-                    )
-        # don't generate any warnings or anything here, just assign it to the itemstats model
-        item_stats.craft_cost = crafting_cost
-        db.session.commit()
