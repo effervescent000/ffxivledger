@@ -118,29 +118,42 @@ def update_world_data():
     # now we prep the list for the bulk update function
     # start by slicing the list from the start until the end OR until max_updates, whichever is lower
     max_updates = int(os.environ["MAX_UPDATES"])
+    item_stats_lists_list = []
     if len(item_stats_list) > max_updates:
         item_stats_list = item_stats_list[:max_updates]
+        item_stats_lists_list = process_item_stats_list(item_stats_list)
     # check the last item in the list, if it's within the freshness threshold,
     # then create a new list which only includes items outside the freshness threshold (list comprehension?)
     freshness_threshold = int(os.environ["FRESHNESS_THRESHOLD"])
-    last_updated = convert_string_to_datetime(item_stats_list[-1].stats_updated)
-    if (datetime.now() - last_updated).total_seconds() / 3600 < freshness_threshold:
-        item_stats_list = [
-            x
-            for x in item_stats_list
-            if (datetime.now() - convert_string_to_datetime(x.stats_updated)).total_seconds() / 3600
-            < freshness_threshold
-        ]
-    # once all this is done, pass the list to the update function
-    # update_bulk_data(item_stats_list, world)
-    item_id_list = ",".join([str(x.item_id) for x in item_stats_list])
-    updated_items_stats = update_bulk_data(item_id_list, world)
-    for item_stats in updated_items_stats:
-        if item_stats.craft_cost == None:
-            item_stats.craft_cost = get_crafting_cost(item_stats.item, world.id)
-            db.session.commit()
+    updated_items_stats = []
+    for i_s_l in item_stats_lists_list:
+        last_updated = convert_string_to_datetime(i_s_l[-1].stats_updated)
+        if (datetime.now() - last_updated).total_seconds() / 3600 < freshness_threshold:
+            i_s_l = [
+                x
+                for x in item_stats_list
+                if (datetime.now() - convert_string_to_datetime(x.stats_updated)).total_seconds() / 3600
+                < freshness_threshold
+            ]
+        # once all this is done, pass the list to the update function
+        # update_bulk_data(item_stats_list, world)
+        item_id_list = ",".join([str(x.item_id) for x in i_s_l])
+        updated_items_stats += update_bulk_data(item_id_list, world)
+        for item_stats in updated_items_stats:
+            if item_stats.craft_cost == None:
+                item_stats.craft_cost = get_crafting_cost(item_stats.item, world.id)
+                db.session.commit()
 
     return jsonify(multi_itemstats_schema.dump(updated_items_stats))
+
+
+def process_item_stats_list(item_stats_list):
+    item_stats_lists_list = []
+    while len(item_stats_list) / 100 > 1:
+        item_stats_lists_list.append(item_stats_list[:100])
+        item_stats_list = item_stats_list[100:]
+    item_stats_lists_list.append(item_stats_list)
+    return item_stats_lists_list
 
 
 def update_bulk_data(item_id_list, world):
@@ -157,7 +170,8 @@ def update_bulk_data(item_id_list, world):
             items_to_requery.append(item)
     # after the above iteration, repeat the process with items_to_requery
     if len(items_to_requery) == 1:
-        item = req.get(f"https://universalis.app/api/{world.datacenter.name}/{item_id_list}").json()
+        item_id = items_to_requery[0].get("itemID")
+        item = req.get(f"https://universalis.app/api/{world.datacenter.name}/{item_id}").json()
         updated_items_stats.append(process_item_data(item, world.id))
     elif len(items_to_requery) > 1:
         item_id_list = ",".join([str(x.get("itemID")) for x in items_to_requery])
