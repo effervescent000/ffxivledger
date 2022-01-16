@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 from flask import Blueprint, jsonify, request
-
 from flask_jwt_extended import jwt_required, current_user
 import requests as req
 
@@ -67,6 +66,7 @@ def get_crafts():
 
 @bp.route("/card/<world_id>-<item_id>", methods=["GET"])
 def generate_card(world_id, item_id):
+    world_id = int(world_id)
     warning_list = []
     # iterate over each item in queue
     item = Item.query.get(item_id)
@@ -87,21 +87,16 @@ def generate_card(world_id, item_id):
 
 
 def get_item_stats(world_id, item_id):
-    item_stats = ItemStats.query.filter_by(world_id=world_id, item_id=item_id).first()
-    if item_stats == None:
-        item_stats = ItemStats(world_id=world_id, item_id=item_id)
-        db.session.add(item_stats)
-        db.session.commit()
-    return item_stats
-
-
-# @bp.route("/stats/update/<world_id>", methods=["PUT"])
-# def force_update_stats(world):
-#     if type(world) is int:
-#         world = World.query.get(world)
-#     item_stats = ItemStats.query.filter_by(world_id=world).all()
-#     for x in item_stats:
-#         update_cached_data(x, world)
+    if type(world_id) == int and type(item_id) == int:
+        item_stats = ItemStats.query.filter_by(world_id=world_id, item_id=item_id).first()
+        if item_stats == None:
+            item_stats = ItemStats(world_id=world_id, item_id=item_id)
+            db.session.add(item_stats)
+            db.session.commit()
+        return item_stats
+    print("world_id", world_id, type(world_id))
+    print("item_id", item_id, type(item_id))
+    raise TypeError(f"Invalid arguments and passed to get_item_stats")
 
 
 @bp.route("/stats/update", methods=["PUT"])
@@ -113,12 +108,11 @@ def update_world_data():
     item_stats_list = ItemStats.query.filter_by(world_id=world.id).all()
     item_list = Item.query.all()
     if len(item_stats_list) < len(item_list):
+        items_to_add = []
         for item in item_list:
             if ItemStats.query.filter_by(world_id=world.id, item_id=item.id).first() == None:
-                item_stats = ItemStats(item_id=item.id, world_id=world.id)
-                db.session.add(item_stats)
-                db.session.commit()
-                update_cached_data(item, world)
+                items_to_add.append(item.id)
+        update_bulk_data(items_to_add, world)
         item_stats_list = ItemStats.query.filter_by(world_id=world.id).all()
     item_stats_list.sort(key=lambda x: convert_string_to_datetime(x.stats_updated))
     # now we prep the list for the bulk update function
@@ -129,9 +123,8 @@ def update_world_data():
     # check the last item in the list, if it's within the freshness threshold,
     # then create a new list which only includes items outside the freshness threshold (list comprehension?)
     freshness_threshold = int(os.environ["FRESHNESS_THRESHOLD"])
-    if (
-        datetime.now() - convert_string_to_datetime(item_stats_list[-1].stats_updated)
-    ).total_seconds() / 3600 < freshness_threshold:
+    last_updated = convert_string_to_datetime(item_stats_list[-1].stats_updated)
+    if (datetime.now() - last_updated).total_seconds() / 3600 < freshness_threshold:
         item_stats_list = [
             x
             for x in item_stats_list
@@ -140,49 +133,51 @@ def update_world_data():
         ]
     # once all this is done, pass the list to the update function
     # update_bulk_data(item_stats_list, world)
-    return jsonify(multi_itemstats_schema.dump(update_bulk_data(item_stats_list, world)))
-
-
-def update_bulk_data(item_stats_list, world):
-    """Takes in a list of items stats and queries universalis, then updates each of the provided items"""
     item_id_list = ",".join([str(x.item_id) for x in item_stats_list])
+    updated_items_stats = update_bulk_data(item_id_list, world)
+    for item_stats in updated_items_stats:
+        if item_stats.craft_cost == None:
+            item_stats.craft_cost = get_crafting_cost(item_stats.item, world.id)
+            db.session.commit()
+
+    return jsonify(multi_itemstats_schema.dump(updated_items_stats))
+
+
+def update_bulk_data(item_id_list, world):
+    """Takes in a list of items stats and queries universalis, then updates each of the provided items"""
     item_data = req.get(f"https://universalis.app/api/{world.id}/{item_id_list}").json().get("items")
-    # iterate over the items in the data
-    # for now just copy the methodology ive been using of get the DC data instead if there aren't enough listings
-    # create a list to add items to that dont have enough world info
-    # at the end we'll send another query to universalis for the DC data of the items in this list
     items_to_requery = []
-    # go down the items in the item_data results
-    updated_items = []
+    updated_items_stats = []
     for item in item_data:
         # if it has enough listings, then pass that data to process_item_data, along with the world id
         if len(item.get("listings")) >= 3:
-            updated_items.append(process_item_data(item, world.id))
+            updated_items_stats.append(process_item_data(item, world.id))
         # if not, add it to items_to_requery
         else:
             items_to_requery.append(item)
     # after the above iteration, repeat the process with items_to_requery
     if len(items_to_requery) == 1:
         item = req.get(f"https://universalis.app/api/{world.datacenter.name}/{item_id_list}").json()
-        updated_items.append(process_item_data(item, world.id))
+        updated_items_stats.append(process_item_data(item, world.id))
     elif len(items_to_requery) > 1:
         item_id_list = ",".join([str(x.get("itemID")) for x in items_to_requery])
         item_data = req.get(f"https://universalis.app/api/{world.datacenter.name}/{item_id_list}").json().get("items")
         for item in item_data:
-            updated_items.append(process_item_data(item, world.id))
-    return updated_items
+            updated_items_stats.append(process_item_data(item, world.id))
+    return updated_items_stats
 
 
 def process_item_data(item_json, world_id):
-    item_stats = ItemStats.query.filter_by(item_id=item_json.get("itemID"), world_id=world_id).first()
+    item_id = item_json.get("itemID")
+    item_stats = get_item_stats(world_id, item_id)
     item_stats.stats_updated = convert_to_time_format(datetime.now())
     item_stats.price = item_json.get("minPrice") if item_json.get("worldID") != None else item_json.get("averagePrice")
     item_stats.sales_velocity = item_json.get("regularSaleVelocity")
     db.session.commit()
 
     # now update crafting cost
-    item_stats.craft_cost = get_crafting_cost(item_stats.item, world_id)
-    db.session.commit()
+    # item_stats.craft_cost = get_crafting_cost(item_stats.item, world_id)
+    # db.session.commit()
 
     return item_stats
 
@@ -199,7 +194,7 @@ def get_crafting_cost(item, world_id):
                 # don't drill all the way down, just go 1 level
                 # use whichever is cheaper, the cost to craft or buy the components
                 if component_stats.price == None:
-                    update_cached_data(component.item, World.query.get(world_id))
+                    return None
                 if component_stats.craft_cost == None:
                     crafting_cost += component_stats.price * component.item_quantity
                 else:
@@ -209,53 +204,3 @@ def get_crafting_cost(item, world_id):
                         else component_stats.craft_cost
                     )
     return crafting_cost if crafting_cost > 0 else None
-
-
-# function to actually query universalis
-def update_cached_data(item, world):
-    # first, get world data as normal
-    data = req.get(f"https://universalis.app/api/{world.id}/{item.id}").json()
-    # if world data is below a certain # of listings, then grab datacenter data
-    print(f"Updating item {item.name}")
-    item_stats = get_item_stats(world.id, item.id)
-    if len(data.get("listings")) <= 3:
-        # overwrite data with dc data for given item
-        data = req.get(f"https://universalis.app/api/{world.datacenter.name}/{item.id}").json()
-        # now update item stats
-        item_stats.stats_updated = convert_to_time_format(datetime.now())
-        item_stats.price = data.get("averagePrice")
-        item_stats.sales_velocity = data.get("regularSaleVelocity")
-        db.session.commit()
-    else:
-        # instead of using averagePrice, use minPrice (only with world data, continue using averagePrice for DC data)
-        item_stats.stats_updated = convert_to_time_format(datetime.now())
-        item_stats.price = data.get("minPrice")
-        item_stats.sales_velocity = data.get("regularSaleVelocity")
-        db.session.commit()
-    # include checks for vanity items (does it require lvl 1 to use?), if so then do not pay attention to NQ vs HQ
-    # if it's an actual gear item, then preferentially use HQ data sources when available
-
-    # now update crafting cost
-    crafting_cost = 0
-    # first, check if an item has any recipes (items that can't be crafted will have None crafting cost)
-    if len(item.recipes) > 0:
-        # if it does, then get its crafting cost
-        # doing it in a for loop like this will cause the crafting cost of certain items to be doubled (or tripled or w/e)
-        for recipe in item.recipes:
-            for component in recipe.components:
-                component_stats = get_item_stats(world.id, component.item.id)
-                # don't drill all the way down, just go 1 level
-                # use whichever is cheaper, the cost to craft or buy the components
-                if component_stats.price == None:
-                    update_cached_data(component.item, world)
-                if component_stats.craft_cost == None:
-                    crafting_cost += component_stats.price * component.item_quantity
-                else:
-                    crafting_cost += (
-                        component_stats.price
-                        if component_stats.price <= component_stats.craft_cost
-                        else component_stats.craft_cost
-                    )
-        # don't generate any warnings or anything here, just assign it to the itemstats model
-        item_stats.craft_cost = crafting_cost
-        db.session.commit()
