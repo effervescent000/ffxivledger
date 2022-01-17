@@ -70,7 +70,7 @@ def get_all_skips():
 
 
 @bp.route("/get_invalid", methods=["GET"])
-def get_problems():
+def get_problem_items():
     problem_list = []
     # I think this is too complex for a list comprehension so I'm going to initialize a new list and iterate over a DB query, adding things to the list as we go
     for item in Item.query.all():
@@ -83,6 +83,12 @@ def get_problems():
         if len(ItemStats.query.filter_by(item_id=item.id).all()) == 0:
             problem_list.append(item)
     return jsonify(multi_item_schema.dump(problem_list))
+
+
+@bp.route("/stock/orphan", methods=["GET"])
+def get_orphan_stock():
+    stock_list = Stock.query.filter_by(profile_id=None).all()
+    return jsonify(multi_stock_schema.dump(stock_list))
 
 
 # POST endpoints
