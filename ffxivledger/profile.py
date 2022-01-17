@@ -149,6 +149,15 @@ def delete_profile(id):
         # if not, check if they are admin
         if current_user.roles != "admin":
             return jsonify("Error: Not authorized"), 401
+    # first, clear out the stuff that might get left behind.
+    # I *think* that retainers will be orphaned and thus should get deleted automatically
+    for skip in profile.skips:
+        db.session.delete(skip)
+        db.session.commit()
+    for stock in profile.stock_list:
+        db.session.delete(stock)
+        db.session.commit()
+
     db.session.delete(profile)
     db.session.commit()
     return jsonify("Profile deleted"), 200
