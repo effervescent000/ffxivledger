@@ -7,7 +7,7 @@ import os
 from ffxivledger.utils import admin_required, convert_to_time_format
 
 from .models import Item, Transaction, Stock, Skip, Recipe, Component, ItemStats
-from .schema import ItemSchema, StockSchema, TransactionSchema, SkipSchema, RecipeSchema
+from .schema import ItemSchema, ItemStatsSchema, StockSchema, TransactionSchema, SkipSchema, RecipeSchema
 from . import db
 
 bp = Blueprint("item", __name__, url_prefix="/item")
@@ -19,6 +19,8 @@ one_skip_schema = SkipSchema()
 multi_skip_schema = SkipSchema(many=True)
 one_recipe_schema = RecipeSchema()
 multi_recipe_schema = RecipeSchema(many=True)
+one_item_stats_schema = ItemStatsSchema()
+multi_item_stats_schema = ItemStatsSchema(many=True)
 
 
 # GET endpoints
@@ -89,6 +91,18 @@ def get_problem_items():
 def get_orphan_stock():
     stock_list = Stock.query.filter_by(profile_id=None).all()
     return jsonify(multi_stock_schema.dump(stock_list))
+
+
+@bp.route("/stats/<id>", methods=["GET"])
+def get_itemstats_by_id(id):
+    # if a world param is passed, use that, else get all
+    if len(request.args) > 0:
+        return jsonify(
+            one_item_stats_schema.dump(
+                ItemStats.query.filter_by(item_id=int(id), world_id=request.args.get("world", type=int)).first()
+            )
+        )
+    return jsonify(multi_item_stats_schema.dump(ItemStats.query.filter_by(item_id=int(id)).all()))
 
 
 # POST endpoints
