@@ -5,6 +5,7 @@ class WorldSchema(ma.Schema):
     class Meta:
         fields = ("id", "name", "datacenter_id")
 
+
 one_world_schema = WorldSchema()
 multi_worlds_schema = WorldSchema(many=True)
 
@@ -32,17 +33,20 @@ class ProfileSchema(ma.Schema):
             "ltw_level",
             "wvr_level",
             "retainers",
-            "is_active"
+            "is_active",
         )
+
     world = ma.Nested(one_world_schema)
     retainers = ma.Nested(multi_retainer_schema)
 
 
 multi_profiles_schema = ProfileSchema(many=True)
 
+
 class UserSchema(ma.Schema):
     class Meta:
         fields = ("id", "username", "roles", "profiles")
+
     profiles = ma.Nested(multi_profiles_schema)
 
 
@@ -51,14 +55,14 @@ class ComponentSchema(ma.Schema):
         fields = ("id", "item_id", "item_quantity", "recipe_id")
 
 
-components_schema = ComponentSchema(many=True)
+multi_components_schema = ComponentSchema(many=True)
 
 
 class RecipeSchema(ma.Schema):
     class Meta:
         fields = ("id", "job", "level", "item_id", "components")
 
-    components = ma.Nested(components_schema)
+    components = ma.Nested(multi_components_schema)
 
 
 multi_recipe_schema = RecipeSchema(many=True)
@@ -66,9 +70,10 @@ multi_recipe_schema = RecipeSchema(many=True)
 
 class ItemSchema(ma.Schema):
     class Meta:
-        fields = ("id", "name", "recipes")
+        fields = ("id", "name", "recipes", "components")
 
     recipes = ma.Nested(multi_recipe_schema)
+    components = ma.Nested(multi_components_schema)
 
 
 one_item_schema = ItemSchema()
@@ -77,6 +82,7 @@ one_item_schema = ItemSchema()
 class ItemStatsSchema(ma.Schema):
     class Meta:
         fields = ("id", "item_id", "world_id", "item", "stats_updated", "craft_cost", "price", "sales_velocity")
+
     item = ma.Nested(one_item_schema)
 
 
