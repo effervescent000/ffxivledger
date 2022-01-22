@@ -22,45 +22,42 @@ def get_crafts():
 
     master_query = []
 
-    test_arg = request.args.get("alcMinLevel", default=0, type=int)
-    print(test_arg, type(test_arg))
-
-    if request.args.get("alcEnabled") == "true":
+    if request.args.get("alcEnabled", default="true") == "true":
         min_level = request.args.get("alcMinLevel", default=0, type=int)
         master_query += Recipe.query.filter(
             Recipe.job == "ALC", Recipe.level <= profile.alc_level, Recipe.level >= min_level
         ).all()
-    if request.args.get("armEnabled") == "true":
+    if request.args.get("armEnabled", default="true") == "true":
         min_level = request.args.get("armMinLevel", default=0, type=int)
         master_query += Recipe.query.filter(
             Recipe.job == "ARM", Recipe.level <= profile.arm_level, Recipe.level >= min_level
         ).all()
-    if request.args.get("bsmEnabled") == "true":
+    if request.args.get("bsmEnabled", default="true") == "true":
         min_level = request.args.get("bsmMinLevel", default=0, type=int)
         master_query += Recipe.query.filter(
             Recipe.job == "BSM", Recipe.level <= profile.bsm_level, Recipe.level >= min_level
         ).all()
-    if request.args.get("crpEnabled") == "true":
+    if request.args.get("crpEnabled", default="true") == "true":
         min_level = request.args.get("crpMinLevel", default=0, type=int)
         master_query += Recipe.query.filter(
             Recipe.job == "CRP", Recipe.level <= profile.crp_level, Recipe.level >= min_level
         ).all()
-    if request.args.get("culEnabled") == "true":
+    if request.args.get("culEnabled", default="true") == "true":
         min_level = request.args.get("culMinLevel", default=0, type=int)
         master_query += Recipe.query.filter(
             Recipe.job == "CUL", Recipe.level <= profile.cul_level, Recipe.level >= min_level
         ).all()
-    if request.args.get("gsmEnabled") == "true":
+    if request.args.get("gsmEnabled", default="true") == "true":
         min_level = request.args.get("gsmMinLevel", default=0, type=int)
         master_query += Recipe.query.filter(
             Recipe.job == "GSM", Recipe.level <= profile.gsm_level, Recipe.level >= min_level
         ).all()
-    if request.args.get("ltwEnabled") == "true":
+    if request.args.get("ltwEnabled", default="true") == "true":
         min_level = request.args.get("ltwMinLevel", default=0, type=int)
         master_query += Recipe.query.filter(
             Recipe.job == "LTW", Recipe.level <= profile.ltw_level, Recipe.level >= min_level
         ).all()
-    if request.args.get("wvrEnabled") == "true":
+    if request.args.get("wvrEnabled", default="true") == "true":
         min_level = request.args.get("wvrMinLevel", default=0, type=int)
         master_query += Recipe.query.filter(
             Recipe.job == "WVR", Recipe.level <= profile.wvr_level, Recipe.level >= min_level
