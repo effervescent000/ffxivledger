@@ -29,8 +29,17 @@ def get_active_profile():
 
 
 @bp.route("/get/<id>", methods=["GET"])
+@jwt_required()
 def get_profile_by_id(id):
-    return jsonify(one_profile_schema.dump(Profile.query.get(id)))
+    # an admin can get any profile but a user can only get their own
+    # first, check to see if the requested profile belongs to the current user
+    profile = Profile.query.get(id)
+    if profile.user_id != current_user.id:
+        # if not, check if the current user is an admin
+        if current_user.roles != "admin":
+            # if not, return 401
+            return jsonify("Error: Not authorized"), 401
+    return jsonify(one_profile_schema.dump(profile))
 
 
 # POST endpoints
