@@ -17,11 +17,12 @@ def get_transaction_by_id(id):
     return jsonify(one_transaction_schema.dump(Transaction.query.get(id)))
 
 
-@bp.route("/get/item/<item_value>", methods=["GET"])
+@bp.route("/get/item/<item_id>", methods=["GET"])
 @jwt_required()
-def get_transactions_by_item(item_value):
+def get_transactions_by_item(item_id):
+    profile = current_user.get_active_profile()
     return jsonify(
-        multi_transaction_schema.dump(Transaction.query.filter_by(item_value=item_value, user_id=current_user.id).all())
+        multi_transaction_schema.dump(Transaction.query.filter_by(item_id=item_id, profile_id=profile.id).all())
     )
 
 
