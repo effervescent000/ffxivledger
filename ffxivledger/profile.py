@@ -29,8 +29,17 @@ def get_active_profile():
 
 
 @bp.route("/get/<id>", methods=["GET"])
+@jwt_required()
 def get_profile_by_id(id):
-    return jsonify(one_profile_schema.dump(Profile.query.get(id)))
+    # an admin can get any profile but a user can only get their own
+    # first, check to see if the requested profile belongs to the current user
+    profile = Profile.query.get(id)
+    if profile.user_id != current_user.id:
+        # if not, check if the current user is an admin
+        if current_user.roles != "admin":
+            # if not, return 401
+            return jsonify("Error: Not authorized"), 401
+    return jsonify(one_profile_schema.dump(profile))
 
 
 # POST endpoints
@@ -49,14 +58,15 @@ def add_profile():
         return jsonify(f"Profile already exists on world {world}")
 
     # check each job level, if any are not included then set them to 0 and add them to profile
-    alc_level = data.get("alc_level")
-    arm_level = data.get("arm_level")
-    bsm_level = data.get("bsm_level")
-    crp_level = data.get("crp_level")
-    cul_level = data.get("cul_level")
-    gsm_level = data.get("gsm_level")
-    ltw_level = data.get("ltw_level")
-    wvr_level = data.get("wvr_level")
+    alc_level = data.get("alcLevel")
+    arm_level = data.get("armLevel")
+    bsm_level = data.get("bsmLevel")
+    crp_level = data.get("crpLevel")
+    cul_level = data.get("culLevel")
+    gsm_level = data.get("gsmLevel")
+    ltw_level = data.get("ltwLevel")
+    wvr_level = data.get("wvrLevel")
+    retainers = data.get("retainers")
 
     profile = Profile(user_id=current_user.id, world_id=world)
     profile.alc_level = alc_level if alc_level != None else 0
@@ -67,6 +77,8 @@ def add_profile():
     profile.gsm_level = gsm_level if gsm_level != None else 0
     profile.ltw_level = ltw_level if ltw_level != None else 0
     profile.wvr_level = wvr_level if wvr_level != None else 0
+    if retainers != None and retainers != []:
+        process_retainers(profile, retainers)
     # if this is the only profile, then set it to active
     profile.is_active = True if current_user.get_active_profile() == None else False
     db.session.add(profile)
@@ -89,14 +101,14 @@ def modify_profile_by_id():
     if profile == None:
         return jsonify("No profile found")
     # check each job level, if any are not included then set them to 0 and add them to profile
-    alc_level = data.get("alc_level")
-    arm_level = data.get("arm_level")
-    bsm_level = data.get("bsm_level")
-    crp_level = data.get("crp_level")
-    cul_level = data.get("cul_level")
-    gsm_level = data.get("gsm_level")
-    ltw_level = data.get("ltw_level")
-    wvr_level = data.get("wvr_level")
+    alc_level = data.get("alcLevel")
+    arm_level = data.get("armLevel")
+    bsm_level = data.get("bsmLevel")
+    crp_level = data.get("crpLevel")
+    cul_level = data.get("culLevel")
+    gsm_level = data.get("gsmLevel")
+    ltw_level = data.get("ltwLevel")
+    wvr_level = data.get("wvrLevel")
     retainers = data.get("retainers")
 
     profile.alc_level = alc_level if alc_level != None else profile.alc_level
@@ -110,8 +122,7 @@ def modify_profile_by_id():
     db.session.commit()
 
     if retainers != None and retainers != []:
-        for retainer in retainers:
-            process_retainer(profile, retainer)
+        process_retainers(profile, retainers)
 
     return jsonify(one_profile_schema.dump(profile))
 
@@ -166,16 +177,19 @@ def delete_profile(id):
 # utils
 
 
-def process_retainer(profile, retainer):
-    print(retainer)
-    if retainer["id"] == 0:
-        new_retainer = Retainer(profile_id=profile.id, name=retainer["name"])
+def process_retainers(profile, retainers):
+    # first, query the db to get the retainers associated with the profile
+    # (this needs to be a list comprehension to keep it from being updated as I change the db, I think)
+    query = [x for x in Retainer.query.filter_by(profile_id=profile.id).all()]
+    # then, 2 list comprehensions:
+    # 1 for retainers in the query but not in the list (delete these)
+    delete_list = [x for x in query if x.name not in retainers]
+    for retainer in delete_list:
+        db.session.delete(retainer)
+        db.session.commit()
+    # 1 filtering for retainers in the passed list but not in the query (add these)
+    add_list = [x for x in retainers if x not in [y.name for y in query]]
+    for retainer in add_list:
+        new_retainer = Retainer(profile_id=profile.id, name=retainer)
         db.session.add(new_retainer)
         db.session.commit()
-    else:
-        retainer_record = Retainer.query.get(retainer["id"])
-        if retainer_record == None:
-            print("No retainer record found")
-        else:
-            retainer_record.name = retainer["name"]
-            db.session.commit()
