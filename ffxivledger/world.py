@@ -10,12 +10,15 @@ bp = Blueprint("world", __name__, url_prefix="/world")
 one_world_schema = WorldSchema()
 multi_world_schema = WorldSchema(many=True)
 
-@bp.route("/add", methods=['POST'])
+
+@bp.route("/add", methods=["POST"])
 def add_world_by_name():
     data = request.get_json()
     world_name = data.get("name")
     # search XIVAPI to get the world id from its name
-    search = req.get(f'https://xivapi.com/search?indexes=World&string={world_name}&private_key={current_app.config.get("XIVAPI_KEY")}').json()
+    search = req.get(
+        f'https://xivapi.com/search?indexes=World&string={world_name}&private_key={current_app.config.get("XIVAPI_KEY")}'
+    ).json()
     results = search.get("Results")
     world_id = None
     if len(results) > 1:
@@ -45,11 +48,11 @@ def add_world_by_name():
     return jsonify(one_world_schema.dump(world))
 
 
-@bp.route("/get/<id>", methods=['GET'])
+@bp.route("/get/<id>", methods=["GET"])
 def get_world_by_id(id):
     return jsonify(one_world_schema.dump(World.query.get(id)))
 
 
-@bp.route("/get/all", methods=['GET'])
+@bp.route("/get", methods=["GET"])
 def get_worlds():
     return jsonify(multi_world_schema.dump(World.query.all()))
